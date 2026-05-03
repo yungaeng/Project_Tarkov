@@ -1,10 +1,14 @@
 #pragma once
 #include "pch.h"
 
+// Core
 #include "Window.h"
 #include "Time.h"
 #include "SceneManager.h"
 #include "Input.h"
+
+// Game
+#include "RaidScene.h"
 
 class Application
 {
@@ -47,7 +51,7 @@ public:
                 running = false;
 
             // 3. Update
-            sceneManager.Update();
+            sceneManager.Update(time.deltaTime);
 
             // 4. Render
             sceneManager.Render();

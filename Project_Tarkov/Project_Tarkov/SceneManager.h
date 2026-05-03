@@ -20,10 +20,10 @@ public:
         currentScene->Init();
     }
 
-    void Update()
+    void Update(float deltaTime)
     {
         if (currentScene)
-            currentScene->Update();
+            currentScene->Update(deltaTime);
     }
 
     void Render()
