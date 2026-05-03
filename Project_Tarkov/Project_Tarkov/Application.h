@@ -45,10 +45,7 @@ public:
 
             // 2. Input
             window.PollEvents();
-
-            // ESC Á¾·á
-            if (Input::GetKey(GLFW_KEY_ESCAPE))
-                running = false;
+            Input::Update();
 
             // 3. Update
             sceneManager.Update(time.deltaTime);

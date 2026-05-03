@@ -11,6 +11,7 @@ class RaidScene : public Scene
 {
 public:
     Player* player = nullptr;
+    bool inventoryOpen = false;
 
     Shader shader;
     Mesh cubeMesh;
@@ -30,77 +31,119 @@ public:
 
     void Update(float dt) override
     {
-        // 마우스 회전
-        static bool first = true;
-        static double lastX = 640;
-        static double lastY = 360;
-        double x, y;
-
-        glfwGetCursorPos(
-            glfwGetCurrentContext(),
-            &x,
-            &y);
-
-        if (first)
+        // I 토글 인벤토리
+        if (Input::GetKey(GLFW_KEY_I))
         {
-            lastX = x;
-            lastY = y;
-            first = false;
+            inventoryOpen = !inventoryOpen;
+           
+            GLFWwindow* win =
+                glfwGetCurrentContext();
+
+            if (inventoryOpen)
+            {
+                glfwSetInputMode(
+                    win,
+                    GLFW_CURSOR,
+                    GLFW_CURSOR_NORMAL);
+            }
+            else
+            {
+                glfwSetInputMode(
+                    win,
+                    GLFW_CURSOR,
+                    GLFW_CURSOR_DISABLED);
+            }
         }
 
-        float dx = (float)(x - lastX);
-        float dy = (float)(lastY - y);
+        if (!inventoryOpen)
+        {
+            // 마우스 회전
+            static bool first = true;
+            static double lastX = 640;
+            static double lastY = 360;
+            double x, y;
 
-        lastX = x;
-        lastY = y;
+            glfwGetCursorPos(
+                glfwGetCurrentContext(),
+                &x,
+                &y);
 
-        float sens = 0.1f;
+            if (first)
+            {
+                lastX = x;
+                lastY = y;
+                first = false;
+            }
 
-        camera.yaw += dx * sens;
-        camera.pitch += dy * sens;
+            float dx = (float)(x - lastX);
+            float dy = (float)(lastY - y);
 
-        if (camera.pitch > 89.0f)
-            camera.pitch = 89.0f;
+            lastX = x;
+            lastY = y;
 
-        if (camera.pitch < -89.0f)
-            camera.pitch = -89.0f;
+            float sens = 0.1f;
 
-        camera.UpdateDirection();
+            camera.yaw += dx * sens;
+            camera.pitch += dy * sens;
 
-        // 이동 방향 계산
-        // y축 제거 (하늘/바닥 안 날게)
-        glm::vec3 forward =
-            glm::normalize(
-                glm::vec3(
-                    camera.front.x,
-                    0,
-                    camera.front.z));
+            if (camera.pitch > 89.0f)
+                camera.pitch = 89.0f;
 
-        glm::vec3 right =
-            glm::normalize(
-                glm::cross(
-                    forward,
-                    glm::vec3(0, 1, 0)));
+            if (camera.pitch < -89.0f)
+                camera.pitch = -89.0f;
 
-        // 플레이어 이동
-        player->Update(
-            dt,
-            forward,
-            right);
+            camera.UpdateDirection();
+
+            // 이동 방향 계산
+            // 이동 속도
+            float moveSpeed = 5.0f;
+
+            // Shift 달리기
+            if (Input::GetKey(GLFW_KEY_LEFT_SHIFT))
+                moveSpeed = 9.0f;
+            // Ctrl 앉기
+            bool crouch =
+                Input::GetKey(GLFW_KEY_LEFT_CONTROL);
+
+            float eyeHeight =
+                crouch ? 1.0f : 1.7f;
+
+            if (crouch)
+                moveSpeed = 2.5f;
+
+            glm::vec3 forward =
+                glm::normalize(
+                    glm::vec3(
+                        camera.front.x,
+                        0,
+                        camera.front.z));
+
+            glm::vec3 right =
+                glm::normalize(
+                    glm::cross(
+                        forward,
+                        glm::vec3(0, 1, 0)));
+
+            player->speed = moveSpeed;
+
+            // 플레이어 이동
+            player->Update(
+                dt,
+                forward,
+                right);
+        }
 
         // FPS 시점
         /*camera.position =
             player->position +
             glm::vec3(0, 1.7f, 0);*/
 
-        // 3인칭 카메라 모드
+
+        // 3인칭 카메라 시점
         camera.position =
         player->position
             - camera.front * 6.0f
             + glm::vec3(0, 3, 0);
-
-        // 캐릭터 몸도 회전시키고 싶으면
-        //playerYaw = camera.yaw;
     }
 
     void Render() override
