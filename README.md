@@ -13,3 +13,9 @@
 ### 마우스 회전으로 화면 회전, 화면이 회전하면 키입력도 변화
 <img width="1883" height="1091" alt="image" src="https://github.com/user-attachments/assets/a3b1ddc8-6796-4060-b706-54454e1a981d" />
 <img width="357" height="779" alt="image" src="https://github.com/user-attachments/assets/c5534a14-5c35-4d45-b9c4-2a5bc8e32fd3" />
+
+### player 사람모양의 모델로 변경
+### F11 전체화면, 전체화면 변경 시, 화면 재조정
+### I키 인벤토리, 마우스 포커스 해제
+### Shift, Ctrl 달리기 웅크리기 속도 제한
+<img width="1707" height="1075" alt="image" src="https://github.com/user-attachments/assets/ef96186c-9d08-4bec-801e-5c69821cacc9" />
