@@ -16,17 +16,11 @@
     <Filter Include="소스 파일\Core">
       <UniqueIdentifier>{5cfcea16-8b41-426e-8b85-773c13a30124}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Graphics">
-      <UniqueIdentifier>{e371b31c-5059-4d68-93d4-d6a7e30b3712}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Assets">
       <UniqueIdentifier>{51fe9277-9458-44e1-9896-71256fea452e}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\Assets\Shaders">
       <UniqueIdentifier>{dc199b7b-b1dd-48e4-a4b5-0ae6a623f929}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Graphics\Camera">
-      <UniqueIdentifier>{d217321a-2511-464f-9698-278ed2a7e1d5}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\Core\Application">
       <UniqueIdentifier>{17be68a3-8fde-4d6a-ab40-ce9b2233f453}</UniqueIdentifier>
@@ -37,41 +31,80 @@
     <Filter Include="소스 파일\Core\Logger">
       <UniqueIdentifier>{a0bb4442-815b-476a-96c5-853c5c6a44c3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Core\Scene">
-      <UniqueIdentifier>{8ab88c2c-d0aa-4875-b0ee-14240b7706e7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Core\SceneManager">
-      <UniqueIdentifier>{29b0632e-693b-49d9-ab18-4da57d3da838}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Core\Time">
       <UniqueIdentifier>{5bf8dca6-be9b-4dc1-8585-e7d791ce530c}</UniqueIdentifier>
     </Filter>
     <Filter Include="소스 파일\Core\Window">
       <UniqueIdentifier>{96aceecf-6deb-4701-9002-b61df29ee68d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Graphics\Mesh">
-      <UniqueIdentifier>{288883c4-356f-4273-9490-24007510479e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Graphics\Renderer">
-      <UniqueIdentifier>{8fd0f824-7be1-4aa9-903b-dda81cca3e91}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Graphics\Shader">
-      <UniqueIdentifier>{80e0a61a-b15e-415e-96c1-954a90ef0b45}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Game">
       <UniqueIdentifier>{b6c71f3c-4cba-4d8e-8cbc-84939f1233dc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Entity">
-      <UniqueIdentifier>{20ce7381-b8fc-41d1-8d52-1b328808e781}</UniqueIdentifier>
+    <Filter Include="소스 파일\Game\Config">
+      <UniqueIdentifier>{20c106b0-6bc9-4ba2-8f6b-2144335af4de}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Entity\Character">
-      <UniqueIdentifier>{f30ccae6-254a-4658-9ffc-358eab1599dc}</UniqueIdentifier>
+    <Filter Include="소스 파일\Engine">
+      <UniqueIdentifier>{2df4722a-75b1-4ea0-88dc-42cbdd1ed4a7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Entity\Character\Player">
+    <Filter Include="소스 파일\Game\Player">
       <UniqueIdentifier>{24fa8062-c44a-4052-9f92-63334ef1cfa2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Entity\EntityManager">
+    <Filter Include="소스 파일\Engine\ECS">
+      <UniqueIdentifier>{36ec2910-8fb8-4fd1-aec5-17df99eda3d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\ECS\Entity">
+      <UniqueIdentifier>{20ce7381-b8fc-41d1-8d52-1b328808e781}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\ECS\EntityManager">
       <UniqueIdentifier>{ecde1a89-410a-4bca-94a8-66a909cbf736}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Renderer">
+      <UniqueIdentifier>{e371b31c-5059-4d68-93d4-d6a7e30b3712}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Renderer\Camera">
+      <UniqueIdentifier>{d217321a-2511-464f-9698-278ed2a7e1d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Renderer\Mesh">
+      <UniqueIdentifier>{288883c4-356f-4273-9490-24007510479e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Renderer\Renderer">
+      <UniqueIdentifier>{8fd0f824-7be1-4aa9-903b-dda81cca3e91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Renderer\Shader">
+      <UniqueIdentifier>{80e0a61a-b15e-415e-96c1-954a90ef0b45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Scene">
+      <UniqueIdentifier>{25b7b2cb-a90b-453b-a647-12d15409cdb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Scene\Scene">
+      <UniqueIdentifier>{8ab88c2c-d0aa-4875-b0ee-14240b7706e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Scene\SceneManager">
+      <UniqueIdentifier>{29b0632e-693b-49d9-ab18-4da57d3da838}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Game\Scene">
+      <UniqueIdentifier>{c4e9f864-06a1-4cf3-8dbd-012564c6ad04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Game\Scene\RaidScene">
+      <UniqueIdentifier>{078045f5-ef6e-4ca8-83cf-ecf2f4208ce0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Assets\Models">
+      <UniqueIdentifier>{da7bb928-29ab-4ded-8469-a2686121e853}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Assets\Models\Player">
+      <UniqueIdentifier>{2fefb57a-9cac-452a-a4da-3648f5b65a15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Resourse">
+      <UniqueIdentifier>{2c1c71c4-eda9-40bb-b3c0-049376f0c04e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Assets\Textures">
+      <UniqueIdentifier>{e67791f9-ca53-4da6-8687-4fbb8dc9ff14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Assets\Textures\Player">
+      <UniqueIdentifier>{a61e951f-9512-4bc9-b6c5-32b1141d5852}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Engine\Renderer\Texture">
+      <UniqueIdentifier>{16f83cb9-ab53-4630-a5d6-6b6fd86fa8f4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -82,7 +115,7 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
-      <Filter>소스 파일\Graphics\Camera</Filter>
+      <Filter>소스 파일\Engine\Renderer\Camera</Filter>
     </ClCompile>
     <ClCompile Include="Application.cpp">
       <Filter>소스 파일\Core\Application</Filter>
@@ -94,10 +127,10 @@
       <Filter>소스 파일\Core\Logger</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">
-      <Filter>소스 파일\Core\Scene</Filter>
+      <Filter>소스 파일\Engine\Scene\Scene</Filter>
     </ClCompile>
     <ClCompile Include="SceneManager.cpp">
-      <Filter>소스 파일\Core\SceneManager</Filter>
+      <Filter>소스 파일\Engine\Scene\SceneManager</Filter>
     </ClCompile>
     <ClCompile Include="Time.cpp">
       <Filter>소스 파일\Core\Time</Filter>
@@ -106,25 +139,34 @@
       <Filter>소스 파일\Core\Window</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
-      <Filter>소스 파일\Graphics\Mesh</Filter>
+      <Filter>소스 파일\Engine\Renderer\Mesh</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
-      <Filter>소스 파일\Graphics\Renderer</Filter>
+      <Filter>소스 파일\Engine\Renderer\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Shader.cpp">
-      <Filter>소스 파일\Graphics\Shader</Filter>
+      <Filter>소스 파일\Engine\Renderer\Shader</Filter>
     </ClCompile>
     <ClCompile Include="Entity.cpp">
-      <Filter>소스 파일\Entity</Filter>
-    </ClCompile>
-    <ClCompile Include="RaidScene.cpp">
-      <Filter>소스 파일\Game</Filter>
+      <Filter>소스 파일\Engine\ECS\Entity</Filter>
     </ClCompile>
     <ClCompile Include="Player.cpp">
-      <Filter>소스 파일\Entity\Character\Player</Filter>
+      <Filter>소스 파일\Game\Player</Filter>
     </ClCompile>
     <ClCompile Include="EntityManager.cpp">
-      <Filter>소스 파일\Entity\EntityManager</Filter>
+      <Filter>소스 파일\Engine\ECS\EntityManager</Filter>
+    </ClCompile>
+    <ClCompile Include="RaidScene.cpp">
+      <Filter>소스 파일\Game\Scene\RaidScene</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>소스 파일\Engine\Resourse</Filter>
+    </ClCompile>
+    <ClCompile Include="AssimpHelper.h">
+      <Filter>소스 파일\Engine\Resourse</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>소스 파일\Engine\Renderer\Texture</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -132,7 +174,7 @@
       <Filter>소스 파일</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>소스 파일\Graphics\Camera</Filter>
+      <Filter>소스 파일\Engine\Renderer\Camera</Filter>
     </ClInclude>
     <ClInclude Include="Application.h">
       <Filter>소스 파일\Core\Application</Filter>
@@ -144,10 +186,10 @@
       <Filter>소스 파일\Core\Logger</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
-      <Filter>소스 파일\Core\Scene</Filter>
+      <Filter>소스 파일\Engine\Scene\Scene</Filter>
     </ClInclude>
     <ClInclude Include="SceneManager.h">
-      <Filter>소스 파일\Core\SceneManager</Filter>
+      <Filter>소스 파일\Engine\Scene\SceneManager</Filter>
     </ClInclude>
     <ClInclude Include="Time.h">
       <Filter>소스 파일\Core\Time</Filter>
@@ -156,25 +198,34 @@
       <Filter>소스 파일\Core\Window</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
-      <Filter>소스 파일\Graphics\Mesh</Filter>
+      <Filter>소스 파일\Engine\Renderer\Mesh</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.h">
-      <Filter>소스 파일\Graphics\Renderer</Filter>
+      <Filter>소스 파일\Engine\Renderer\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Shader.h">
-      <Filter>소스 파일\Graphics\Shader</Filter>
-    </ClInclude>
-    <ClInclude Include="RaidScene.h">
-      <Filter>소스 파일\Game</Filter>
+      <Filter>소스 파일\Engine\Renderer\Shader</Filter>
     </ClInclude>
     <ClInclude Include="Entity.h">
-      <Filter>소스 파일\Entity</Filter>
+      <Filter>소스 파일\Engine\ECS\Entity</Filter>
     </ClInclude>
     <ClInclude Include="Player.h">
-      <Filter>소스 파일\Entity\Character\Player</Filter>
+      <Filter>소스 파일\Game\Player</Filter>
     </ClInclude>
     <ClInclude Include="EntityManager.h">
-      <Filter>소스 파일\Entity\EntityManager</Filter>
+      <Filter>소스 파일\Engine\ECS\EntityManager</Filter>
+    </ClInclude>
+    <ClInclude Include="RaidScene.h">
+      <Filter>소스 파일\Game\Scene\RaidScene</Filter>
+    </ClInclude>
+    <ClInclude Include="GameUnit.h">
+      <Filter>소스 파일\Game\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelLoader.h">
+      <Filter>소스 파일\Engine\Resourse</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>소스 파일\Engine\Renderer\Texture</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -185,6 +236,9 @@
   <ItemGroup>
     <None Include="Assets\Shaders\cube.vs">
       <Filter>소스 파일\Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Models\Player\Ch22_nonPBR.fbx">
+      <Filter>소스 파일\Assets\Models\Player</Filter>
     </None>
   </ItemGroup>
 </Project>

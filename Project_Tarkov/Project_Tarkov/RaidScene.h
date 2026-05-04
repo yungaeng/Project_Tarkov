@@ -6,6 +6,8 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Camera.h"
+#include "ModelLoader.h"
+#include "Texture.h"
 
 class RaidScene : public Scene
 {
@@ -15,6 +17,8 @@ public:
 
     Shader shader;
     Mesh cubeMesh;
+    Mesh playerMesh;
+    Texture  texture;
     Camera camera;
 
     void Init() override
@@ -27,6 +31,13 @@ public:
             "Assets/Shaders/cube.vs",
             "Assets/Shaders/cube.fs");
         cubeMesh.CreateCube();
+
+        playerMesh =
+            ModelLoader::LoadFBX(
+                "Assets/Models/Player/Ch22_nonPBR.fbx");
+
+        texture.Load(
+            ("Assets/Models/Player/Ch22_nonPBR.fbx"));
     }
 
     void Update(float dt) override
@@ -154,15 +165,15 @@ public:
 
         // 바닥
         glm::mat4 floor =glm::translate(glm::mat4(1.0f),glm::vec3(0, -1, 0));
-        floor = glm::scale(floor, glm::vec3(20, 0.2f, 20));
+        floor = glm::scale(floor, glm::vec3(200, 0.2f, 200));
 
         Renderer::Draw(shader,cubeMesh,camera,floor,1280,720);
 
-        // 플레이어 큐브
+        // 플레이어
         glm::mat4 model =glm::translate(glm::mat4(1.0f),player->position);
-        model = glm::scale(model,glm::vec3(1, 2, 1));
-
-        Renderer::Draw(shader,cubeMesh,camera,model,1280,720);
+        model =glm::scale(model,glm::vec3(0.01f));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+        Renderer::Draw(shader,playerMesh,camera,model,1280,720);
 
         //  플레이어 움직임 로그
         std::cout << "Player X: "

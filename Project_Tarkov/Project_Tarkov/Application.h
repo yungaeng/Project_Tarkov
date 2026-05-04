@@ -38,22 +38,26 @@ public:
 
     void Run()
     {
-        while (running && !window.ShouldClose())
+        while (running &&
+            !window.ShouldClose())
         {
-            // 1. Time
             time.Update();
 
-            // 2. Input
             window.PollEvents();
+
             Input::Update();
 
-            // 3. Update
-            sceneManager.Update(time.deltaTime);
+            if (Input::GetKeyDown(GLFW_KEY_Q))
+                running = false;
 
-            // 4. Render
+            if (Input::GetKeyDown(GLFW_KEY_F11))
+                window.ToggleFullscreen();
+
+            sceneManager.Update(
+                Time::deltaTime);
+
             sceneManager.Render();
 
-            // 5. Present
             window.SwapBuffers();
         }
     }
