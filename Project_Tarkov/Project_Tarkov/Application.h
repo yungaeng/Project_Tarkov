@@ -6,6 +6,7 @@
 #include "Time.h"
 #include "SceneManager.h"
 #include "Input.h"
+#include "Renderer.h"
 
 // Game
 #include "RaidScene.h"
@@ -27,6 +28,7 @@ public:
         if (!window.Create("Project_Tarkov"))
             return false;
 
+        Renderer::Init();
         Input::Init(window.GetNative());
         Time::Init();
 

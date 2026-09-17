@@ -5,8 +5,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-Mesh ModelLoader::LoadFBX(const std::string& path)
+LoadedModel ModelLoader::LoadFBX(const std::string& path)
 {
+    LoadedModel result;
+
     Assimp::Importer importer;
 
     const aiScene* scene =
@@ -16,16 +18,16 @@ Mesh ModelLoader::LoadFBX(const std::string& path)
             aiProcess_GenNormals |
             aiProcess_FlipUVs);
 
-    if (!scene)
+    if (!scene || !scene->HasMeshes())
     {
         Logger::Error(
+            scene ? "No meshes in model" :
             importer.GetErrorString());
+        return result;
     }
 
-    aiMesh* mesh =
-        scene->mMeshes[0];
-
     std::vector<Vertex> verts;
+    aiMesh* lastMesh = nullptr;
 
     for (unsigned m = 0;
         m < scene->mNumMeshes;
@@ -33,6 +35,8 @@ Mesh ModelLoader::LoadFBX(const std::string& path)
     {
         aiMesh* mesh =
             scene->mMeshes[m];
+
+        lastMesh = mesh;
 
         for (unsigned i = 0;
             i < mesh->mNumFaces;
@@ -59,6 +63,22 @@ Mesh ModelLoader::LoadFBX(const std::string& path)
                 v.pos.z =
                     mesh->mVertices[idx].z;
 
+                if (mesh->HasNormals())
+                {
+                    v.normal.x =
+                        mesh->mNormals[idx].x;
+
+                    v.normal.y =
+                        mesh->mNormals[idx].y;
+
+                    v.normal.z =
+                        mesh->mNormals[idx].z;
+                }
+                else
+                {
+                    v.normal = { 0, 1, 0 };
+                }
+
                 if (mesh->HasTextureCoords(0))
                 {
                     v.uv.x =
@@ -77,23 +97,34 @@ Mesh ModelLoader::LoadFBX(const std::string& path)
         }
     }
 
-    aiMaterial* mat =
-        scene->mMaterials[
-            mesh->mMaterialIndex];
-
-    aiString texPath;
-
-    if (mat->GetTexture(
-        aiTextureType_DIFFUSE,
-        0,
-        &texPath) == AI_SUCCESS)
+    if (lastMesh &&
+        lastMesh->mMaterialIndex <
+        scene->mNumMaterials)
     {
-        Logger::Info(
-            texPath.C_Str());
+        aiMaterial* mat =
+            scene->mMaterials[
+                lastMesh->mMaterialIndex];
+
+        aiString texPath;
+
+        if (mat->GetTexture(
+            aiTextureType_DIFFUSE,
+            0,
+            &texPath) == AI_SUCCESS)
+        {
+            fs::path modelDir =
+                fs::path(path).parent_path();
+
+            result.diffuseTexturePath =
+                (modelDir / texPath.C_Str())
+                .string();
+
+            Logger::Info(
+                result.diffuseTexturePath);
+        }
     }
 
-    Mesh result;
-    result.Create(verts);
+    result.mesh.Create(verts);
 
     return result;
 }

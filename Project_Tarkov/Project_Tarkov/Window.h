@@ -31,7 +31,7 @@ public:
     {
         glfwInit();
 
-        // Ã¢ ºñÀ² °íÁ¤ 16:9
+        // Ã¢ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 16:9
         glfwWindowHint(
             GLFW_RESIZABLE,
             GLFW_TRUE);
@@ -65,10 +65,15 @@ public:
 
         glViewport(0, 0, width, height);
 
+        glfwSetInputMode(
+            handle,
+            GLFW_CURSOR,
+            GLFW_CURSOR_DISABLED);
+
         return true;
     }
 
-    // F11 ÀüÃ¼È­¸é Åä±Û
+    // F11 ï¿½ï¿½Ã¼È­ï¿½ï¿½ ï¿½ï¿½ï¿½
     void ToggleFullscreen()
     {
         fullscreen = !fullscreen;

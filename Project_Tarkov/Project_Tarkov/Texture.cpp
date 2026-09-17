@@ -32,3 +32,9 @@ bool Texture::Load(
 
     return true;
 }
+
+void Texture::Bind(int slot)
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, id);
+}

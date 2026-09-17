@@ -40,83 +40,59 @@ public:
     }
     void CreateCube()
     {
-        float vertices[] =
+        struct Face
         {
-            // 앞면
-            -0.5f,-0.5f, 0.5f,
-             0.5f,-0.5f, 0.5f,
-             0.5f, 0.5f, 0.5f,
-
-             0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-            -0.5f,-0.5f, 0.5f,
-
-            // 뒤면
-            -0.5f,-0.5f,-0.5f,
-            -0.5f, 0.5f,-0.5f,
-             0.5f, 0.5f,-0.5f,
-
-             0.5f, 0.5f,-0.5f,
-             0.5f,-0.5f,-0.5f,
-            -0.5f,-0.5f,-0.5f,
-
-            // 왼쪽
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f,-0.5f,
-            -0.5f,-0.5f,-0.5f,
-
-            -0.5f,-0.5f,-0.5f,
-            -0.5f,-0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-
-            // 오른쪽
-             0.5f, 0.5f, 0.5f,
-             0.5f,-0.5f,-0.5f,
-             0.5f, 0.5f,-0.5f,
-
-             0.5f,-0.5f,-0.5f,
-             0.5f, 0.5f, 0.5f,
-             0.5f,-0.5f, 0.5f,
-
-             // 위
-             -0.5f, 0.5f,-0.5f,
-             -0.5f, 0.5f, 0.5f,
-              0.5f, 0.5f, 0.5f,
-
-              0.5f, 0.5f, 0.5f,
-              0.5f, 0.5f,-0.5f,
-             -0.5f, 0.5f,-0.5f,
-
-             // 아래
-             -0.5f,-0.5f,-0.5f,
-              0.5f,-0.5f,-0.5f,
-              0.5f,-0.5f, 0.5f,
-
-              0.5f,-0.5f, 0.5f,
-             -0.5f,-0.5f, 0.5f,
-             -0.5f,-0.5f,-0.5f
+            glm::vec3 normal;
+            glm::vec3 corners[4];
         };
 
-        vertexCount = 36;
+        Face faces[] =
+        {
+            { { 0, 0, 1 },
+              { {-0.5f,-0.5f, 0.5f}, { 0.5f,-0.5f, 0.5f},
+                { 0.5f, 0.5f, 0.5f}, {-0.5f, 0.5f, 0.5f} } },
+            { { 0, 0,-1 },
+              { { 0.5f,-0.5f,-0.5f}, {-0.5f,-0.5f,-0.5f},
+                {-0.5f, 0.5f,-0.5f}, { 0.5f, 0.5f,-0.5f} } },
+            { {-1, 0, 0 },
+              { {-0.5f,-0.5f,-0.5f}, {-0.5f,-0.5f, 0.5f},
+                {-0.5f, 0.5f, 0.5f}, {-0.5f, 0.5f,-0.5f} } },
+            { { 1, 0, 0 },
+              { { 0.5f,-0.5f, 0.5f}, { 0.5f,-0.5f,-0.5f},
+                { 0.5f, 0.5f,-0.5f}, { 0.5f, 0.5f, 0.5f} } },
+            { { 0, 1, 0 },
+              { {-0.5f, 0.5f, 0.5f}, { 0.5f, 0.5f, 0.5f},
+                { 0.5f, 0.5f,-0.5f}, {-0.5f, 0.5f,-0.5f} } },
+            { { 0,-1, 0 },
+              { {-0.5f,-0.5f,-0.5f}, { 0.5f,-0.5f,-0.5f},
+                { 0.5f,-0.5f, 0.5f}, {-0.5f,-0.5f, 0.5f} } },
+        };
 
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
+        std::vector<Vertex> verts;
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        for (const auto& face : faces)
+        {
+            const glm::vec3* c = face.corners;
 
-        glBufferData(
-            GL_ARRAY_BUFFER,
-            sizeof(vertices),
-            vertices,
-            GL_STATIC_DRAW);
+            auto pushTri = [&](
+                const glm::vec3& a,
+                const glm::vec3& b,
+                const glm::vec3& c_)
+            {
+                Vertex v;
+                v.normal = face.normal;
+                v.uv = { 0, 0 };
 
-        glVertexAttribPointer(
-            0, 3, GL_FLOAT, GL_FALSE,
-            3 * sizeof(float),
-            (void*)0);
+                v.pos = a; verts.push_back(v);
+                v.pos = b; verts.push_back(v);
+                v.pos = c_; verts.push_back(v);
+            };
 
-        glEnableVertexAttribArray(0);
+            pushTri(c[0], c[1], c[2]);
+            pushTri(c[2], c[3], c[0]);
+        }
+
+        Create(verts);
     }
     void DrawTriangle()
     {
@@ -147,7 +123,14 @@ public:
             sizeof(Vertex),
             (void*)offsetof(Vertex, pos));
 
+        glVertexAttribPointer(
+            1, 3, GL_FLOAT,
+            GL_FALSE,
+            sizeof(Vertex),
+            (void*)offsetof(Vertex, normal));
+
         glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
     }
     void Draw()
     {

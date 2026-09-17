@@ -25,25 +25,33 @@ public:
     {
         player = new Player();
 
-        camera.position = { 0,8,12 };
+        camera.position = { 0,6,10 };
 
         shader.LoadFromFile(
             "Assets/Shaders/cube.vs",
             "Assets/Shaders/cube.fs");
         cubeMesh.CreateCube();
 
-        playerMesh =
+        LoadedModel playerModel =
             ModelLoader::LoadFBX(
                 "Assets/Models/Player/Ch22_nonPBR.fbx");
 
-        texture.Load(
-            ("Assets/Models/Player/Ch22_nonPBR.fbx"));
+        playerMesh = playerModel.mesh;
+
+        if (!playerModel.diffuseTexturePath.empty())
+        {
+            texture.Load(
+                playerModel.diffuseTexturePath
+                    .c_str());
+        }
     }
 
     void Update(float dt) override
     {
-        // I Åä±Û ÀÎº¥Åä¸®
-        if (Input::GetKey(GLFW_KEY_I))
+        float eyeHeight = 1.7f;
+
+        // I ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ä¸®
+        if (Input::GetKeyDown(GLFW_KEY_I))
         {
             inventoryOpen = !inventoryOpen;
            
@@ -68,7 +76,7 @@ public:
 
         if (!inventoryOpen)
         {
-            // ¸¶¿ì½º È¸Àü
+            // ï¿½ï¿½ï¿½ì½º È¸ï¿½ï¿½
             static bool first = true;
             static double lastX = 640;
             static double lastY = 360;
@@ -105,18 +113,17 @@ public:
 
             camera.UpdateDirection();
 
-            // ÀÌµ¿ ¹æÇâ °è»ê
-            // ÀÌµ¿ ¼Óµµ
+            // ï¿½Ìµï¿½ ï¿½Óµï¿½
             float moveSpeed = 5.0f;
 
-            // Shift ´Þ¸®±â
+            // Shift ï¿½Þ¸ï¿½ï¿½ï¿½
             if (Input::GetKey(GLFW_KEY_LEFT_SHIFT))
                 moveSpeed = 9.0f;
-            // Ctrl ¾É±â
+            // Ctrl ï¿½É±ï¿½
             bool crouch =
                 Input::GetKey(GLFW_KEY_LEFT_CONTROL);
 
-            float eyeHeight =
+            eyeHeight =
                 crouch ? 1.0f : 1.7f;
 
             if (crouch)
@@ -137,48 +144,47 @@ public:
 
             player->speed = moveSpeed;
 
-            // ÇÃ·¹ÀÌ¾î ÀÌµ¿
+            // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½Ìµï¿½
             player->Update(
                 dt,
                 forward,
                 right);
         }
 
-        // FPS ½ÃÁ¡
-        /*camera.position =
-            player->position +
-            glm::vec3(0, 1.7f, 0);*/
-
-
-        // 3ÀÎÄª Ä«¸Þ¶ó ½ÃÁ¡
+        // 3ï¿½ï¿½Äª Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½
         camera.position =
-        player->position
+            player->position
             - camera.front * 6.0f
-            + glm::vec3(0, 3, 0);
+            + glm::vec3(0, eyeHeight + 1.0f, 0);
     }
 
     void Render() override
     {
         shader.HotReload();
-
+        
         Renderer::BeginFrame();
 
-        // ¹Ù´Ú
+        int w = 1280, h = 720;
+        glfwGetFramebufferSize(
+            glfwGetCurrentContext(),
+            &w, &h);
+
+        // ï¿½Ù´ï¿½
         glm::mat4 floor =glm::translate(glm::mat4(1.0f),glm::vec3(0, -1, 0));
         floor = glm::scale(floor, glm::vec3(200, 0.2f, 200));
 
-        Renderer::Draw(shader,cubeMesh,camera,floor,1280,720);
+        Renderer::Draw(shader,cubeMesh,camera,floor,(float)w,(float)h);
 
-        // ÇÃ·¹ÀÌ¾î
+        // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½
         glm::mat4 model =glm::translate(glm::mat4(1.0f),player->position);
         model =glm::scale(model,glm::vec3(0.01f));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0, 1, 0));
-        Renderer::Draw(shader,playerMesh,camera,model,1280,720);
+        Renderer::Draw(shader,playerMesh,camera,model,(float)w,(float)h);
 
-        //  ÇÃ·¹ÀÌ¾î ¿òÁ÷ÀÓ ·Î±×
-        std::cout << "Player X: "
+        //  ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½Ä¡ ï¿½Î±ï¿½
+       /* std::cout << "Player X: "
         << player->position.x
-            << "\n";
+            << "\n";*/
     }
 
     void Shutdown() override
