@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="소스 파일">
@@ -159,6 +159,7 @@
     <ClCompile Include="RaidScene.cpp">
       <Filter>소스 파일\Game\Scene\RaidScene</Filter>
     </ClCompile>
+    <ClCompile Include="SkeletalAnimation.cpp" />
     <ClCompile Include="ModelLoader.cpp">
       <Filter>소스 파일\Engine\Resourse</Filter>
     </ClCompile>
@@ -209,6 +210,10 @@
     <ClInclude Include="Entity.h">
       <Filter>소스 파일\Engine\ECS\Entity</Filter>
     </ClInclude>
+    <ClInclude Include="CollisionWorld.h" />
+    <ClInclude Include="Character.h">
+      <Filter>소스 파일\Engine\ECS\Entity</Filter>
+    </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>소스 파일\Game\Player</Filter>
     </ClInclude>
@@ -221,6 +226,7 @@
     <ClInclude Include="GameUnit.h">
       <Filter>소스 파일\Game\Config</Filter>
     </ClInclude>
+    <ClInclude Include="SkeletalAnimation.h" />
     <ClInclude Include="ModelLoader.h">
       <Filter>소스 파일\Engine\Resourse</Filter>
     </ClInclude>
@@ -240,5 +246,6 @@
     <None Include="Assets\Models\Player\Ch22_nonPBR.fbx">
       <Filter>소스 파일\Assets\Models\Player</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

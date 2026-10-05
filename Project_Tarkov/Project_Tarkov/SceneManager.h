@@ -1,23 +1,24 @@
 #pragma once
 #include "pch.h"
 #include "Scene.h"
+#include <utility>
 
 class SceneManager
 {
 private:
-    Scene* currentScene = nullptr;
+    std::unique_ptr<Scene> currentScene;
 
 public:
-    void Load(Scene* newScene)
+    void Load(std::unique_ptr<Scene> newScene)
     {
         if (currentScene)
         {
             currentScene->Shutdown();
-            delete currentScene;
+            currentScene.reset();
         }
 
-        currentScene = newScene;
-        currentScene->Init();
+        currentScene = std::move(newScene);
+        if (currentScene) currentScene->Init();
     }
 
     void Update(float deltaTime)
@@ -37,8 +38,7 @@ public:
         if (currentScene)
         {
             currentScene->Shutdown();
-            delete currentScene;
-            currentScene = nullptr;
+            currentScene.reset();
         }
     }
 };

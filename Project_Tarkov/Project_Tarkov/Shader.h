@@ -96,7 +96,10 @@ private:
         glCompileShader(vs);
 
         if (!CheckShader(vs))
+        {
+            glDeleteShader(vs);
             return false;
+        }
 
         unsigned int fs =
             glCreateShader(GL_FRAGMENT_SHADER);
@@ -105,7 +108,11 @@ private:
         glCompileShader(fs);
 
         if (!CheckShader(fs))
+        {
+            glDeleteShader(vs);
+            glDeleteShader(fs);
             return false;
+        }
 
         unsigned int newProgram =
             glCreateProgram();
@@ -115,7 +122,12 @@ private:
         glLinkProgram(newProgram);
 
         if (!CheckProgram(newProgram))
+        {
+            glDeleteShader(vs);
+            glDeleteShader(fs);
+            glDeleteProgram(newProgram);
             return false;
+        }
 
         glDeleteShader(vs);
         glDeleteShader(fs);
@@ -129,6 +141,17 @@ private:
     }
 
 public:
+    Shader() = default;
+    ~Shader() { Reset(); }
+    Shader(const Shader&) = delete;
+    Shader& operator=(const Shader&) = delete;
+    void Reset()
+    {
+        if (program) glDeleteProgram(program);
+        program = 0;
+        vertexPath.clear();
+        fragmentPath.clear();
+    }
     bool LoadFromFile(
         const std::string& vs,
         const std::string& fs)
@@ -136,6 +159,13 @@ public:
         vertexPath = vs;
         fragmentPath = fs;
 
+        std::error_code vsError, fsError;
+        const auto newVs = std::filesystem::last_write_time(vertexPath, vsError);
+        const auto newFs = std::filesystem::last_write_time(fragmentPath, fsError);
+        if (vsError || fsError) return false;
+        // Record attempts so a broken edit is not recompiled every frame.
+        vsTime = newVs;
+        fsTime = newFs;
         std::string vsCode =
             ReadFile(vertexPath);
 
@@ -151,14 +181,6 @@ public:
             fsCode.c_str()))
             return false;
 
-        vsTime =
-            std::filesystem::last_write_time(
-                vertexPath);
-
-        fsTime =
-            std::filesystem::last_write_time(
-                fragmentPath);
-
         std::cout
             << "[Shader Loaded] "
             << vertexPath
@@ -171,14 +193,11 @@ public:
 
     void HotReload()
     {
-        auto newVs =
-            std::filesystem::last_write_time(
-                vertexPath);
-
-        auto newFs =
-            std::filesystem::last_write_time(
-                fragmentPath);
-
+        if (vertexPath.empty() || fragmentPath.empty()) return;
+        std::error_code vsError, fsError;
+        const auto newVs = std::filesystem::last_write_time(vertexPath, vsError);
+        const auto newFs = std::filesystem::last_write_time(fragmentPath, fsError);
+        if (vsError || fsError) return;
         if (newVs != vsTime ||
             newFs != fsTime)
         {

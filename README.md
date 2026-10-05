@@ -2,6 +2,16 @@
 
 # 타르코프 게임 제작
 
+## 빌드 환경
+
+Windows / Visual Studio 2022 / MSVC v143 기반 C++ 프로젝트입니다.
+기본 확인 대상 구성은 **Debug | x64**입니다.
+
+설치할 도구와 외부 라이브러리, Visual Studio 설정, 빌드·실행 방법,
+오류 해결 방법은 [빌드 환경 가이드](docs/BUILD.md)에 정리되어 있습니다.
+GLAD를 포함한 의존성은 vcpkg manifest와 NuGet으로 복원합니다.
+저장소 루트에서 `./build.ps1`로 Debug x64 빌드를 실행합니다.
+
 ## 26/5/3
 ### Core와 Graphics 제작
 <img width="1600" height="1042" alt="image" src="https://github.com/user-attachments/assets/337c3567-76b4-4e29-87e7-b79e0361629f" />
@@ -19,3 +29,4 @@
 ### I키 인벤토리, 마우스 포커스 해제
 ### Shift, Ctrl 달리기 웅크리기 속도 제한
 <img width="1707" height="1075" alt="image" src="https://github.com/user-attachments/assets/ef96186c-9d08-4bec-801e-5c69821cacc9" />
+

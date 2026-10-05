@@ -14,6 +14,7 @@ bool Texture::Load(
     if (!data)
         return false;
 
+    Reset();
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 

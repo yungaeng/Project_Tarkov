@@ -1,0 +1,6 @@
+/vcpkg_installed/
+/.build/
+/Project_Tarkov/packages/
+**/x64/
+**/x86/
+**/.vs/

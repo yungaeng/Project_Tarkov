@@ -6,6 +6,7 @@ class Window
 {
 private:
     GLFWwindow* handle = nullptr;
+    bool initialized = false;
 
     int width = 1280;
     int height = 720;
@@ -27,9 +28,16 @@ public:
     }
 
 public:
+    Window() = default;
+    ~Window() { Destroy(); }
+    Window(const Window&) = delete;
+    Window& operator=(const Window&) = delete;
+
     bool Create(const char* title)
     {
-        glfwInit();
+        Destroy();
+        if (!glfwInit()) return false;
+        initialized = true;
 
         // â ���� ���� 16:9
         glfwWindowHint(
@@ -45,14 +53,20 @@ public:
                 nullptr);
 
         if (!handle)
+        {
+            Destroy();
             return false;
+        }
 
         glfwMakeContextCurrent(handle);
 
         if (!gladLoadGLLoader(
             (GLADloadproc)
             glfwGetProcAddress))
+        {
+            Destroy();
             return false;
+        }
 
         glfwSetFramebufferSizeCallback(
             handle,
@@ -93,9 +107,11 @@ public:
             GLFWmonitor* monitor =
                 glfwGetPrimaryMonitor();
 
+            if (!monitor) { fullscreen = false; return; }
             const GLFWvidmode* mode =
                 glfwGetVideoMode(
                     monitor);
+            if (!mode) { fullscreen = false; return; }
 
             glfwSetWindowMonitor(
                 handle,
@@ -152,7 +168,9 @@ public:
 
     void Destroy()
     {
-        glfwDestroyWindow(handle);
-        glfwTerminate();
+        if (handle) glfwDestroyWindow(handle);
+        handle = nullptr;
+        if (initialized) glfwTerminate();
+        initialized = false;
     }
 };

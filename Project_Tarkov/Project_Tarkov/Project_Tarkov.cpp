@@ -1,14 +1,18 @@
-﻿#include "Application.h"
+#include "Application.h"
+#include <exception>
 
 int main()
 {
-    Application app;
-
-    if (!app.Init())
+    try
+    {
+        Application app;
+        if (!app.Init()) return -1;
+        app.Run();
+    }
+    catch (const std::exception& error)
+    {
+        Logger::Error(error.what());
         return -1;
-
-    app.Run();
-    app.Shutdown();
-
+    }
     return 0;
 }

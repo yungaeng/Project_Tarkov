@@ -15,12 +15,15 @@ class Application
 {
 private:
     bool running = true;
+    bool shutdown = false;
 
     Window window;
     SceneManager sceneManager;
     Time time;
 
 public:
+    ~Application() { Shutdown(); }
+
     bool Init()
     {
         Logger::Init();
@@ -32,7 +35,7 @@ public:
         Input::Init(window.GetNative());
         Time::Init();
 
-        sceneManager.Load(new RaidScene());
+        sceneManager.Load(std::make_unique<RaidScene>());
 
         Logger::Info("Application Init Complete");
         return true;
@@ -53,7 +56,10 @@ public:
                 running = false;
 
             if (Input::GetKeyDown(GLFW_KEY_F11))
+            {
                 window.ToggleFullscreen();
+                Input::ResetMouse();
+            }
 
             sceneManager.Update(
                 Time::deltaTime);
@@ -66,7 +72,10 @@ public:
 
     void Shutdown()
     {
+        if (shutdown) return;
+        shutdown = true;
         sceneManager.Shutdown();
+        Input::Shutdown();
         window.Destroy();
         Logger::Shutdown();
     }
