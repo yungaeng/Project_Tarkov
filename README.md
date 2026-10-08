@@ -61,3 +61,8 @@ Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로
 ## 아이템과 인벤토리
 
 F키로 가까운 아이템을 줍고 I키로 인벤토리를 확인합니다. [사용법과 구조](docs/INVENTORY.md)를 참고하세요.
+
+## 개발 목표와 작업 스펙
+
+- [프로젝트 완성 스펙](docs/COMPLETION_SPEC.md): 최소 완성 범위, 게임 규칙, 구현 순서와 완료 기준
+- [다음 작업 스펙](docs/NEXT_TASK_SPEC.md): 아이템 사용·버리기의 상세 요구사항
