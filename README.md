@@ -35,3 +35,20 @@ Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로
 ### Shift, Ctrl 달리기 웅크리기 속도 제한
 <img width="1707" height="1075" alt="image" src="https://github.com/user-attachments/assets/ef96186c-9d08-4bec-801e-5c69821cacc9" />
 
+
+## 26/10/8
+### Entity → Character → Player 구조로 캐릭터 이동 처리 분리
+### 중력과 지면 판정, 벽과 상자 충돌 추가
+### 벽에 닿으면 멈추거나 벽을 따라 이동, 바닥 끝에서는 낙하
+
+### 캐릭터 대기, 걷기, 달리기, 웅크리기 애니메이션 적용
+### Idle.fbx에 대기 호흡 동작 추가, 웅크린 상태에서도 호흡 표현
+### 이동 방향으로 캐릭터 회전, 애니메이션 전환 시 0.15초 보간
+### 벽에 막혀 실제 이동이 없으면 대기 동작으로 전환
+
+### 창 포커스를 잃으면 입력 차단, 커서 재포착 시 시점 튐 방지
+### 셰이더 파일 변경 시 다시 로드, 오류 발생 시 기존 셰이더 유지
+
+### 불필요한 .build, tests, tools 폴더와 build.ps1 정리
+### Visual Studio 솔루션에서 빌드하도록 안내 수정
+### 라이브러리 복원에 필요한 vcpkg.json 유지
