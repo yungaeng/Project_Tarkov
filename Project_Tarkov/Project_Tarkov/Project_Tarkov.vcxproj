@@ -255,4 +255,17 @@
     <None Include="Assets\Animations\Weapons\Idle.anim" />
     <None Include="Assets\Animations\Weapons\Reload.anim" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\Config\RaidConfig.h" />
+    <ClInclude Include="Game\IndustrialZone.h" />
+    <ClInclude Include="Game\RaidStatus.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\IndustrialDetails.h" />
+    <ClInclude Include="Game\IndustrialGeometry.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\Hideout.h"></ClInclude>
+    <ClCompile Include="Game\Hideout.cpp"></ClCompile>
+  </ItemGroup>
 </Project>

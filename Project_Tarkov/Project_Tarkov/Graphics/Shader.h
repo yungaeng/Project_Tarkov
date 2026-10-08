@@ -8,11 +8,23 @@
 #include <string>
 #include <system_error>
 #include <filesystem>
+#include <unordered_map>
+#include <chrono>
 
 class Shader
 {
 private:
     unsigned int program = 0;
+    std::unordered_map<std::string, GLint> uniformLocations;
+    std::chrono::steady_clock::time_point nextReloadCheck{};
+    GLint UniformLocation(const char* name)
+    {
+        const auto found = uniformLocations.find(name);
+        if (found != uniformLocations.end()) return found->second;
+        const GLint location = glGetUniformLocation(program, name);
+        uniformLocations.emplace(name, location);
+        return location;
+    }
 
     std::string vertexPath;
     std::string fragmentPath;
@@ -143,6 +155,7 @@ private:
             glDeleteProgram(program);
 
         program = newProgram;
+        uniformLocations.clear();
 
         return true;
     }
@@ -156,6 +169,8 @@ public:
     {
         if (program) glDeleteProgram(program);
         program = 0;
+        uniformLocations.clear();
+        nextReloadCheck = {};
         vertexPath.clear();
         fragmentPath.clear();
     }
@@ -200,6 +215,12 @@ public:
 
     void HotReload()
     {
+#ifndef _DEBUG
+        return;
+#else
+        const auto now = std::chrono::steady_clock::now();
+        if (now < nextReloadCheck) return;
+        nextReloadCheck = now + std::chrono::milliseconds(500);
         if (vertexPath.empty() || fragmentPath.empty()) return;
         std::error_code vsError, fsError;
         const auto newVs = std::filesystem::last_write_time(vertexPath, vsError);
@@ -215,6 +236,7 @@ public:
                 vertexPath,
                 fragmentPath);
         }
+#endif
     }
 
     void Bind()
@@ -222,12 +244,17 @@ public:
         glUseProgram(program);
     }
 
+    void SetInt(const char* name, int value)
+    {
+        glUniform1i(UniformLocation(name), value);
+    }
+
     void SetVec3(
         const char* name,
         const glm::vec3& v)
     {
         glUniform3fv(
-            glGetUniformLocation(program, name),
+            UniformLocation(name),
             1,
             glm::value_ptr(v));
     }
@@ -237,9 +264,7 @@ public:
         const glm::mat4& mat)
     {
         glUniformMatrix4fv(
-            glGetUniformLocation(
-                program,
-                name),
+            UniformLocation(name),
             1,
             GL_FALSE,
             glm::value_ptr(mat));

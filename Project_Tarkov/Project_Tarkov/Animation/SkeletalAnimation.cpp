@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <limits>
 
 namespace
 {
@@ -71,25 +72,34 @@ struct SkeletalAnimation::Data
         std::vector<aiQuatKey> rotations;
     };
     struct Clip { double duration = 0, rate = 25; std::unordered_map<size_t, Track> tracks; };
-    std::vector<Node> nodes;
-    std::unordered_map<std::string, size_t> nodeIds;
-    std::vector<Bone> bones;
-    std::vector<Source> sources;
-    std::vector<size_t> indices;
+    struct Asset
+    {
+        std::vector<Node> nodes;
+        std::unordered_map<std::string, size_t> nodeIds;
+        std::vector<Bone> bones;
+        std::vector<Source> sources;
+        std::vector<unsigned int> indices;
+        std::unordered_map<std::string, Clip> clips;
+        std::unordered_map<std::string, std::string> clipPaths;
+        aiMatrix4x4 inverseRoot;
+        std::vector<glm::vec3> boundsMin, boundsMax;
+    };
+    std::shared_ptr<Asset> asset = std::make_shared<Asset>();
     std::vector<AnimatedVertex> output;
-    std::vector<Pose> pose, transition;
-    std::vector<Pose> captured;
-    std::vector<aiMatrix4x4> globals;
-    std::unordered_map<std::string, Clip> clips;
-    aiMatrix4x4 inverseRoot;
+    std::vector<Pose> pose, transition, captured;
+    std::vector<aiMatrix4x4> globals, palette;
+    std::vector<aiMatrix3x3> normals;
+    std::vector<glm::mat4> gpuPalette;
+    glm::vec3 boundsMin{0}, boundsMax{0};
     std::string error, selected;
     double time = 0;
     double idleTime = 0;
     float blendTime = 0.15f;
     bool playing = false;
 
-    void Skin()
+    void RefreshPose()
     {
+        const auto& nodes = asset->nodes;
         globals.resize(nodes.size());
         for (size_t i = 0; i < nodes.size(); ++i)
         {
@@ -97,25 +107,58 @@ struct SkeletalAnimation::Data
             const aiMatrix4x4 local(p.scale, p.rotation, p.position);
             globals[i] = nodes[i].parent < 0 ? local : globals[nodes[i].parent] * local;
         }
-        std::vector<aiMatrix4x4> palette;
-        std::vector<aiMatrix3x3> normals;
-        for (const auto& bone : bones)
+        const size_t count = asset->bones.size() + nodes.size();
+        palette.resize(count);
+        normals.resize(count);
+        gpuPalette.resize(count * 2);
+        boundsMin = glm::vec3((std::numeric_limits<float>::max)());
+        boundsMax = -boundsMin;
+        for (size_t i = 0; i < count; ++i)
         {
-            palette.push_back(inverseRoot * globals[bone.node] * bone.offset);
-            aiMatrix3x3 normal(palette.back());
-            normals.push_back(normal.Inverse().Transpose());
+            if (i < asset->bones.size())
+            {
+                const auto& bone = asset->bones[i];
+                palette[i] = asset->inverseRoot * globals[bone.node] * bone.offset;
+            }
+            else palette[i] = asset->inverseRoot * globals[i - asset->bones.size()];
+            normals[i] = aiMatrix3x3(palette[i]);
+            normals[i].Inverse().Transpose();
+            // Assimp is row-major; GLM indexes columns first.
+            glm::mat4 matrix(1), normal(1);
+            for (int row = 0; row < 4; ++row)
+                for (int col = 0; col < 4; ++col) matrix[col][row] = palette[i][row][col];
+            for (int row = 0; row < 3; ++row)
+                for (int col = 0; col < 3; ++col) normal[col][row] = normals[i][row][col];
+            gpuPalette[i * 2] = matrix;
+            gpuPalette[i * 2 + 1] = normal;
+            if (asset->boundsMin.empty() || asset->boundsMin[i].x > asset->boundsMax[i].x) continue;
+            for (int corner = 0; corner < 8; ++corner)
+            {
+                glm::vec3 point;
+                for (int axis = 0; axis < 3; ++axis)
+                    point[axis] = (corner & (1 << axis)) ? asset->boundsMax[i][axis] : asset->boundsMin[i][axis];
+                point = glm::vec3(matrix * glm::vec4(point, 1));
+                boundsMin = (glm::min)(boundsMin, point);
+                boundsMax = (glm::max)(boundsMax, point);
+            }
         }
-        std::vector<AnimatedVertex> vertices;
-        vertices.reserve(sources.size());
-        for (const auto& source : sources)
+    }
+
+    // CPU skinning is retained only for precise corpse support.
+    void Skin()
+    {
+        RefreshPose();
+        output.resize(asset->sources.size());
+        for (size_t i = 0; i < asset->sources.size(); ++i)
         {
-            AnimatedVertex vertex = source.vertex;
+            const auto& source = asset->sources[i];
+            auto& vertex = output[i];
+            vertex = source.vertex;
             if (source.weights.empty())
             {
-                const aiMatrix4x4 rigid = inverseRoot * globals[source.node];
-                vertex.position = rigid * source.vertex.position;
-                aiMatrix3x3 normal(rigid);
-                vertex.normal = normal.Inverse().Transpose() * source.vertex.normal;
+                const size_t bone = asset->bones.size() + source.node;
+                vertex.position = palette[bone] * source.vertex.position;
+                vertex.normal = normals[bone] * source.vertex.normal;
             }
             else
             {
@@ -132,18 +175,16 @@ struct SkeletalAnimation::Data
                 vertex.normal /= sum;
             }
             if (vertex.normal.SquareLength() > 0) vertex.normal.Normalize();
-            vertices.push_back(vertex);
         }
-        output.resize(indices.size());
-        for (size_t i = 0; i < indices.size(); ++i) output[i] = vertices[indices[i]];
     }
+
 };
 
 SkeletalAnimation::SkeletalAnimation() : data(std::make_unique<Data>()) {}
 SkeletalAnimation::~SkeletalAnimation() = default;
 void SkeletalAnimation::Reset() { data = std::make_unique<Data>(); }
 const std::string& SkeletalAnimation::Error() const { return data->error; }
-size_t SkeletalAnimation::BoneCount() const { return data->bones.size(); }
+size_t SkeletalAnimation::BoneCount() const { return data->asset->bones.size(); }
 const std::vector<AnimatedVertex>& SkeletalAnimation::Vertices() const { return data->output; }
 
 void SkeletalAnimation::CapturePose() { data->captured = data->pose; }
@@ -155,11 +196,11 @@ void SkeletalAnimation::ApplyMotion(const MotionClip& clip, float time, float we
     if (frozen && data->captured.size() == data->pose.size()) data->pose = data->captured;
     for (const auto& entry : clip.Tracks())
     {
-        const auto node = data->nodeIds.find(entry.first);
-        if (node == data->nodeIds.end()) continue; // Root is a world-space visual track.
+        const auto node = data->asset->nodeIds.find(entry.first);
+        if (node == data->asset->nodeIds.end()) continue; // Root is a world-space visual track.
         const size_t id = node->second;
         const auto key = clip.Sample(entry.first, time);
-        Pose target = fromBind ? data->nodes[id].bind : data->pose[id];
+        Pose target = fromBind ? data->asset->nodes[id].bind : data->pose[id];
         target.position += aiVector3D(key.position.x, key.position.y, key.position.z);
         const auto r = glm::radians(key.rotation);
         target.rotation = target.rotation * aiQuaternion(aiVector3D(0, 0, 1), r.z) *
@@ -172,35 +213,43 @@ void SkeletalAnimation::ApplyMotion(const MotionClip& clip, float time, float we
 
 glm::vec3 SkeletalAnimation::NodePosition(const std::string& name) const
 {
-    const auto node = data->nodeIds.find(name);
-    if (node == data->nodeIds.end() || data->globals.empty()) return glm::vec3(0);
-    const auto point = (data->inverseRoot * data->globals[node->second]) * aiVector3D();
+    const auto node = data->asset->nodeIds.find(name);
+    if (node == data->asset->nodeIds.end() || data->globals.empty()) return glm::vec3(0);
+    const auto point = (data->asset->inverseRoot * data->globals[node->second]) * aiVector3D();
     return {point.x, point.y, point.z};
 }
 
 bool SkeletalAnimation::LoadModel(const std::string& path)
 {
     Reset();
+    static std::unordered_map<std::string, std::weak_ptr<Data::Asset>> cache;
+    if (auto shared = cache[path].lock())
+    {
+        data->asset = std::move(shared);
+        for (const auto& node : data->asset->nodes) data->pose.push_back(node.bind);
+        data->RefreshPose();
+        return true;
+    }
     Assimp::Importer importer;
     Configure(importer);
     const auto* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals |
-        aiProcess_FlipUVs | aiProcess_RemoveComponent);
+        aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices | aiProcess_RemoveComponent);
     if (!scene || !scene->mRootNode || !scene->HasMeshes())
     {
         data->error = "Model load failed: " + path + ": " + importer.GetErrorString();
         return false;
     }
-    data->inverseRoot = scene->mRootNode->mTransformation;
-    data->inverseRoot.Inverse();
+    data->asset->inverseRoot = scene->mRootNode->mTransformation;
+    data->asset->inverseRoot.Inverse();
     std::vector<std::pair<const aiNode*, size_t>> meshNodes;
     bool valid = true;
     std::function<void(const aiNode*, int)> visit = [&](const aiNode* node, int parent)
     {
-        const size_t id = data->nodes.size();
+        const size_t id = data->asset->nodes.size();
         Data::Node entry{ NodeName(node->mName), parent, {} };
         node->mTransformation.Decompose(entry.bind.scale, entry.bind.rotation, entry.bind.position);
-        if (!data->nodeIds.emplace(entry.name, id).second) valid = false;
-        data->nodes.push_back(entry);
+        if (!data->asset->nodeIds.emplace(entry.name, id).second) valid = false;
+        data->asset->nodes.push_back(entry);
         data->pose.push_back(entry.bind);
         meshNodes.emplace_back(node, id);
         for (unsigned i = 0; i < node->mNumChildren; ++i) visit(node->mChildren[i], static_cast<int>(id));
@@ -212,43 +261,61 @@ bool SkeletalAnimation::LoadModel(const std::string& path)
         for (unsigned m = 0; m < instance.first->mNumMeshes; ++m)
         {
             const auto* mesh = scene->mMeshes[instance.first->mMeshes[m]];
-            const size_t start = data->sources.size();
+            const size_t start = data->asset->sources.size();
             for (unsigned v = 0; v < mesh->mNumVertices; ++v)
             {
                 AnimatedVertex vertex{ mesh->mVertices[v], mesh->mNormals[v], {} };
                 if (mesh->HasTextureCoords(0)) vertex.uv = mesh->mTextureCoords[0][v];
-                data->sources.push_back({ vertex, instance.second, {} });
+                data->asset->sources.push_back({ vertex, instance.second, {} });
             }
             for (unsigned b = 0; b < mesh->mNumBones; ++b)
             {
                 const auto* bone = mesh->mBones[b];
-                const auto found = data->nodeIds.find(NodeName(bone->mName));
-                if (found == data->nodeIds.end()) { data->error = "Bone node missing"; return false; }
-                const size_t boneId = data->bones.size();
-                data->bones.push_back({ found->second, bone->mOffsetMatrix });
+                const auto found = data->asset->nodeIds.find(NodeName(bone->mName));
+                if (found == data->asset->nodeIds.end()) { data->error = "Bone node missing"; return false; }
+                const size_t boneId = data->asset->bones.size();
+                data->asset->bones.push_back({ found->second, bone->mOffsetMatrix });
                 for (unsigned w = 0; w < bone->mNumWeights; ++w)
                 {
                     const auto& weight = bone->mWeights[w];
                     if (weight.mVertexId < mesh->mNumVertices && std::isfinite(weight.mWeight) && weight.mWeight > 0)
-                        data->sources[start + weight.mVertexId].weights.push_back({ boneId, weight.mWeight });
+                        data->asset->sources[start + weight.mVertexId].weights.push_back({ boneId, weight.mWeight });
                 }
             }
             for (unsigned f = 0; f < mesh->mNumFaces; ++f)
             {
                 const auto& face = mesh->mFaces[f];
                 if (face.mNumIndices != 3) continue;
-                for (unsigned i = 0; i < 3; ++i) data->indices.push_back(start + face.mIndices[i]);
+                for (unsigned i = 0; i < 3; ++i) data->asset->indices.push_back(static_cast<unsigned int>(start + face.mIndices[i]));
             }
         }
     }
-    if (data->bones.empty() || data->indices.empty()) { data->error = "Model has no skinned triangles"; return false; }
-    data->Skin();
+    if (data->asset->bones.empty() || data->asset->indices.empty()) { data->error = "Model has no skinned triangles"; return false; }
+    const size_t count = data->asset->bones.size() + data->asset->nodes.size();
+    data->asset->boundsMin.assign(count, glm::vec3((std::numeric_limits<float>::max)()));
+    data->asset->boundsMax.assign(count, glm::vec3(-(std::numeric_limits<float>::max)()));
+    for (const auto& source : data->asset->sources)
+    {
+        const glm::vec3 point(source.vertex.position.x, source.vertex.position.y, source.vertex.position.z);
+        auto include = [&](size_t bone) {
+            data->asset->boundsMin[bone] = (glm::min)(data->asset->boundsMin[bone], point);
+            data->asset->boundsMax[bone] = (glm::max)(data->asset->boundsMax[bone], point);
+        };
+        if (source.weights.empty()) include(data->asset->bones.size() + source.node);
+        else for (const auto& weight : source.weights) include(weight.bone);
+    }
+    data->RefreshPose();
+    cache[path] = data->asset;
     return true;
 }
 
 bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& path)
 {
-    if (data->nodes.empty()) { data->error = "Load the model before clips"; return false; }
+    if (data->asset->nodes.empty()) { data->error = "Load the model before clips"; return false; }
+    const auto cached = data->asset->clipPaths.find(name);
+    if (cached != data->asset->clipPaths.end() && cached->second == path) return true;
+    if (cached != data->asset->clipPaths.end())
+    { data->error = "Clip name already loaded from a different path"; return false; }
     Assimp::Importer importer;
     Configure(importer);
     const auto* scene = importer.ReadFile(path, aiProcess_RemoveComponent);
@@ -277,8 +344,8 @@ bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& pat
     for (unsigned i = 0; i < animation->mNumChannels; ++i)
     {
         const auto* channel = animation->mChannels[i];
-        const auto found = data->nodeIds.find(NodeName(channel->mNodeName));
-        if (found == data->nodeIds.end()) continue;
+        const auto found = data->asset->nodeIds.find(NodeName(channel->mNodeName));
+        if (found == data->asset->nodeIds.end()) continue;
         Data::Track track;
         if (channel->mNumPositionKeys) track.positions.assign(channel->mPositionKeys, channel->mPositionKeys + channel->mNumPositionKeys);
         if (channel->mNumRotationKeys) track.rotations.assign(channel->mRotationKeys, channel->mRotationKeys + channel->mNumRotationKeys);
@@ -288,19 +355,20 @@ bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& pat
     // End joints often have no keys; they inherit their animated parent's transform.
     std::unordered_set<size_t> boneNodes;
     size_t matched = 0;
-    for (const auto& bone : data->bones) boneNodes.insert(bone.node);
+    for (const auto& bone : data->asset->bones) boneNodes.insert(bone.node);
     for (const auto node : boneNodes) if (clip.tracks.count(node)) ++matched;
     if (matched * 2 < boneNodes.size())
     { data->error = "Animation skeleton does not match the model"; return false; }
-    data->clips[name] = std::move(clip);
+    data->asset->clips[name] = std::move(clip);
+    data->asset->clipPaths[name] = path;
     data->error.clear();
     return true;
 }
 
 void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, bool skin)
 {
-    const auto found = data->clips.find(name);
-    if (found == data->clips.end() || !std::isfinite(dt) || dt < 0) return;
+    const auto found = data->asset->clips.find(name);
+    if (found == data->asset->clips.end() || !std::isfinite(dt) || dt < 0) return;
     const auto& clip = found->second;
     if (data->selected != name || data->playing != playing)
     {
@@ -315,9 +383,9 @@ void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, 
     if (playing) data->time = std::fmod(data->time + elapsed * clip.rate, clip.duration);
     else data->idleTime = std::fmod(data->idleTime + elapsed, 3.5);
     data->blendTime = (std::min)(data->blendTime + elapsed, 0.15f);
-    for (size_t i = 0; i < data->nodes.size(); ++i)
+    for (size_t i = 0; i < data->asset->nodes.size(); ++i)
     {
-        const auto& node = data->nodes[i];
+        const auto& node = data->asset->nodes[i];
         Pose target = node.bind;
         const auto track = clip.tracks.find(i);
         if (track != clip.tracks.end())
@@ -354,4 +422,34 @@ void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, 
             Blend(data->transition[i], target, data->blendTime / 0.15f);
     }
     if (skin) data->Skin();
+}
+
+void SkeletalAnimation::RefreshPose() { data->RefreshPose(); }
+const std::vector<glm::mat4>& SkeletalAnimation::Palette() const { return data->gpuPalette; }
+glm::vec3 SkeletalAnimation::BoundsMin() const { return data->boundsMin; }
+glm::vec3 SkeletalAnimation::BoundsMax() const { return data->boundsMax; }
+void SkeletalAnimation::CreateMesh(Mesh& mesh) const
+{
+    std::vector<SkinVertex> vertices;
+    std::vector<glm::vec2> weights;
+    vertices.reserve(data->asset->sources.size());
+    for (const auto& source : data->asset->sources)
+    {
+        SkinVertex vertex;
+        vertex.pos = {source.vertex.position.x, source.vertex.position.y, source.vertex.position.z};
+        vertex.normal = {source.vertex.normal.x, source.vertex.normal.y, source.vertex.normal.z};
+        vertex.influences.x = static_cast<int>(weights.size());
+        if (source.weights.empty())
+            weights.emplace_back(static_cast<float>(data->asset->bones.size() + source.node), 1.0f);
+        else
+        {
+            float sum = 0;
+            for (const auto& weight : source.weights) sum += weight.value;
+            for (const auto& weight : source.weights)
+                weights.emplace_back(static_cast<float>(weight.bone), weight.value / sum);
+        }
+        vertex.influences.y = static_cast<int>(weights.size()) - vertex.influences.x;
+        vertices.push_back(vertex);
+    }
+    mesh.CreateSkinned(vertices, data->asset->indices, weights);
 }

@@ -1,20 +1,25 @@
 #include "RaidScene.h"
+#include "IndustrialDetails.h"
 #include "../Core/Input.h"
 #include "../Graphics/Renderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <filesystem>
 
 void RaidScene::Init()
 {
-    collisionWorld.Clear();
-    collisionWorld.AddBox({ { -100, -1.1f, -100 }, { 100, -0.9f, 100 } });
-    collisionWorld.AddBox({ { -3, -0.9f, -6 }, { 3, 2.1f, -5.5f } });
-    collisionWorld.AddBox({ { 4, -0.9f, -3 }, { 6, 1.1f, -1 } });
+    std::vector<IndustrialZone::Block> mapBlocks;
+    IndustrialZone::Build(collisionWorld, mapBlocks);
+    IndustrialZone::AddDetails(collisionWorld, mapBlocks);
+    IndustrialZone::Bake(mapBlocks, mapBatches);
+    raid = RaidStatus{};
+    hideout.Load();
     player = std::make_unique<Player>();
     player->SetCollisionWorld(&collisionWorld);
-    player->position = { 0, 1.0f, 0 };
+    player->position = IndustrialZone::Spawns[0];
     playerController.Reset();
     camera = Camera{};
     cameraController.Follow(camera, *player);
@@ -27,11 +32,28 @@ void RaidScene::Init()
     actions.Cancel();
     focusGeneration = Input::FocusGeneration();
     hud.Init(glfwGetCurrentContext());
+    Input::SetCursorCaptured(false);
 }
 
 void RaidScene::Update(float dt)
 {
-    dt = std::clamp(dt, 0.0f, 0.1f);
+    if (raid.Finished()) {
+        if (raid.returnToHideout) {
+            raid.phase = RaidPhase::Hideout;
+            raid.returnToHideout = false;
+            Input::SetCursorCaptured(false);
+        }
+        return;
+    }
+    if (raid.phase == RaidPhase::Hideout) {
+        if (deployRequested) { deployRequested = false; StartRaid(); }
+        return;
+    }
+    const float elapsed = std::isfinite(dt) ? (std::max)(0.0f, dt) : 0.0f;
+    raid.remaining = (std::max)(0.0f, raid.remaining - elapsed);
+    // Timeout wins over extraction on the same frame.
+    if (raid.remaining <= 0) { FinishRaid(RaidPhase::Missing); return; }
+    dt = std::clamp(elapsed, 0.0f, 0.1f);
     if (focusGeneration != Input::FocusGeneration()) { actions.Cancel(); combat.CancelInput(); }
     focusGeneration = Input::FocusGeneration();
     playerController.UpdateInterface();
@@ -47,9 +69,17 @@ void RaidScene::Update(float dt)
     if (player->vitals.Alive() && combat.Equipped())
         player->rotation.y = glm::degrees(std::atan2(camera.front.x, camera.front.z));
     playerVisual.Update(dt, *player, {!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
-        combat.Fired(), combat.ReloadTime(), camera.pitch});
+        combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasRifle()});
     cameraController.Follow(camera, *player);
     loot.Update(dt, *player, camera, collisionWorld, playerController.IsGameplayInputEnabled() && player->vitals.Alive(), Input::GetKeyDown(GLFW_KEY_F));
+    if (!player->vitals.Alive()) { FinishRaid(RaidPhase::Dead); return; }
+    const auto offset = player->position - IndustrialZone::Exits[raid.assignedExit].position;
+    raid.exitDistance = glm::length(glm::vec2(offset.x, offset.z));
+    if (std::abs(offset.x) <= RaidConfig::ExtractRadius && std::abs(offset.z) <= RaidConfig::ExtractRadius &&
+        std::abs(offset.y) < 2.0f)
+        raid.extraction += elapsed;
+    else raid.extraction = 0;
+    if (raid.extraction >= RaidConfig::DefaultExtractTime) FinishRaid(RaidPhase::Extracted);
 }
 
 void RaidScene::Render()
@@ -59,20 +89,64 @@ void RaidScene::Render()
     int width = 0, height = 0;
     glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
     if (width <= 0 || height <= 0) return;
-    for (const auto& box : collisionWorld.GetBoxes())
+    if (raid.phase == RaidPhase::Hideout) {
+        deployRequested = hud.RenderHideout(hideout);
+        return;
+    }
+    Renderer::PrepareFrame(shader, camera, static_cast<float>(width), static_cast<float>(height));
+    for (auto& batch : mapBatches)
     {
-        const glm::vec3 center = (box.min + box.max) * 0.5f;
-        const glm::vec3 size = box.max - box.min;
-        glm::mat4 transform = glm::translate(glm::mat4(1), center);
-        transform = glm::scale(transform, size);
-        Renderer::Draw(shader, cubeMesh, camera, transform,
-            static_cast<float>(width), static_cast<float>(height));
+        const glm::mat4 identity(1);
+        if (!Renderer::IsVisible(batch.low, batch.high, identity)) continue;
+        Renderer::Draw(shader, batch.mesh, camera, identity,
+            static_cast<float>(width), static_cast<float>(height), batch.color);
     }
     loot.Render(shader, cubeMesh, camera, static_cast<float>(width), static_cast<float>(height));
     playerVisual.Render(*player, shader, camera,
         static_cast<float>(width), static_cast<float>(height));
     combat.Render(shader, camera, static_cast<float>(width), static_cast<float>(height));
-    hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen());
+    hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid);
+}
+
+void RaidScene::FinishRaid(RaidPhase result)
+{
+    raid.phase = result;
+    actions.Cancel();
+    combat.CancelInput();
+    player->StopMovement();
+    Input::SetCursorCaptured(false);
+    if (result == RaidPhase::Extracted) {
+        raid.recovered = player->GetInventory();
+        hideout.Recover(raid.recovered, combat.HasRifle(), combat.Magazine());
+    } else {
+        player->GetInventory() = Inventory{};
+        hideout.Recover(Inventory{}, false, 0);
+    }
+    raid.saveMessage = hideout.message;
+}
+
+void RaidScene::StartRaid()
+{
+    if (!hideout.ready || !hideout.Depart()) return;
+    raid = RaidStatus{};
+    raid.phase = RaidPhase::Active;
+    raid.assignedExit = hideout.spawn;
+    player = std::make_unique<Player>();
+    player->SetCollisionWorld(&collisionWorld);
+    player->position = IndustrialZone::Spawns[hideout.spawn];
+    player->GetInventory() = hideout.loadout;
+    playerController.Reset();
+    camera = Camera{};
+    cameraController.Follow(camera, *player);
+    actions.Cancel();
+    loot.Init();
+    combat.Init(collisionWorld);
+    combat.SetLoadout(hideout.rifle, hideout.magazine);
+    playerVisual.Reset();
+    playerVisual.Init();
+    playerVisual.Update(0, *player, {false, combat.Equipped(), false, false, 0, 0, combat.HasRifle()});
+    raid.exitDistance = glm::length(IndustrialZone::Exits[raid.assignedExit].position - player->position);
+    focusGeneration = Input::FocusGeneration();
 }
 
 void RaidScene::Shutdown()
@@ -83,6 +157,7 @@ void RaidScene::Shutdown()
     loot.Reset();
     player.reset();
     playerVisual.Reset();
+    mapBatches.clear();
     collisionWorld.Clear();
     cubeMesh.Reset();
     shader.Reset();

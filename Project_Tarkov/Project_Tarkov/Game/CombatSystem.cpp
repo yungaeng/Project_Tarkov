@@ -1,4 +1,5 @@
 #include "CombatSystem.h"
+#include "IndustrialZone.h"
 #include "Player.h"
 #include "LootSystem.h"
 #include "../Core/Input.h"
@@ -36,7 +37,7 @@ namespace
 void CombatSystem::Init(const CollisionWorld& world)
 {
     enemies.clear();
-    for (const glm::vec3 position : {glm::vec3(-8, -0.9f, -12), glm::vec3(9, -0.9f, -10), glm::vec3(0, -0.9f, -18)})
+    for (const glm::vec3 position : IndustrialZone::Enemies)
     {
         Enemy enemy;
         enemy.body.SetCollisionWorld(&world);
@@ -46,7 +47,7 @@ void CombatSystem::Init(const CollisionWorld& world)
         enemies.push_back(std::move(enemy));
     }
     magazine = 30;
-    equipped = true;
+    hasRifle = equipped = true;
     aiming = false;
     fired = false;
     cooldown = reload = messageTime = 0;
@@ -68,7 +69,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
     if (messageTime == 0) message.clear();
     enabled = enabled && player.vitals.Alive();
     if (!enabled) reload = 0;
-    if (enabled && Input::GetKeyDown(GLFW_KEY_1)) { equipped = !equipped; reload = 0; }
+    if (enabled && hasRifle && Input::GetKeyDown(GLFW_KEY_1)) { equipped = !equipped; reload = 0; }
     aiming = enabled && equipped && Input::Mouse(GLFW_MOUSE_BUTTON_RIGHT);
     camera.fieldOfView = aiming ? 50.0f : 75.0f;
     if (reload > 0)
@@ -202,8 +203,15 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         }
     }
     for (auto& enemy : enemies)
+    {
+        const auto delta = enemy.body.position - camera.position;
+        const float distanceSquared = glm::dot(delta, delta);
+        // Only visual poses are throttled. AI, physics and weapon events stay per-frame.
+        const float interval = distanceSquared > 60 * 60 ? 1.0f / 15.0f :
+            distanceSquared > 25 * 25 ? 1.0f / 30.0f : 0.0f;
         enemy.visual->Update(dt, enemy.body, {enemy.health <= 0, true, enemy.state == EnemyState::Attack,
-            enemy.fired, 0, enemy.aimPitch});
+            enemy.fired, 0, enemy.aimPitch}, interval);
+    }
     if (!player.vitals.Alive()) { reload = 0; aiming = false; camera.fieldOfView = 75; }
 }
 

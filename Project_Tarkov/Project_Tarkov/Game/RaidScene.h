@@ -13,6 +13,9 @@
 #include "../Graphics/Mesh.h"
 #include "../Graphics/Camera.h"
 #include <memory>
+#include "IndustrialGeometry.h"
+#include "RaidStatus.h"
+#include "Hideout.h"
 
 class RaidScene : public Scene
 {
@@ -37,4 +40,10 @@ private:
     InventoryActions actions;
     CombatSystem combat;
     unsigned focusGeneration = 0;
+    std::vector<IndustrialZone::Batch> mapBatches;
+    RaidStatus raid;
+    Hideout hideout;
+    bool deployRequested = false;
+    void StartRaid();
+    void FinishRaid(RaidPhase result);
 };

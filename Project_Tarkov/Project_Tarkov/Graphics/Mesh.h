@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <stdexcept>
 
 struct Vertex
 {
@@ -15,10 +16,17 @@ struct Vertex
     glm::vec2 uv;
 };
 
+struct SkinVertex
+{
+    glm::vec3 pos{0}, normal{0};
+    glm::ivec2 influences{0};
+};
+
 class Mesh
 {
 private:
-    GLuint vao = 0, vbo = 0;
+    GLuint vao = 0, vbo = 0, ebo = 0, weightBuffer = 0, weightTexture = 0;
+    int indexCount = 0;
     int vertexCount = 0;
 
 public:
@@ -35,6 +43,10 @@ public:
             vao = std::exchange(other.vao, 0);
             vbo = std::exchange(other.vbo, 0);
             vertexCount = std::exchange(other.vertexCount, 0);
+            ebo = std::exchange(other.ebo, 0);
+            weightBuffer = std::exchange(other.weightBuffer, 0);
+            weightTexture = std::exchange(other.weightTexture, 0);
+            indexCount = std::exchange(other.indexCount, 0);
         }
         return *this;
     }
@@ -42,7 +54,11 @@ public:
     {
         if (vao) glDeleteVertexArrays(1, &vao);
         if (vbo) glDeleteBuffers(1, &vbo);
-        vao = vbo = 0;
+        if (ebo) glDeleteBuffers(1, &ebo);
+        if (weightTexture) glDeleteTextures(1, &weightTexture);
+        if (weightBuffer) glDeleteBuffers(1, &weightBuffer);
+        vao = vbo = ebo = weightBuffer = weightTexture = 0;
+        indexCount = 0;
         vertexCount = 0;
     }
     bool IsValid() const { return vao != 0 && vertexCount > 0; }
@@ -173,11 +189,52 @@ public:
         return true;
     }
 
+    void CreateSkinned(const std::vector<SkinVertex>& vertices,
+        const std::vector<unsigned int>& indices, const std::vector<glm::vec2>& weights)
+    {
+        GLint limit = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE, &limit);
+        if (weights.size() > static_cast<size_t>(limit))
+            throw std::runtime_error("Skin influence buffer exceeds GPU capacity");
+        Reset();
+        vertexCount = static_cast<int>(vertices.size());
+        indexCount = static_cast<int>(indices.size());
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(SkinVertex), vertices.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SkinVertex), (void*)offsetof(SkinVertex, pos));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SkinVertex), (void*)offsetof(SkinVertex, normal));
+        glVertexAttribIPointer(2, 2, GL_INT, sizeof(SkinVertex), (void*)offsetof(SkinVertex, influences));
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        glGenBuffers(1, &weightBuffer);
+        glBindBuffer(GL_TEXTURE_BUFFER, weightBuffer);
+        glBufferData(GL_TEXTURE_BUFFER, weights.size() * sizeof(glm::vec2), weights.data(), GL_STATIC_DRAW);
+        glGenTextures(1, &weightTexture);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_BUFFER, weightTexture);
+        glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, weightBuffer);
+        glActiveTexture(GL_TEXTURE0);
+    }
+
     void Draw()
     {
         if (!IsValid()) return;
         glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        if (weightTexture)
+        {
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_BUFFER, weightTexture);
+            glActiveTexture(GL_TEXTURE0);
+        }
+        if (indexCount) glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+        else glDrawArrays(GL_TRIANGLES, 0, vertexCount);
     }
 
     bool LoadOBJ(const char* path)

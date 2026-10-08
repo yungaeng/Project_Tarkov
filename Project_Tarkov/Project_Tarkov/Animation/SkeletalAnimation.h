@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "MotionClip.h"
+#include "../Graphics/Mesh.h"
 
 struct AnimatedVertex
 {
@@ -12,7 +13,7 @@ struct AnimatedVertex
     aiVector3D uv;
 };
 
-// CPU skinning keeps the animation independent of OpenGL and its bone uniform limits.
+// Shared assets and per-character poses; GPU skinning retains all bone influences.
 class SkeletalAnimation
 {
 public:
@@ -30,6 +31,11 @@ public:
     void CapturePose();
     void ApplyMotion(const MotionClip& clip, float time, float weight, bool fromBind = false, bool frozen = false, bool skin = true);
     void RefreshVertices();
+    void RefreshPose();
+    const std::vector<glm::mat4>& Palette() const;
+    glm::vec3 BoundsMin() const;
+    glm::vec3 BoundsMax() const;
+    void CreateMesh(Mesh& mesh) const;
     glm::vec3 NodePosition(const std::string& name) const;
 private:
     struct Data;

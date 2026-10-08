@@ -1,10 +1,11 @@
 #pragma once
+#include "Config/RaidConfig.h"
 
 // World distances are meters; imported character models use centimeters.
 struct CharacterSettings
 {
-    float walkSpeed = 5.0f;
-    float runSpeed = 9.0f;
+    float walkSpeed = RaidConfig::WalkSpeed;
+    float runSpeed = RaidConfig::RunSpeed;
     float crouchSpeed = 2.5f;
     float bodyRadius = 0.35f;
     float bodyHeight = 1.8f;

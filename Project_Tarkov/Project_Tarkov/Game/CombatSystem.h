@@ -28,6 +28,8 @@ public:
     void Render(Shader& shader, Camera& camera, float width, float height);
     int Magazine() const { return magazine; }
     bool Equipped() const { return equipped; }
+    bool HasRifle() const { return hasRifle; }
+    void SetLoadout(bool rifle, int rounds) { hasRifle = equipped = rifle; magazine = rifle ? rounds : 0; }
     bool Aiming() const { return aiming; }
     bool Fired() const { return fired; }
     float ReloadTime() const { return reload; }
@@ -38,7 +40,7 @@ public:
 private:
     std::vector<Enemy> enemies;
     int magazine = 30;
-    bool equipped = true, aiming = false;
+    bool equipped = true, hasRifle = true, aiming = false;
     bool fired = false;
     float cooldown = 0, reload = 0, messageTime = 0;
     std::string message;

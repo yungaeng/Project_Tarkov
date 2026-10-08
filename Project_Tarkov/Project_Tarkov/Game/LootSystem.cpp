@@ -1,4 +1,6 @@
 #include "LootSystem.h"
+#include "IndustrialZone.h"
+#include <random>
 #include "Player.h"
 #include "../Graphics/Renderer.h"
 #include "../Physics/CollisionWorld.h"
@@ -21,11 +23,15 @@ namespace
 void LootSystem::Init()
 {
     Reset();
-    // Centers sit on the existing floor at y = -0.9.
-    items.emplace_back(glm::vec3(-1, -0.7f, -2), ItemStack{ ItemType::Bandage, 2 });
-    items.emplace_back(glm::vec3(0, -0.7f, -2.5f), ItemStack{ ItemType::Water, 1 });
-    items.emplace_back(glm::vec3(1, -0.7f, -2), ItemStack{ ItemType::Ammo, 30 });
-    items.emplace_back(glm::vec3(2, -0.7f, -3), ItemStack{ ItemType::Ammo, 40 });
+    std::mt19937 random(std::random_device{}());
+    std::uniform_int_distribution<int> kind(0, 2);
+    // Four reachable floor pickups per building; existing MVP item definitions.
+    for (const auto& building : IndustrialZone::Buildings)
+        for (int point = 0; point < RaidConfig::MvpLootCount / 5; ++point) {
+            const auto type = static_cast<ItemType>(kind(random));
+            Spawn(building + glm::vec3(point % 2 ? 5.0f : -5.0f, WorldItem::HalfSize,
+                point / 2 ? 8.0f : -8.0f), {type, type == ItemType::Ammo ? 30 : 1});
+        }
 }
 
 const WorldItem* LootSystem::Target() const

@@ -107,4 +107,17 @@
     <None Include="Assets\Animations\Weapons\Idle.anim"><Filter>Assets</Filter></None>
     <None Include="Assets\Animations\Weapons\Reload.anim"><Filter>Assets</Filter></None>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\Config\RaidConfig.h"><Filter>Game</Filter></ClInclude>
+    <ClInclude Include="Game\IndustrialZone.h"><Filter>Game</Filter></ClInclude>
+    <ClInclude Include="Game\RaidStatus.h"><Filter>Game</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\IndustrialDetails.h"><Filter>Game</Filter></ClInclude>
+    <ClInclude Include="Game\IndustrialGeometry.h"><Filter>Game</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\Hideout.h"><Filter>Game</Filter></ClInclude>
+    <ClCompile Include="Game\Hideout.cpp"><Filter>Game</Filter></ClCompile>
+  </ItemGroup>
 </Project>

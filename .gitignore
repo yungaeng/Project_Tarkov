@@ -8,3 +8,6 @@
 # Python bytecode cache
 __pycache__/
 *.py[cod]
+
+# Local raid loot records
+**/Saves/
