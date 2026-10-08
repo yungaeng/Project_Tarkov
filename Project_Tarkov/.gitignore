@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Wavefront source meshes are assets, not MSVC object files.
+!Project_Tarkov/Assets/Models/Weapons/*.obj

@@ -81,4 +81,30 @@
     <ClCompile Include="Game\RaidHud.cpp"><Filter>Game</Filter></ClCompile>
     <ClInclude Include="Physics\Raycast.h"><Filter>Physics</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\PlayerVitals.h"><Filter>Game</Filter></ClInclude>
+    <ClInclude Include="Game\InventoryActions.h"><Filter>Game</Filter></ClInclude>
+    <ClCompile Include="Game\InventoryActions.cpp"><Filter>Game</Filter></ClCompile>
+    <ClInclude Include="Game\CombatSystem.h"><Filter>Game</Filter></ClInclude>
+    <ClCompile Include="Game\CombatSystem.cpp"><Filter>Game</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Animation\MotionClip.h"><Filter>Animation</Filter></ClInclude>
+    <ClCompile Include="Animation\MotionClip.cpp"><Filter>Animation</Filter></ClCompile>
+    <ClInclude Include="Animation\WeaponVisual.h"><Filter>Animation</Filter></ClInclude>
+    <ClCompile Include="Animation\WeaponVisual.cpp"><Filter>Animation</Filter></ClCompile>
+    <None Include="Assets\Models\Weapons\Bolt.obj"><Filter>Assets</Filter></None>
+    <None Include="Assets\Models\Weapons\Magazine.obj"><Filter>Assets</Filter></None>
+    <None Include="Assets\Models\Weapons\MuzzleFlash.obj"><Filter>Assets</Filter></None>
+    <None Include="Assets\Models\Weapons\Rifle.obj"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\Death.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleHold.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleReload.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Aim.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Equip.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Fire.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Holster.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Idle.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Reload.anim"><Filter>Assets</Filter></None>
+  </ItemGroup>
 </Project>

@@ -26,6 +26,9 @@ public:
     const WorldItem* Target() const;
     const std::string& Message() const { return message; }
     void Reset();
+    bool Drop(Player& player, StackId id, bool all, const Camera& camera, const CollisionWorld& world);
+    void Spawn(glm::vec3 center, ItemStack stack);
+    void Notify(const std::string& text) { message = text; messageTime = 3; }
 private:
     std::vector<WorldItem> items;
     int target = -1;

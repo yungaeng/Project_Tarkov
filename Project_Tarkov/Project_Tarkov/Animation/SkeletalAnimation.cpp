@@ -78,6 +78,8 @@ struct SkeletalAnimation::Data
     std::vector<size_t> indices;
     std::vector<AnimatedVertex> output;
     std::vector<Pose> pose, transition;
+    std::vector<Pose> captured;
+    std::vector<aiMatrix4x4> globals;
     std::unordered_map<std::string, Clip> clips;
     aiMatrix4x4 inverseRoot;
     std::string error, selected;
@@ -88,7 +90,7 @@ struct SkeletalAnimation::Data
 
     void Skin()
     {
-        std::vector<aiMatrix4x4> globals(nodes.size());
+        globals.resize(nodes.size());
         for (size_t i = 0; i < nodes.size(); ++i)
         {
             const auto& p = pose[i];
@@ -143,6 +145,38 @@ void SkeletalAnimation::Reset() { data = std::make_unique<Data>(); }
 const std::string& SkeletalAnimation::Error() const { return data->error; }
 size_t SkeletalAnimation::BoneCount() const { return data->bones.size(); }
 const std::vector<AnimatedVertex>& SkeletalAnimation::Vertices() const { return data->output; }
+
+void SkeletalAnimation::CapturePose() { data->captured = data->pose; }
+
+void SkeletalAnimation::RefreshVertices() { data->Skin(); }
+
+void SkeletalAnimation::ApplyMotion(const MotionClip& clip, float time, float weight, bool fromBind, bool frozen, bool skin)
+{
+    if (frozen && data->captured.size() == data->pose.size()) data->pose = data->captured;
+    for (const auto& entry : clip.Tracks())
+    {
+        const auto node = data->nodeIds.find(entry.first);
+        if (node == data->nodeIds.end()) continue; // Root is a world-space visual track.
+        const size_t id = node->second;
+        const auto key = clip.Sample(entry.first, time);
+        Pose target = fromBind ? data->nodes[id].bind : data->pose[id];
+        target.position += aiVector3D(key.position.x, key.position.y, key.position.z);
+        const auto r = glm::radians(key.rotation);
+        target.rotation = target.rotation * aiQuaternion(aiVector3D(0, 0, 1), r.z) *
+            aiQuaternion(aiVector3D(0, 1, 0), r.y) * aiQuaternion(aiVector3D(1, 0, 0), r.x);
+        target.rotation.Normalize();
+        data->pose[id] = Blend(data->pose[id], target, std::clamp(weight, 0.0f, 1.0f));
+    }
+    if (skin) data->Skin();
+}
+
+glm::vec3 SkeletalAnimation::NodePosition(const std::string& name) const
+{
+    const auto node = data->nodeIds.find(name);
+    if (node == data->nodeIds.end() || data->globals.empty()) return glm::vec3(0);
+    const auto point = (data->inverseRoot * data->globals[node->second]) * aiVector3D();
+    return {point.x, point.y, point.z};
+}
 
 bool SkeletalAnimation::LoadModel(const std::string& path)
 {
@@ -263,7 +297,7 @@ bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& pat
     return true;
 }
 
-void SkeletalAnimation::Update(float dt, const std::string& name, bool playing)
+void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, bool skin)
 {
     const auto found = data->clips.find(name);
     if (found == data->clips.end() || !std::isfinite(dt) || dt < 0) return;
@@ -319,5 +353,5 @@ void SkeletalAnimation::Update(float dt, const std::string& name, bool playing)
         data->pose[i] = data->transition.empty() ? target :
             Blend(data->transition[i], target, data->blendTime / 0.15f);
     }
-    data->Skin();
+    if (skin) data->Skin();
 }

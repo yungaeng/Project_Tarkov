@@ -28,10 +28,10 @@ void PlayerController::UpdateMovement(Player& player, const Camera& camera) cons
 {
     player.StopMovement();
     player.SetSprinting(false);
-    if (!IsGameplayInputEnabled()) return;
+    if (!IsGameplayInputEnabled() || !player.vitals.Alive()) return;
 
     player.SetCrouching(Input::GetKey(GLFW_KEY_LEFT_CONTROL));
-    player.SetSprinting(Input::GetKey(GLFW_KEY_LEFT_SHIFT));
+    player.SetSprinting(Input::GetKey(GLFW_KEY_LEFT_SHIFT) && player.vitals.CanSprint());
     const auto& settings = player.GetSettings();
     const float speed = player.IsCrouching() ? settings.crouchSpeed :
         player.IsSprinting() ? settings.runSpeed : settings.walkSpeed;

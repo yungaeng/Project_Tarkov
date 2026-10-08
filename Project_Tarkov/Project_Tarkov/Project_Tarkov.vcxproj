@@ -229,4 +229,30 @@
     <ClCompile Include="Game\RaidHud.cpp" />
     <ClInclude Include="Physics\Raycast.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\PlayerVitals.h" />
+    <ClInclude Include="Game\InventoryActions.h" />
+    <ClCompile Include="Game\InventoryActions.cpp" />
+    <ClInclude Include="Game\CombatSystem.h" />
+    <ClCompile Include="Game\CombatSystem.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Animation\MotionClip.h" />
+    <ClCompile Include="Animation\MotionClip.cpp" />
+    <ClInclude Include="Animation\WeaponVisual.h" />
+    <ClCompile Include="Animation\WeaponVisual.cpp" />
+    <None Include="Assets\Models\Weapons\Bolt.obj" />
+    <None Include="Assets\Models\Weapons\Magazine.obj" />
+    <None Include="Assets\Models\Weapons\MuzzleFlash.obj" />
+    <None Include="Assets\Models\Weapons\Rifle.obj" />
+    <None Include="Assets\Animations\Characters\Death.anim" />
+    <None Include="Assets\Animations\Characters\RifleHold.anim" />
+    <None Include="Assets\Animations\Characters\RifleReload.anim" />
+    <None Include="Assets\Animations\Weapons\Aim.anim" />
+    <None Include="Assets\Animations\Weapons\Equip.anim" />
+    <None Include="Assets\Animations\Weapons\Fire.anim" />
+    <None Include="Assets\Animations\Weapons\Holster.anim" />
+    <None Include="Assets\Animations\Weapons\Idle.anim" />
+    <None Include="Assets\Animations\Weapons\Reload.anim" />
+  </ItemGroup>
 </Project>

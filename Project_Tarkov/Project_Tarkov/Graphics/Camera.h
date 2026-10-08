@@ -10,6 +10,7 @@ public:
 
     float yaw = -90.0f;
     float pitch = 0.0f;
+    float fieldOfView = 75.0f;
 
     glm::vec3 front = { 0,0,-1 };
     glm::vec3 up = { 0,1,0 };
@@ -46,7 +47,7 @@ public:
         float h)
     {
         return glm::perspective(
-            glm::radians(75.0f),
+            glm::radians(fieldOfView),
             (float)w / (float)h,
             0.1f,
             1000.0f);

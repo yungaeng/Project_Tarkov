@@ -1,6 +1,8 @@
 #pragma once
 struct GLFWwindow;
-class Inventory;
+class Player;
+class CombatSystem;
+class InventoryActions;
 class LootSystem;
 
 class RaidHud
@@ -11,7 +13,7 @@ public:
     RaidHud(const RaidHud&) = delete;
     RaidHud& operator=(const RaidHud&) = delete;
     void Init(GLFWwindow* window);
-    void Render(const Inventory& inventory, const LootSystem& loot, bool inventoryOpen);
+    void Render(const Player& player, const LootSystem& loot, const CombatSystem& combat, InventoryActions& actions, bool inventoryOpen);
     void Shutdown();
 private:
     bool contextReady = false;

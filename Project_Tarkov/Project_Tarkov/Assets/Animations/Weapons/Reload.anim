@@ -1,0 +1,12 @@
+# Two-second reload synchronized with ammunition transfer.
+Weapon 0 0 0 0 0 0 0
+Weapon 0.25 0 -0.06 -0.03 15 0 -28
+Weapon 1.45 0 -0.06 -0.03 15 0 -28
+Weapon 1.8 0 -0.02 0 -4 0 -8
+Weapon 2 0 0 0 0 0 0
+Magazine 0 0 0 0 0 0 0
+Magazine 0.25 0 0 0 0 0 0
+Magazine 0.65 -0.06 -0.22 0.04 0 0 -12
+Magazine 1.0 -0.09 -0.28 0.04 0 0 -15
+Magazine 1.45 0 0 0 0 0 0
+Magazine 2 0 0 0 0 0 0

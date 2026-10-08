@@ -1,5 +1,9 @@
 #include "RaidHud.h"
 #include "Inventory.h"
+#include "Player.h"
+#include "CombatSystem.h"
+#include "InventoryActions.h"
+#include "../Core/Input.h"
 #include "LootSystem.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -22,9 +26,10 @@ void RaidHud::Init(GLFWwindow* window)
     if (!rendererReady) throw std::runtime_error("HUD renderer initialization failed");
 }
 
-void RaidHud::Render(const Inventory& inventory, const LootSystem& loot, bool inventoryOpen)
+void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatSystem& combat, InventoryActions& actions, bool inventoryOpen)
 {
     if (!rendererReady) return;
+    const auto& inventory = player.GetInventory();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -37,6 +42,12 @@ void RaidHud::Render(const Inventory& inventory, const LootSystem& loot, bool in
     ImGui::TextUnformatted("WASD Move | F Pick up | I Inventory | Q Quit");
     ImGui::Text("Inventory: %d / %d slots | %.2f kg", static_cast<int>(inventory.Items().size()),
         static_cast<int>(Inventory::Capacity), inventory.TotalWeight());
+    ImGui::Text("HP %.0f/100 | Water %.0f/100 | Stamina %.0f/100", player.vitals.Health(), player.vitals.Hydration(), player.vitals.Stamina());
+    ImGui::Text("Rifle: %s | %d/30 | Reserve %d | Enemies %d", combat.Equipped() ? "Equipped" : "Holstered", combat.Magazine(), inventory.Count(ItemType::Ammo), combat.LivingEnemies());
+    ImGui::TextUnformatted("1 Equip/Holster | LMB Fire | RMB Aim | R Reload");
+    if (combat.ReloadTime() > 0) ImGui::Text("Reloading %.1fs", combat.ReloadTime());
+    if (!combat.Message().empty()) ImGui::TextUnformatted(combat.Message().c_str());
+    if (!player.vitals.Alive()) ImGui::TextUnformatted("YOU DIED - Press Q to quit");
     ImGui::End();
 
     if (!inventoryOpen)
@@ -76,12 +87,33 @@ void RaidHud::Render(const Inventory& inventory, const LootSystem& loot, bool in
             {
                 const auto& item = GetItemDefinition(stack.type);
                 ImGui::TableNextRow();
-                ImGui::TableNextColumn(); ImGui::TextUnformatted(item.name);
+                ImGui::TableNextColumn();
+                const auto label = std::string(item.name) + "##" + std::to_string(stack.id);
+                if (ImGui::Selectable(label.c_str(), actions.selected == stack.id, ImGuiSelectableFlags_SpanAllColumns)) actions.selected = stack.id;
                 ImGui::TableNextColumn(); ImGui::Text("%d / %d", stack.quantity, item.maxStack);
                 ImGui::TableNextColumn(); ImGui::Text("%.2f", stack.quantity * item.weight);
             }
             ImGui::EndTable();
         }
+        if (const auto* stack = inventory.Find(actions.selected))
+        {
+            const auto& definition = GetItemDefinition(stack->type);
+            ImGui::Separator();
+            ImGui::Text("%s | %d/%d | Unit %.2f kg | Stack %.2f kg", definition.name, stack->quantity, definition.maxStack, definition.weight, definition.weight * stack->quantity);
+            ImGui::TextUnformatted(stack->type == ItemType::Bandage ? "Effect: Health +20" : stack->type == ItemType::Water ? "Effect: Hydration +30" : "Ammunition: press R outside inventory to reload");
+            ImGui::BeginDisabled(!Input::IsFocused() || !player.vitals.Alive());
+            const bool usable = stack->type == ItemType::Bandage ? player.vitals.Health() < 100 : stack->type == ItemType::Water && player.vitals.Hydration() < 100;
+            ImGui::BeginDisabled(!usable);
+            if (ImGui::Button("Use")) actions.Request(InventoryAction::Use);
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (ImGui::Button("Drop 1")) actions.Request(InventoryAction::DropOne);
+            ImGui::SameLine();
+            if (ImGui::Button("Drop All")) actions.Request(InventoryAction::DropAll);
+            ImGui::EndDisabled();
+            if (!usable) ImGui::TextUnformatted("Cannot use: stat full or ammunition item.");
+        }
+        if (!loot.Message().empty()) ImGui::TextUnformatted(loot.Message().c_str());
         ImGui::End();
     }
     ImGui::Render();

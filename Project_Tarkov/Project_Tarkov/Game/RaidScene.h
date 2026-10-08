@@ -5,6 +5,8 @@
 #include "PlayerController.h"
 #include "LootSystem.h"
 #include "RaidHud.h"
+#include "InventoryActions.h"
+#include "CombatSystem.h"
 #include "../Graphics/ThirdPersonCameraController.h"
 #include "../Animation/CharacterVisual.h"
 #include "../Graphics/Shader.h"
@@ -32,4 +34,7 @@ private:
     Camera camera;
     LootSystem loot;
     RaidHud hud;
+    InventoryActions actions;
+    CombatSystem combat;
+    unsigned focusGeneration = 0;
 };

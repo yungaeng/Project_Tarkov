@@ -1,0 +1,33 @@
+# Non-looping death: frozen source pose + local joint offsets.
+# Root is visual space (meters), all bone positions use model centimeters.
+Root 0 0 0 0 0 0 0
+Root 0.18 0 0 -0.03 -8 0 3
+Root 0.48 0 0 -0.14 -38 0 6
+Root 0.85 0 0 -0.30 -82 0 4
+Root 1.05 0 0 -0.34 -92 0 2
+Root 1.25 0 0 -0.34 -88 0 2
+Spine 0 0 0 0 0 0 0
+Spine 0.28 0 0 0 12 0 0
+Spine 0.85 0 0 0 -4 0 0
+Spine 1.25 0 0 0 -2 0 0
+Head 0 0 0 0 0 0 0
+Head 0.18 0 0 0 -18 0 8
+Head 1.25 0 0 0 -8 0 12
+RightArm 0 0 0 0 0 0 0
+RightArm 0.45 0 0 0 0 12 -20
+RightArm 1.25 0 0 0 0 18 -35
+LeftArm 0 0 0 0 0 0 0
+LeftArm 0.45 0 0 0 0 -15 25
+LeftArm 1.25 0 0 0 0 -20 40
+RightUpLeg 0 0 0 0 0 0 0
+RightUpLeg 0.48 0 0 0 -18 0 6
+RightUpLeg 1.25 0 0 0 -5 0 8
+RightLeg 0 0 0 0 0 0 0
+RightLeg 0.48 0 0 0 35 0 0
+RightLeg 1.25 0 0 0 12 0 0
+LeftUpLeg 0 0 0 0 0 0 0
+LeftUpLeg 0.48 0 0 0 -12 0 -5
+LeftUpLeg 1.25 0 0 0 -3 0 -6
+LeftLeg 0 0 0 0 0 0 0
+LeftLeg 0.48 0 0 0 22 0 0
+LeftLeg 1.25 0 0 0 6 0 0

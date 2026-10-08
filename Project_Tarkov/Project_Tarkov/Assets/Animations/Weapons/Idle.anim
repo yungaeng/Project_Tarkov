@@ -1,0 +1,6 @@
+# Breathing/sway loop; meters and degrees.
+Weapon 0 0 0 0 0 0 0
+Weapon 0.875 0.002 0.003 0 0.3 0.2 0.2
+Weapon 1.75 0 0 0 0 0 0
+Weapon 2.625 -0.002 -0.003 0 -0.3 -0.2 -0.2
+Weapon 3.5 0 0 0 0 0 0

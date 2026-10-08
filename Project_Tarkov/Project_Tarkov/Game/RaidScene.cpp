@@ -3,6 +3,8 @@
 #include "../Graphics/Renderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
+#include <algorithm>
+#include <cmath>
 
 void RaidScene::Init()
 {
@@ -21,19 +23,33 @@ void RaidScene::Init()
     cubeMesh.CreateCube();
     playerVisual.Init();
     loot.Init();
+    combat.Init(collisionWorld);
+    actions.Cancel();
+    focusGeneration = Input::FocusGeneration();
     hud.Init(glfwGetCurrentContext());
 }
 
 void RaidScene::Update(float dt)
 {
+    dt = std::clamp(dt, 0.0f, 0.1f);
+    if (focusGeneration != Input::FocusGeneration()) { actions.Cancel(); combat.CancelInput(); }
+    focusGeneration = Input::FocusGeneration();
     playerController.UpdateInterface();
-    if (playerController.IsGameplayInputEnabled())
+    actions.Update(*player, loot, camera, collisionWorld, playerController.IsInventoryOpen() && Input::IsFocused());
+    if (playerController.IsGameplayInputEnabled() && player->vitals.Alive())
         cameraController.Rotate(camera, Input::GetMouseDelta());
     playerController.UpdateMovement(*player, camera);
     player->Update(dt);
-    playerVisual.Update(dt, *player);
+    player->vitals.Update(dt, player->IsSprinting() && player->IsMoving());
+    if (player->position.y < -30) player->vitals.Damage(100);
     cameraController.Follow(camera, *player);
-    loot.Update(dt, *player, camera, collisionWorld, playerController.IsGameplayInputEnabled(), Input::GetKeyDown(GLFW_KEY_F));
+    combat.Update(dt, *player, camera, collisionWorld, loot, playerController.IsGameplayInputEnabled());
+    if (player->vitals.Alive() && combat.Equipped())
+        player->rotation.y = glm::degrees(std::atan2(camera.front.x, camera.front.z));
+    playerVisual.Update(dt, *player, {!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
+        combat.Fired(), combat.ReloadTime(), camera.pitch});
+    cameraController.Follow(camera, *player);
+    loot.Update(dt, *player, camera, collisionWorld, playerController.IsGameplayInputEnabled() && player->vitals.Alive(), Input::GetKeyDown(GLFW_KEY_F));
 }
 
 void RaidScene::Render()
@@ -55,12 +71,15 @@ void RaidScene::Render()
     loot.Render(shader, cubeMesh, camera, static_cast<float>(width), static_cast<float>(height));
     playerVisual.Render(*player, shader, camera,
         static_cast<float>(width), static_cast<float>(height));
-    hud.Render(player->GetInventory(), loot, playerController.IsInventoryOpen());
+    combat.Render(shader, camera, static_cast<float>(width), static_cast<float>(height));
+    hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen());
 }
 
 void RaidScene::Shutdown()
 {
+    actions.Cancel();
     hud.Shutdown();
+    combat.Reset();
     loot.Reset();
     player.reset();
     playerVisual.Reset();

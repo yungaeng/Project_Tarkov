@@ -12,6 +12,9 @@ private:
     inline static bool current[GLFW_KEY_LAST + 1] = {};
     inline static bool previous[GLFW_KEY_LAST + 1] = {};
     inline static bool focused = false;
+    inline static bool buttons[GLFW_MOUSE_BUTTON_LAST + 1] = {};
+    inline static bool oldButtons[GLFW_MOUSE_BUTTON_LAST + 1] = {};
+    inline static unsigned focusGeneration = 0;
     inline static bool mouseReady = false;
     inline static double lastX = 0, lastY = 0;
     inline static glm::vec2 mouseDelta = { 0, 0 };
@@ -36,6 +39,7 @@ public:
             {
                 // Also handle a loss and regain occurring within one event poll.
                 focused = false;
+                ++focusGeneration;
                 ResetMouse();
             });
     }
@@ -46,6 +50,7 @@ public:
         focused = false;
         for (int i = 0; i <= GLFW_KEY_LAST; ++i)
             current[i] = previous[i] = false;
+        for (int i = 0; i <= GLFW_MOUSE_BUTTON_LAST; ++i) buttons[i] = oldButtons[i] = false;
         ResetMouse();
     }
     static void SetCursorCaptured(bool captured)
@@ -68,6 +73,12 @@ public:
             // Held keys on focus restoration must not trigger toggles.
             if (regainedFocus) previous[i] = current[i];
         }
+        for (int i = 0; i <= GLFW_MOUSE_BUTTON_LAST; ++i)
+        {
+            oldButtons[i] = buttons[i];
+            buttons[i] = focused && glfwGetMouseButton(window, i) == GLFW_PRESS;
+            if (regainedFocus) oldButtons[i] = buttons[i];
+        }
         mouseDelta = { 0, 0 };
         if (!focused || glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
         {
@@ -82,6 +93,9 @@ public:
         lastY = y;
         mouseReady = true;
     }
+    static unsigned FocusGeneration() { return focusGeneration; }
+    static bool Mouse(int button) { return button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST && buttons[button]; }
+    static bool MouseDown(int button) { return Mouse(button) && !oldButtons[button]; }
     static bool IsFocused() { return focused; }
     static glm::vec2 GetMouseDelta() { return mouseDelta; }
     static bool GetKey(int key) { return ValidKey(key) && current[key]; }
