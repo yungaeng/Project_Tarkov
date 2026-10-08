@@ -8,6 +8,7 @@ struct CharacterSettings
     float crouchSpeed = 2.5f;
     float bodyRadius = 0.35f;
     float bodyHeight = 1.8f;
+    float crouchingBodyHeight = 1.1f;
     float gravity = 9.81f;
     float terminalSpeed = 50.0f;
     float standingEyeHeight = 1.7f;

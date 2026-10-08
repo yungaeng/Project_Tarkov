@@ -5,6 +5,17 @@
 #include <algorithm>
 #include <cmath>
 
+void Character::SetCrouching(bool value)
+{
+    if (!value && crouching && collisionWorld &&
+        !collisionWorld->CanOccupy(position, settings.bodyRadius, settings.bodyHeight))
+        return;
+
+    // Feet stay fixed when changing stance, including in the air.
+    crouching = value;
+    if (crouching) sprinting = false;
+}
+
 void Character::SetCollisionWorld(const CollisionWorld* world)
 {
     collisionWorld = world;
@@ -46,8 +57,9 @@ void Character::Update(float dt)
     const float elapsed = (std::min)(dt, 1.0f);
     const int steps = static_cast<int>(std::ceil(elapsed * 120.0f));
     const float step = elapsed / steps;
+    const float bodyHeight = GetBodyHeight();
     if (collisionWorld)
-        collisionWorld->ResolveOverlap(position, settings.bodyRadius, settings.bodyHeight);
+        collisionWorld->ResolveOverlap(position, settings.bodyRadius, bodyHeight);
     for (int i = 0; i < steps; ++i)
     {
         const float dx = moveDirection.x * moveSpeed * step;
@@ -55,11 +67,11 @@ void Character::Update(float dt)
         verticalVelocity = (std::max)(verticalVelocity - settings.gravity * step, -settings.terminalSpeed);
         if (collisionWorld)
         {
-            collisionWorld->MoveAxis(position, settings.bodyRadius, settings.bodyHeight, 0, dx);
-            collisionWorld->MoveAxis(position, settings.bodyRadius, settings.bodyHeight, 2, dz);
-            if (collisionWorld->MoveAxis(position, settings.bodyRadius, settings.bodyHeight, 1, verticalVelocity * step))
+            collisionWorld->MoveAxis(position, settings.bodyRadius, bodyHeight, 0, dx);
+            collisionWorld->MoveAxis(position, settings.bodyRadius, bodyHeight, 2, dz);
+            if (collisionWorld->MoveAxis(position, settings.bodyRadius, bodyHeight, 1, verticalVelocity * step))
                 verticalVelocity = 0;
-            grounded = collisionWorld->IsSupported(position, settings.bodyRadius, settings.bodyHeight);
+            grounded = collisionWorld->IsSupported(position, settings.bodyRadius, bodyHeight);
             if (grounded && verticalVelocity < 0) verticalVelocity = 0;
         }
         else

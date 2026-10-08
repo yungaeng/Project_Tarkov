@@ -1,6 +1,5 @@
 #pragma once
 #include "Entity.h"
-class CollisionWorld;
 #include "CharacterSettings.h"
 
 class CollisionWorld;
@@ -26,7 +25,10 @@ public:
     bool IsCrouching() const { return crouching; }
     bool IsSprinting() const { return sprinting; }
     bool IsMoving() const { return moving; }
-    void SetCrouching(bool value) { crouching = value; if (value) sprinting = false; }
+    float GetBodyHeight() const { return crouching ? settings.crouchingBodyHeight : settings.bodyHeight; }
+    // A standing request is rejected when the full standing body would overlap geometry.
+    // Controllers may repeat the request each frame to stand as soon as space is available.
+    void SetCrouching(bool value);
     void SetSprinting(bool value) { sprinting = value && !crouching; }
 
     void SetCollisionWorld(const CollisionWorld* world);

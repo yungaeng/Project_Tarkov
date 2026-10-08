@@ -49,4 +49,3 @@ OpenGL 3.3을 지원하는 그래픽 드라이버가 필요합니다.
 - 오래된 vcpkg에서 MSYS 다운로드가 실패하면 vcpkg 도구/스크립트를 갱신하거나 독립 실행형 `pkg-config`의 경로를 `PKG_CONFIG`로 지정하고 `VCPKG_KEEP_ENV_VARS`에 `PKG_CONFIG`를 포함하세요.
 - `glad/glad.h` 또는 GLAD 심볼 오류 시 vcpkg 설치 단계가 성공했는지 확인하세요. GLAD 2 헤더로 교체하면 기존 API와 호환되지 않습니다.
 - 에셋 로딩 오류는 EXE 옆의 `Assets` 폴더를 확인하고 프로젝트를 다시 빌드하세요. 다른 위치로 배포할 때는 EXE, DLL, `Assets` 폴더를 함께 복사하세요.
-

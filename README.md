@@ -53,3 +53,7 @@ Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로
 ### Visual Studio 솔루션에서 빌드하도록 안내 수정
 ### 라이브러리 복원에 필요한 vcpkg.json 유지
 
+
+## 소스 구조
+
+폴더별 역할과 업데이트 순서는 [구조 가이드](docs/STRUCTURE.md)를 참고하세요.

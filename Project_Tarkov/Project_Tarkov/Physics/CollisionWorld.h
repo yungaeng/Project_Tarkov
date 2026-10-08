@@ -49,6 +49,16 @@ public:
     void Clear() { boxes.clear(); }
     const std::vector<StaticBox>& GetBoxes() const { return boxes; }
 
+    // Touching a surface is allowed; only positive-volume intersections block a pose.
+    bool CanOccupy(const glm::vec3& feet, float radius, float height) const
+    {
+        const auto body = Bounds(feet, radius, height);
+        for (const auto& box : boxes)
+            if (Overlaps(body, box, 0) && Overlaps(body, box, 1) && Overlaps(body, box, 2))
+                return false;
+        return true;
+    }
+
     // Sweep the full distance on one axis, so thin walls cannot be skipped.
     bool MoveAxis(glm::vec3& feet, float radius, float height, int axis, float distance) const
     {

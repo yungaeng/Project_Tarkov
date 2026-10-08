@@ -5,9 +5,14 @@
 - Entity는 위치·회전·크기와 활성 상태를 가집니다.
 - Character는 월드 기준 이동 방향과 속도를 받아 수평 이동을 처리합니다.
 - Player는 Character의 이동과 Entity의 위치를 그대로 사용합니다.
-- RaidScene이 Player를 unique_ptr로 소유하고, 입력·카메라·렌더링을 처리합니다.
+- RaidScene이 Player를 unique_ptr로 소유하고 객체 생성과 업데이트 순서를 관리합니다.
+- PlayerController가 입력을 이동·자세 명령으로 변환합니다.
+- ThirdPersonCameraController가 시점 회전과 플레이어 추적을 담당합니다.
+- CharacterVisual이 캐릭터 상태를 읽어 애니메이션·메시 갱신과 렌더링을 담당합니다.
+- Character가 웅크림·달리기·실제 이동 여부를 관리하며 방향은 Entity의 rotation.y에 저장합니다.
+- Game/CharacterSettings.h에서 속도, 몸체 치수, 눈높이, 모델 배율과 추적 카메라 설정을 관리합니다.
 
-매 프레임 장면은 먼저 StopMovement를 호출합니다. 게임 입력이 허용될 때만
+매 프레임 PlayerController는 먼저 StopMovement를 호출합니다. 게임 입력이 허용될 때만
 WASD와 카메라 방향으로 SetMovement를 설정하고, Update(dt)를 한 번 호출합니다.
 따라서 인벤토리가 열려 있거나 창이 비활성일 때 이전 이동 명령이 남지 않습니다.
 속도는 기존 값인 걷기 5, 달리기 9, 웅크리기 2.5를 유지합니다.
@@ -16,7 +21,7 @@ Character 자체는 입력 장치나 카메라를 참조하지 않습니다.
 SetMovement의 명령은 StopMovement 또는 다음 SetMovement까지 유지됩니다.
 다른 제어 코드에서도 이동을 중단할 때 반드시 명령을 갱신해야 합니다.
 Entity 참조를 통해 Update(dt)를 호출해도 Character의 이동 처리가 실행됩니다.
-EntityManager는 현재 실행 경로에 사용하지 않습니다.
+EntityManager는 현재 실행 경로에 사용하지 않습니다. Add(unique_ptr<Entity>)로 소유권을 넘기며, Shutdown 또는 관리자 소멸 시 객체를 해제합니다. null 전달은 거부합니다.
 
 ## 이후 확장
 
