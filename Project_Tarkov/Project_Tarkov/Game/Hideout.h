@@ -18,6 +18,7 @@ public:
     void Load();
     bool Save();
     void Transfer(ItemType type, int quantity, bool take);
+    void StoreStack(StackId id);
     void ToggleRifle();
     void LoadMagazine();
     bool Depart();

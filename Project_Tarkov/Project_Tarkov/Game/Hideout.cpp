@@ -85,6 +85,20 @@ void Hideout::Transfer(ItemType type, int quantity, bool take)
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
 }
 
+void Hideout::StoreStack(StackId id)
+{
+    if (!ready) return;
+    const auto* item = loadout.Find(id);
+    if (!item) { message = "Item is no longer available."; return; }
+    const auto type = static_cast<std::size_t>(item->type);
+    const int quantity = item->quantity;
+    if (stash[type] > MaxStored - quantity) { message = "Stash capacity reached."; return; }
+    Hideout before = *this;
+    if (!loadout.Remove(id, quantity)) return;
+    stash[type] += quantity;
+    if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
+}
+
 void Hideout::ToggleRifle()
 {
     if (!ready) return;

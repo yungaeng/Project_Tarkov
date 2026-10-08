@@ -3,6 +3,7 @@
 #include "Hideout.h"
 #include "IndustrialZone.h"
 #include <cmath>
+#include <algorithm>
 #include "Inventory.h"
 #include "Player.h"
 #include "CombatSystem.h"
@@ -157,6 +158,35 @@ void RaidHud::Shutdown()
     rendererReady = windowReady = contextReady = false;
 }
 
+namespace
+{
+    struct GearDrag { int type; int quantity; bool fromStash; StackId stack; };
+    constexpr const char* GearPayload = "HIDEOUT_GEAR";
+    void GearIcon(ImDrawList* draw, ImVec2 p, int type, ImU32 color)
+    {
+        if (type == 3) {
+            draw->AddRectFilled({p.x+4,p.y+19},{p.x+56,p.y+27},color,2);
+            draw->AddRectFilled({p.x+48,p.y+21},{p.x+72,p.y+24},color);
+            draw->AddQuadFilled({p.x+5,p.y+21},{p.x+20,p.y+25},{p.x+15,p.y+35},{p.x,p.y+34},color);
+            draw->AddRectFilled({p.x+30,p.y+27},{p.x+39,p.y+40},color,2);
+        } else if (type == 0) {
+            draw->AddRectFilled({p.x+12,p.y+6},{p.x+49,p.y+40},color,4);
+            draw->AddRectFilled({p.x+27,p.y+12},{p.x+34,p.y+34},IM_COL32(80,33,29,255));
+            draw->AddRectFilled({p.x+20,p.y+19},{p.x+41,p.y+26},IM_COL32(80,33,29,255));
+        } else if (type == 1) {
+            draw->AddRectFilled({p.x+24,p.y+3},{p.x+37,p.y+10},color,2);
+            draw->AddRectFilled({p.x+19,p.y+11},{p.x+42,p.y+42},color,6);
+            draw->AddRectFilled({p.x+20,p.y+22},{p.x+41,p.y+31},IM_COL32(40,62,73,255));
+        } else {
+            for (int i=0;i<4;++i) {
+                float x=p.x+12+i*11;
+                draw->AddRectFilled({x,p.y+15},{x+7,p.y+39},color,1);
+                draw->AddTriangleFilled({x,p.y+15},{x+7,p.y+15},{x+3.5f,p.y+5},color);
+            }
+        }
+    }
+}
+
 bool RaidHud::RenderHideout(Hideout& hideout)
 {
     if (!rendererReady) return false;
@@ -164,56 +194,142 @@ bool RaidHud::RenderHideout(Hideout& hideout)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     const auto& io = ImGui::GetIO();
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    const ImVec4 accent(.66f,.61f,.43f,1);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(.045f,.05f,.047f,1));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(.07f,.077f,.07f,1));
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.17f,.18f,.15f,1));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.30f,.31f,.23f,1));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(.40f,.39f,.27f,1));
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(.28f,.29f,.24f,1));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(.84f,.84f,.78f,1));
+    ImGui::PushStyleColor(ImGuiCol_DragDropTarget, accent);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20,18));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 1);
+    ImGui::SetNextWindowPos({0,0});
     ImGui::SetNextWindowSize(io.DisplaySize);
     ImGui::Begin("Hideout", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings);
-    ImGui::TextUnformatted("HIDEOUT / Industrial Zone");
-    ImGui::TextWrapped("Prepare your loadout. Stored equipment stays safe. Carried equipment is lost on death, MIA or quitting a raid.");
+    ImGui::TextColored(accent, "PROJECT TARKOV    /    HIDEOUT");
+    ImGui::TextDisabled("CHARACTER & STASH                                      INDUSTRIAL ZONE / PREPARATION");
     ImGui::Separator();
+    ImGui::TextWrapped("Drag equipment between stash and character. Drop supplies into the carried grid; drop a rifle into the weapon slot.");
     ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
-    ImGui::Text("Weapon slot: %s | Stashed rifles: %d", hideout.rifle ? "Rifle equipped" : "Empty", hideout.rifles);
-    if (ImGui::Button(hideout.rifle ? "Store rifle and unload" : "Equip rifle")) hideout.ToggleRifle();
-    ImGui::SameLine();
-    ImGui::BeginDisabled(!hideout.rifle || hideout.magazine >= 30 || hideout.stash[2] == 0);
-    if (ImGui::Button("Load magazine from stash")) hideout.LoadMagazine();
-    ImGui::EndDisabled();
-    ImGui::Text("Magazine: %d/30 | Carried supplies: %d/%d slots | %.2f kg", hideout.magazine,
-        static_cast<int>(hideout.loadout.Items().size()), static_cast<int>(Inventory::Capacity), hideout.loadout.TotalWeight());
-    if (ImGui::BeginTable("Equipment", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp)) {
-        for (const char* heading : {"Item", "Stash", "Carried", "Take", "Leave behind"}) ImGui::TableSetupColumn(heading);
-        ImGui::TableHeadersRow();
-        for (int i = 0; i < 3; ++i) {
-            const auto type = static_cast<ItemType>(i);
-            const int step = type == ItemType::Ammo ? 30 : 1;
-            ImGui::PushID(i);
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn(); ImGui::TextUnformatted(GetItemDefinition(type).name);
-            ImGui::TableNextColumn(); ImGui::Text("%d", hideout.stash[i]);
-            ImGui::TableNextColumn(); ImGui::Text("%d", hideout.loadout.Count(type));
-            ImGui::TableNextColumn();
-            ImGui::BeginDisabled(hideout.stash[i] == 0);
-            if (ImGui::Button(type == ItemType::Ammo ? "Take 30" : "Take 1")) hideout.Transfer(type, step, true);
-            ImGui::EndDisabled();
-            ImGui::TableNextColumn();
-            ImGui::BeginDisabled(hideout.loadout.Count(type) == 0);
-            if (ImGui::Button(type == ItemType::Ammo ? "Store 30" : "Store 1")) hideout.Transfer(type, step, false);
-            ImGui::EndDisabled();
-            ImGui::PopID();
+
+    GearDrag pending{};
+    bool transfer = false, toStash = false;
+    auto target = [&](bool stashTarget, int accepts) {
+        if (ImGui::BeginDragDropTarget()) {
+            if (const auto* payload = ImGui::AcceptDragDropPayload(GearPayload)) {
+                if (payload->DataSize == sizeof(GearDrag)) {
+                    const auto data = *static_cast<const GearDrag*>(payload->Data);
+                    if (data.fromStash != stashTarget && data.type >= 0 && data.type <= 3 &&
+                        (accepts < 0 || (accepts == 3 ? data.type == 3 : data.type < 3))) {
+                        pending = data; transfer = true; toStash = stashTarget;
+                    }
+                }
+            }
+            ImGui::EndDragDropTarget();
         }
+    };
+    auto card = [&](int id, const char* name, int type, int count, bool sourceStash, StackId stack, float width) {
+        ImGui::PushID(id);
+        const auto start = ImGui::GetCursorScreenPos();
+        ImGui::Button("##gear", {width,96});
+        auto* draw = ImGui::GetWindowDrawList();
+        if (count > 0) GearIcon(draw,{start.x+8,start.y+6},type,
+            type==1 ? IM_COL32(122,155,168,255) : IM_COL32(182,171,130,255));
+        draw->AddText({start.x+8,start.y+57},IM_COL32(216,215,195,255),name);
+        const std::string amount = count ? "x"+std::to_string(count) : "EMPTY";
+        draw->AddText({start.x+8,start.y+76},IM_COL32(155,155,138,255),amount.c_str());
+        if (count > 0 && ImGui::BeginDragDropSource()) {
+            GearDrag data{type,sourceStash && type<3 ? (std::min)(count,GetItemDefinition(static_cast<ItemType>(type)).maxStack) : count,sourceStash,stack};
+            ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
+            ImGui::Text("%s x%d",name,type==3?1:data.quantity);
+            ImGui::EndDragDropSource();
+        }
+        target(sourceStash,sourceStash ? -1 : type==3?3:0);
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::TextUnformatted(name);
+            ImGui::TextUnformatted(sourceStash ? "Drag to character. One stack per transfer." : "Drag to stash to leave behind.");
+            ImGui::EndTooltip();
+        }
+        ImGui::PopID();
+    };
+
+    const bool wide=ImGui::GetContentRegionAvail().x>=850;
+    const float panelHeight=(std::max)(440.f,io.DisplaySize.y-235.f);
+    if (ImGui::BeginTable("HideoutLayout",wide?2:1,ImGuiTableFlags_SizingStretchSame)) {
+        ImGui::TableNextColumn();
+        ImGui::BeginChild("CharacterPanel",{0,panelHeight},true);
+        ImGui::TextColored(accent,"CHARACTER / LOADOUT");
+        ImGui::TextDisabled("Equipment at risk during a raid");
+        const auto p=ImGui::GetCursorScreenPos();
+        const float center=p.x+ImGui::GetContentRegionAvail().x*.5f;
+        auto* draw=ImGui::GetWindowDrawList();
+        const ImU32 body=IM_COL32(69,76,65,255), edge=IM_COL32(123,130,104,255);
+        draw->AddCircleFilled({center,p.y+24},17,body);
+        draw->AddQuadFilled({center-27,p.y+47},{center+27,p.y+47},{center+21,p.y+117},{center-21,p.y+117},body);
+        draw->AddLine({center-30,p.y+51},{center-45,p.y+112},edge,10);
+        draw->AddLine({center+30,p.y+51},{center+45,p.y+112},edge,10);
+        draw->AddLine({center-12,p.y+116},{center-20,p.y+172},edge,14);
+        draw->AddLine({center+12,p.y+116},{center+20,p.y+172},edge,14);
+        ImGui::Dummy({0,185});
+        card(100,"PRIMARY / RIFLE",3,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x);
+        ImGui::Text("Magazine %d/30",hideout.magazine);
+        ImGui::SameLine();
+        ImGui::BeginDisabled(!hideout.rifle || hideout.magazine>=30 || hideout.stash[2]==0);
+        if (ImGui::SmallButton("LOAD FROM STASH")) hideout.LoadMagazine();
+        ImGui::EndDisabled();
+        ImGui::Separator();
+        ImGui::Text("CARRIED SUPPLIES  %d/12 | %.2f kg",static_cast<int>(hideout.loadout.Items().size()),hideout.loadout.TotalWeight());
+        const int columns=(std::max)(1,static_cast<int>(ImGui::GetContentRegionAvail().x/135));
+        const float cell=(ImGui::GetContentRegionAvail().x-(columns-1)*8)/columns;
+        const auto& items=hideout.loadout.Items();
+        for (int i=0;i<static_cast<int>(Inventory::Capacity);++i) {
+            if (i%columns) ImGui::SameLine();
+            if (i<static_cast<int>(items.size())) {
+                const auto& stack=items[i];
+                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell);
+            } else card(200+i,"SUPPLY SLOT",0,0,false,0,cell);
+        }
+        ImGui::EndChild();
+
+        ImGui::TableNextColumn();
+        ImGui::BeginChild("StashPanel",{0,panelHeight},true);
+        ImGui::TextColored(accent,"STASH / SECURE STORAGE");
+        ImGui::TextWrapped("Stored items survive failed raids. Drop any carried item here to store it.");
+        const float stashWidth=ImGui::GetContentRegionAvail().x;
+        card(300,"RIFLE",3,hideout.rifles,true,0,stashWidth);
+        for (int i=0;i<3;++i)
+            card(301+i,GetItemDefinition(static_cast<ItemType>(i)).name,i,hideout.stash[i],true,0,stashWidth);
+        ImGui::Button("DROP HERE TO STORE",{stashWidth,72});
+        target(true,-1);
+        ImGui::EndChild();
         ImGui::EndTable();
     }
+    // Mutate only after every source item has been drawn, never while iterating inventory.
+    if (transfer) {
+        if (pending.type==3) {
+            if (pending.fromStash ? !hideout.rifle && hideout.rifles>0 : hideout.rifle) hideout.ToggleRifle();
+            else hideout.message="Weapon slot is occupied.";
+        } else if (pending.quantity>0) {
+            if (!toStash) hideout.Transfer(static_cast<ItemType>(pending.type),pending.quantity,true);
+            else hideout.StoreStack(pending.stack);
+        }
+    }
     ImGui::Separator();
-    ImGui::TextUnformatted("Deployment");
-    ImGui::RadioButton("Southwest spawn / NE exit", &hideout.spawn, 0);
-    ImGui::RadioButton("Northwest spawn / SE exit", &hideout.spawn, 1);
-    if (!hideout.rifle) ImGui::TextUnformatted("No weapon selected: you will enter unarmed.");
-    const bool deploy = ImGui::Button("ENTER RAID", ImVec2(240, 48));
+    ImGui::RadioButton("Southwest / NE exit",&hideout.spawn,0);
     ImGui::SameLine();
-    if (ImGui::Button("Save / Retry")) hideout.Save();
+    ImGui::RadioButton("Northwest / SE exit",&hideout.spawn,1);
+    if (!hideout.rifle) ImGui::TextColored(accent,"NO WEAPON EQUIPPED - entering unarmed");
+    const bool deploy=ImGui::Button("ENTER RAID",{240,44});
+    ImGui::SameLine();
+    if (ImGui::Button("SAVE / RETRY",{140,44})) hideout.Save();
     ImGui::EndDisabled();
-    ImGui::TextWrapped("%s", hideout.message.c_str());
-    ImGui::TextUnformatted("Q: Quit | Changes are saved automatically.");
+    ImGui::TextWrapped("%s",hideout.message.c_str());
     ImGui::End();
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor(8);
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     return deploy;
