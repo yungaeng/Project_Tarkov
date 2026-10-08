@@ -79,6 +79,15 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>$(ProjectDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>GLFW_INCLUDE_NONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -111,7 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -126,7 +135,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,54 +143,53 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Application.cpp" />
-    <ClCompile Include="AssimpHelper.h" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Entity.cpp" />
-    <ClCompile Include="EntityManager.cpp" />
-    <ClCompile Include="Input.cpp" />
-    <ClCompile Include="Logger.cpp" />
-    <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="ModelLoader.cpp" />
-    <ClCompile Include="SkeletalAnimation.cpp" />
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Core\Application.cpp" />
+    <ClInclude Include="Graphics\AssimpHelper.h" />
+    <ClCompile Include="Graphics\Camera.cpp" />
+    <ClCompile Include="Game\Entity.cpp" />
+    <ClCompile Include="Game\EntityManager.cpp" />
+    <ClCompile Include="Core\Input.cpp" />
+    <ClCompile Include="Core\Logger.cpp" />
+    <ClCompile Include="Graphics\Mesh.cpp" />
+    <ClCompile Include="Graphics\ModelLoader.cpp" />
+    <ClCompile Include="Animation\SkeletalAnimation.cpp" />
+    <ClCompile Include="Core\pch.cpp" />
+    <ClCompile Include="Game\Player.cpp" />
     <ClCompile Include="Project_Tarkov.cpp" />
-    <ClCompile Include="RaidScene.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="Time.cpp" />
-    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="Game\RaidScene.cpp" />
+    <ClCompile Include="Graphics\Renderer.cpp" />
+    <ClCompile Include="Scene\Scene.cpp" />
+    <ClCompile Include="Scene\SceneManager.cpp" />
+    <ClCompile Include="Graphics\Shader.cpp" />
+    <ClCompile Include="Graphics\Texture.cpp" />
+    <ClCompile Include="Core\Time.cpp" />
+    <ClCompile Include="Core\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Application.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Entity.h" />
-    <ClInclude Include="Character.h" />
-    <ClInclude Include="CollisionWorld.h" />
-    <ClInclude Include="EntityManager.h" />
-    <ClInclude Include="GameUnit.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="Logger.h" />
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="ModelLoader.h" />
-    <ClInclude Include="SkeletalAnimation.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="RaidScene.h" />
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="Scene.h" />
-    <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Time.h" />
-    <ClInclude Include="Window.h" />
+    <ClInclude Include="Core\Application.h" />
+    <ClInclude Include="Graphics\Camera.h" />
+    <ClInclude Include="Game\Entity.h" />
+    <ClInclude Include="Game\Character.h" />
+    <ClInclude Include="Physics\CollisionWorld.h" />
+    <ClInclude Include="Game\EntityManager.h" />
+    <ClInclude Include="Game\GameUnit.h" />
+    <ClInclude Include="Core\Input.h" />
+    <ClInclude Include="Core\Logger.h" />
+    <ClInclude Include="Graphics\Mesh.h" />
+    <ClInclude Include="Graphics\ModelLoader.h" />
+    <ClInclude Include="Animation\SkeletalAnimation.h" />
+    <ClInclude Include="Core\pch.h" />
+    <ClInclude Include="Game\Player.h" />
+    <ClInclude Include="Game\RaidScene.h" />
+    <ClInclude Include="Graphics\Renderer.h" />
+    <ClInclude Include="Scene\Scene.h" />
+    <ClInclude Include="Scene\SceneManager.h" />
+    <ClInclude Include="Graphics\Shader.h" />
+    <ClInclude Include="Graphics\Texture.h" />
+    <ClInclude Include="Core\Time.h" />
+    <ClInclude Include="Core\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Assets\Idle.fbx" />
     <None Include="Assets\Walking.fbx" />
     <None Include="Assets\Fast Run.fbx" />
@@ -192,15 +200,24 @@
     <None Include="Assets\Models\Player\Ch22_nonPBR.fbx" />
     <None Include="Assets\Shaders\cube.vs" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Game\Character.cpp" />
+    <ClInclude Include="Game\CharacterSettings.h" />
+    <ClCompile Include="Animation\CharacterVisual.cpp" />
+    <ClInclude Include="Animation\CharacterVisual.h" />
+    <ClCompile Include="Game\PlayerController.cpp" />
+    <ClInclude Include="Game\PlayerController.h" />
+    <ClCompile Include="Graphics\ThirdPersonCameraController.cpp" />
+    <ClInclude Include="Graphics\ThirdPersonCameraController.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\glfw.3.4.0\build\native\glfw.targets" Condition="Exists('..\packages\glfw.3.4.0\build\native\glfw.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\glfw.3.4.0\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\glfw.3.4.0\build\native\glfw.targets'))" />
+  <Target Name="CopyRuntimeAssets" AfterTargets="Build">
+    <ItemGroup>
+      <RuntimeAsset Include="$(ProjectDir)Assets\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RuntimeAsset)"
+          DestinationFiles="@(RuntimeAsset->'$(OutDir)Assets\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
   </Target>
 </Project>

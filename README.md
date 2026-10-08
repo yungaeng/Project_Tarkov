@@ -9,7 +9,7 @@ Windows / Visual Studio 2022 / MSVC v143 기반 C++ 프로젝트입니다.
 
 설치할 도구와 외부 라이브러리, Visual Studio 설정, 빌드·실행 방법,
 오류 해결 방법은 [빌드 환경 가이드](docs/BUILD.md)에 정리되어 있습니다.
-GLAD를 포함한 의존성은 vcpkg manifest와 NuGet으로 복원합니다.
+GLAD를 포함한 의존성은 vcpkg manifest로 복원합니다.
 Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로 빌드합니다.
 
 ## 캐릭터 애니메이션
@@ -52,3 +52,4 @@ Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로
 ### 불필요한 .build, tests, tools 폴더와 build.ps1 정리
 ### Visual Studio 솔루션에서 빌드하도록 안내 수정
 ### 라이브러리 복원에 필요한 vcpkg.json 유지
+

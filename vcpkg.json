@@ -3,9 +3,15 @@
   "version-string": "0.1.0",
   "builtin-baseline": "f26ec398c25c4980f33a50391f00a75f7ad62ef7",
   "dependencies": [
-    { "name": "glad", "features": ["gl-api-33"] },
+    {
+      "name": "glad",
+      "features": [
+        "gl-api-33"
+      ]
+    },
     "glm",
     "assimp",
-    "stb"
+    "stb",
+    "glfw3"
   ]
 }
