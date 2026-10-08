@@ -1,0 +1,6 @@
+# Tighten shoulder/elbow hold while aiming.
+Spine2 0 0 0 0 -2 0 0
+RightArm 0 0 0 0 -3 -4 3
+LeftArm 0 0 0 0 -3 4 -3
+RightForeArm 0 0 0 0 0 -4 0
+LeftForeArm 0 0 0 0 0 4 0

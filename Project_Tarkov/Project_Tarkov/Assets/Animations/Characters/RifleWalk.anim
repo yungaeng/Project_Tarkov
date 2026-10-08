@@ -1,0 +1,10 @@
+# Small shoulder sway; preserve the FBX leg cycle.
+Spine2 0 0 0 0 1 0 -1
+Spine2 .4 0 0 0 2 0 1
+Spine2 .8 0 0 0 1 0 -1
+RightArm 0 0 0 0 1 -1 0
+RightArm .4 0 0 0 -1 1 0
+RightArm .8 0 0 0 1 -1 0
+LeftArm 0 0 0 0 1 -1 0
+LeftArm .4 0 0 0 -1 1 0
+LeftArm .8 0 0 0 1 -1 0

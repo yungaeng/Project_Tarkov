@@ -120,4 +120,15 @@
     <ClInclude Include="Game\Hideout.h"><Filter>Game</Filter></ClInclude>
     <ClCompile Include="Game\Hideout.cpp"><Filter>Game</Filter></ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Animations\Characters\RifleRecoil.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Run.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleIdle.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleCrouchWalk.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleRun.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleAim.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleCrouchIdle.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Weapons\Crouch.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\RifleWalk.anim"><Filter>Assets</Filter></None>
+  </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 # Bind-relative local bone rotations; translations in model centimeters.
 RightArm 0 0 0 0 0 -65 60
 RightForeArm 0 0 0 0 0 -80 0
-RightHand 0 0 0 0 0 10 0
+RightHand 0 0 0 0 0 6 -3
 LeftArm 0 0 0 0 0 50 -65
 LeftForeArm 0 0 0 0 0 85 0
-LeftHand 0 0 0 0 0 -15 0
+LeftHand 0 0 0 0 0 -10 3

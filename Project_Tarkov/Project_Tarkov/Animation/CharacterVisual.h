@@ -3,6 +3,7 @@
 #include "SkeletalAnimation.h"
 #include "WeaponVisual.h"
 #include <memory>
+#include <array>
 
 class Character;
 class Camera;
@@ -39,5 +40,7 @@ private:
     MotionPose deathRoot;
     CharacterVisualState state;
     float deathTime = 0, holdWeight = 0;
+    float motionClock = 0, aimWeight = 0, recoilTime = 1;
+    std::array<float, 5> stanceWeights{};
     bool dying = false;
 };

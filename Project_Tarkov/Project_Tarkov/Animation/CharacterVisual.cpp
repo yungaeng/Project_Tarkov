@@ -4,11 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <cmath>
 
 struct CharacterVisual::Assets
 {
     Mesh mesh;
-    MotionClip deathClip, holdClip, reloadClip;
+    MotionClip deathClip, holdClip, reloadClip, aimClip, recoilClip;
+    std::array<MotionClip, 5> stances;
 };
 
 CharacterVisual::~CharacterVisual() { Reset(); }
@@ -30,6 +32,11 @@ void CharacterVisual::Init()
         shared->deathClip.Load("Assets/Animations/Characters/Death.anim");
         shared->holdClip.Load("Assets/Animations/Characters/RifleHold.anim");
         shared->reloadClip.Load("Assets/Animations/Characters/RifleReload.anim");
+        const char* names[] = {"RifleIdle", "RifleWalk", "RifleRun", "RifleCrouchIdle", "RifleCrouchWalk"};
+        for (int i = 0; i < 5; ++i)
+            shared->stances[i].Load(std::string("Assets/Animations/Characters/") + names[i] + ".anim");
+        shared->aimClip.Load("Assets/Animations/Characters/RifleAim.anim");
+        shared->recoilClip.Load("Assets/Animations/Characters/RifleRecoil.anim");
         animation.CreateMesh(shared->mesh);
         assets = shared;
         cache = shared;
@@ -63,7 +70,9 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
 {
     if (!assets) return;
     state = next;
-    weapon.Update(dt, state.equipped, state.aiming, state.reloadRemaining, state.fired, character.IsMoving(), state.dead);
+    state.equipped = state.equipped && state.hasWeapon;
+    recoilTime = state.fired ? 0 : recoilTime + dt;
+    weapon.Update(dt, state.equipped, state.aiming, state.reloadRemaining, state.fired, character.IsMoving(), state.dead, character.IsSprinting() && character.IsMoving() && !state.aiming, character.IsCrouching());
     if (state.dead)
     {
         if (!dying) { animation.CapturePose(); dying = true; deathTime = 0; }
@@ -91,8 +100,21 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     const bool crouching = character.IsCrouching();
     const char* clip = crouching ? "crouch" : moving ? (character.IsSprinting() ? "run" : "walk") : "idle";
     animation.Update(dt, clip, moving || !crouching, false);
-    holdWeight += ((state.equipped ? 1.0f : 0.0f) - holdWeight) * (std::min)(1.0f, dt * 10);
+    const float blend = 1 - std::exp(-dt * 12);
+    holdWeight += ((state.equipped ? 1.0f : 0.0f) - holdWeight) * blend;
+    const bool sprint = moving && character.IsSprinting() && !crouching && !state.aiming;
+    const int stance = crouching ? (moving ? 4 : 3) : moving ? (sprint ? 2 : 1) : 0;
+    motionClock = std::fmod(motionClock + dt, 924.0f);
+    aimWeight += ((state.aiming && !sprint && state.reloadRemaining <= 0 ? 1.f : 0.f) - aimWeight) * blend;
+    for (int i = 0; i < 5; ++i) stanceWeights[i] += ((i == stance ? 1.f : 0.f) - stanceWeights[i]) * blend;
     if (holdWeight > 0.001f) animation.ApplyMotion(assets->holdClip, 0, holdWeight, true, false, false);
+    for (int i = 0; i < 5; ++i) {
+        const auto& motion = assets->stances[i];
+        animation.ApplyMotion(motion, std::fmod(motionClock, motion.Duration()),
+            stanceWeights[i] * holdWeight * (1 - aimWeight * .7f), false, false, false);
+    }
+    animation.ApplyMotion(assets->aimClip, 0, aimWeight * holdWeight, false, false, false);
+    animation.ApplyMotion(assets->recoilClip, recoilTime, holdWeight, false, false, false);
     if (state.reloadRemaining > 0) animation.ApplyMotion(assets->reloadClip, 2 - state.reloadRemaining, holdWeight, false, false, false);
     animation.RefreshPose();
     UploadPalette();
@@ -131,7 +153,9 @@ void CharacterVisual::Reset()
     animation.Reset();
     weapon.Reset();
     dying = false;
-    deathTime = holdWeight = 0;
+    deathTime = holdWeight = motionClock = aimWeight = 0;
+    recoilTime = 1;
+    stanceWeights = {};
     deathRoot = {};
     state = {};
 }

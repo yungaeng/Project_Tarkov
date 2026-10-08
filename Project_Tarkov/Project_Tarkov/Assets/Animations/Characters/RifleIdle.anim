@@ -1,0 +1,10 @@
+# Additive local rotations, model centimeters. Seamless 3 second breathing.
+Spine2 0 0 0 0 0 0 0
+Spine2 1.5 0 0 0 -1 0 .4
+Spine2 3 0 0 0 0 0 0
+RightArm 0 0 0 0 0 0 0
+RightArm 1.5 0 0 0 .6 0 -.4
+RightArm 3 0 0 0 0 0 0
+LeftArm 0 0 0 0 0 0 0
+LeftArm 1.5 0 0 0 .6 0 .4
+LeftArm 3 0 0 0 0 0 0

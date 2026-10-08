@@ -1,0 +1,10 @@
+# One shot: impulse and recovery, synchronized with the weapon fire event.
+Spine2 0 0 0 0 -2 0 0
+Spine2 .05 0 0 0 -3 0 0
+Spine2 .18 0 0 0 0 0 0
+RightArm 0 0 0 0 -2 0 0
+RightArm .05 0 0 0 -4 0 0
+RightArm .18 0 0 0 0 0 0
+LeftArm 0 0 0 0 -2 0 0
+LeftArm .05 0 0 0 -4 0 0
+LeftArm .18 0 0 0 0 0 0

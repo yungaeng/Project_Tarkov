@@ -1,0 +1,10 @@
+# Controlled crouched movement.
+Spine2 0 0 0 0 -3 0 -.7
+Spine2 .55 0 0 0 -2 0 .7
+Spine2 1.1 0 0 0 -3 0 -.7
+RightArm 0 0 0 0 -2 -3 2
+RightArm .55 0 0 0 -1 -2 2
+RightArm 1.1 0 0 0 -2 -3 2
+LeftArm 0 0 0 0 -2 3 -2
+LeftArm .55 0 0 0 -1 2 -2
+LeftArm 1.1 0 0 0 -2 3 -2

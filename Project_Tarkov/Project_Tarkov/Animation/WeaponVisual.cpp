@@ -8,7 +8,7 @@
 struct WeaponVisual::Assets
 {
     Mesh rifle, magazine, bolt, muzzle;
-    MotionClip idle, aim, fire, reload, equip, holster;
+    MotionClip idle, aim, fire, reload, equip, holster, run, crouch;
     Assets()
     {
         rifle = std::move(ModelLoader::LoadFBX("Assets/Models/Weapons/Rifle.obj").mesh);
@@ -18,6 +18,8 @@ struct WeaponVisual::Assets
         if (!rifle.IsValid() || !magazine.IsValid() || !bolt.IsValid() || !muzzle.IsValid())
             throw std::runtime_error("Rifle model asset load failed");
         idle.Load("Assets/Animations/Weapons/Idle.anim");
+        run.Load("Assets/Animations/Weapons/Run.anim");
+        crouch.Load("Assets/Animations/Weapons/Crouch.anim");
         aim.Load("Assets/Animations/Weapons/Aim.anim");
         fire.Load("Assets/Animations/Weapons/Fire.anim");
         reload.Load("Assets/Animations/Weapons/Reload.anim");
@@ -39,21 +41,25 @@ void WeaponVisual::Reset()
     assets.reset();
     clock = equipTime = aimWeight = moveWeight = 0;
     recoilTime = 10;
+    sprintWeight = crouchWeight = 0;
     reloadTime = -1;
     visible = wasEquipped = dead = false;
 }
 
-void WeaponVisual::Update(float dt, bool equipped, bool aiming, float reloadRemaining, bool fired, bool moving, bool isDead)
+void WeaponVisual::Update(float dt, bool equipped, bool aiming, float reloadRemaining, bool fired, bool moving, bool isDead, bool sprinting, bool crouching)
 {
     if (!assets) return;
     dead = isDead;
+    const float blend = 1 - std::exp(-dt * 12);
+    sprintWeight += ((sprinting && equipped && !crouching && reloadRemaining <= 0 ? 1.f : 0.f) - sprintWeight) * blend;
+    crouchWeight += ((crouching && equipped ? 1.f : 0.f) - crouchWeight) * blend;
     if (equipped != wasEquipped) { equipTime = 0; wasEquipped = equipped; }
     equipTime += dt;
     visible = equipped || equipTime < assets->holster.Duration();
     clock += dt;
     recoilTime = fired ? 0 : recoilTime + dt;
     reloadTime = reloadRemaining > 0 ? 2.0f - reloadRemaining : -1;
-    aimWeight += (std::clamp(aiming && !dead ? 1.0f : 0.0f, 0.0f, 1.0f) - aimWeight) * (std::min)(1.0f, dt * 12);
+    aimWeight += (std::clamp(aiming && !sprinting && !dead ? 1.0f : 0.0f, 0.0f, 1.0f) - aimWeight) * (std::min)(1.0f, dt * 12);
     moveWeight += ((moving ? 1.0f : 0.0f) - moveWeight) * (std::min)(1.0f, dt * 10);
     if (dead) { recoilTime = 10; reloadTime = -1; }
 }
@@ -65,7 +71,14 @@ void WeaponVisual::Render(const glm::mat4& grip, Shader& shader, Camera& camera,
     if (!dead)
     {
         auto idle = assets->idle.Sample("Weapon", std::fmod(clock, assets->idle.Duration()));
-        idle.position *= 1 + moveWeight;
+        idle.position *= (1 + moveWeight) * (1 - aimWeight * .8f);
+        idle.rotation *= 1 - aimWeight * .8f;
+        auto running = assets->run.Sample("Weapon", std::fmod(clock, assets->run.Duration()));
+        running.position *= sprintWeight; running.rotation *= sprintWeight;
+        model *= running.Matrix();
+        auto crouched = assets->crouch.Sample("Weapon", std::fmod(clock, assets->crouch.Duration()));
+        crouched.position *= crouchWeight; crouched.rotation *= crouchWeight;
+        model *= crouched.Matrix();
         model *= idle.Matrix();
         auto aim = assets->aim.Sample("Weapon", aimWeight * assets->aim.Duration());
         model *= aim.Matrix();

@@ -268,4 +268,15 @@
     <ClInclude Include="Game\Hideout.h"></ClInclude>
     <ClCompile Include="Game\Hideout.cpp"></ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Animations\Characters\RifleRecoil.anim" />
+    <None Include="Assets\Animations\Weapons\Run.anim" />
+    <None Include="Assets\Animations\Characters\RifleIdle.anim" />
+    <None Include="Assets\Animations\Characters\RifleCrouchWalk.anim" />
+    <None Include="Assets\Animations\Characters\RifleRun.anim" />
+    <None Include="Assets\Animations\Characters\RifleAim.anim" />
+    <None Include="Assets\Animations\Characters\RifleCrouchIdle.anim" />
+    <None Include="Assets\Animations\Weapons\Crouch.anim" />
+    <None Include="Assets\Animations\Characters\RifleWalk.anim" />
+  </ItemGroup>
 </Project>
