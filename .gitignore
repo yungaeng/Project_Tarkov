@@ -4,3 +4,7 @@
 **/x64/
 **/x86/
 **/.vs/
+
+# Python bytecode cache
+__pycache__/
+*.py[cod]

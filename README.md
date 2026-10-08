@@ -10,7 +10,12 @@ Windows / Visual Studio 2022 / MSVC v143 기반 C++ 프로젝트입니다.
 설치할 도구와 외부 라이브러리, Visual Studio 설정, 빌드·실행 방법,
 오류 해결 방법은 [빌드 환경 가이드](docs/BUILD.md)에 정리되어 있습니다.
 GLAD를 포함한 의존성은 vcpkg manifest와 NuGet으로 복원합니다.
-저장소 루트에서 `./build.ps1`로 Debug x64 빌드를 실행합니다.
+Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로 빌드합니다.
+
+## 캐릭터 애니메이션
+
+대기(Idle), 걷기, 달리기, 웅크리기 이동·대기를 지원합니다.
+상태 전환과 Idle.fbx 구성은 [애니메이션 가이드](docs/ANIMATION.md)를 참고하세요.
 
 ## 26/5/3
 ### Core와 Graphics 제작

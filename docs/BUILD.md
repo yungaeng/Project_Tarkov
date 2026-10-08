@@ -10,16 +10,9 @@
 
 ## 빌드
 
-저장소 루트의 PowerShell에서 실행합니다.
-
-```powershell
-.\build.ps1
-.\build.ps1 -Configuration Release
-# 다른 vcpkg 설치 경로 사용
-.\build.ps1 -VcpkgRoot C:\dev\vcpkg
-```
-
-스크립트는 Visual Studio의 MSBuild를 찾아 NuGet을 복원하고 x64로 빌드합니다.
+Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 엽니다.
+NuGet 패키지를 복원한 뒤 Debug 또는 Release / x64를 선택해 솔루션을 빌드합니다.
+다른 vcpkg 설치 경로를 사용하려면 Visual Studio 실행 전에 `VCPKG_ROOT` 환경변수를 설정합니다.
 프로젝트의 vcpkg manifest 통합이 헤더, 라이브러리 연결 및 실행에 필요한 DLL 복사를 처리합니다.
 GLAD는 라이브러리로 연결하므로 별도의 `glad.c`를 추가하지 않습니다.
 `Texture.cpp`가 stb_image 구현을 제공하므로 다른 파일에서 구현 매크로를 중복 정의하지 않습니다.
@@ -53,7 +46,6 @@ OpenGL 3.3을 지원하는 그래픽 드라이버가 필요합니다.
 
 - `vcpkg.exe` 또는 MSBuild가 없으면 위 도구 설치와 경로 설정을 확인하세요.
 - 패키지 다운로드 실패 시 인터넷 및 프록시 설정을 확인하세요.
-- 오래된 vcpkg에서 `msys2-runtime-3.5.4-2` 다운로드가 404로 실패할 수 있습니다. 이 PC에서는 vcpkg가 다운로드한 pkgconf 2.3.0 배포본을 `.build/pkgconf`에 추출해 사용했습니다. `build.ps1`은 해당 도구가 있으면 자동 사용합니다. 새 PC에서는 vcpkg 도구/스크립트를 갱신하거나 독립 실행형 `pkg-config`의 경로를 `PKG_CONFIG`로 지정하고 `VCPKG_KEEP_ENV_VARS`에 `PKG_CONFIG`를 포함하세요.
+- 오래된 vcpkg에서 MSYS 다운로드가 실패하면 vcpkg 도구/스크립트를 갱신하거나 독립 실행형 `pkg-config`의 경로를 `PKG_CONFIG`로 지정하고 `VCPKG_KEEP_ENV_VARS`에 `PKG_CONFIG`를 포함하세요.
 - `glad/glad.h` 또는 GLAD 심볼 오류 시 vcpkg 설치 단계가 성공했는지 확인하세요. GLAD 2 헤더로 교체하면 기존 API와 호환되지 않습니다.
-- `PATH`/`Path` 중복 오류는 `build.ps1`이 자식 프로세스 환경을 정규화하여 방지합니다.
 - 에셋 로딩 오류는 실행 작업 폴더를 확인하세요.
