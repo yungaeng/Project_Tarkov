@@ -220,4 +220,13 @@
           DestinationFiles="@(RuntimeAsset->'$(OutDir)Assets\%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
   </Target>
+  <ItemGroup>
+    <ClInclude Include="Game\Inventory.h" />
+    <ClCompile Include="Game\Inventory.cpp" />
+    <ClInclude Include="Game\LootSystem.h" />
+    <ClCompile Include="Game\LootSystem.cpp" />
+    <ClInclude Include="Game\RaidHud.h" />
+    <ClCompile Include="Game\RaidHud.cpp" />
+    <ClInclude Include="Physics\Raycast.h" />
+  </ItemGroup>
 </Project>

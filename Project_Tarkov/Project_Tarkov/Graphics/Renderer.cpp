@@ -12,10 +12,11 @@ void Renderer::EndFrame(GLFWwindow* window)
     glfwSwapBuffers(window);
 }
 
-void Renderer::Draw(Shader& shader, Mesh& mesh, Camera& camera, glm::mat4 model, float width, float height)
+void Renderer::Draw(Shader& shader, Mesh& mesh, Camera& camera, glm::mat4 model, float width, float height, const glm::vec3& color)
 {
     shader.Bind();
-    
+    shader.SetVec3("objectColor", color);
+
     shader.SetVec3(
         "lightPos",
         glm::vec3(5, 10, 5));
@@ -43,6 +44,7 @@ void Renderer::DrawCube(
     float height)
 {
     shader.Bind();
+    shader.SetVec3("objectColor", glm::vec3(0.3f, 0.8f, 0.4f));
 
     shader.SetMat4("model", model);
     shader.SetMat4("view", camera.GetViewMatrix());

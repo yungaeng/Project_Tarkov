@@ -1,7 +1,13 @@
 #pragma once
 #include "Character.h"
+#include "Inventory.h"
 
-// Player-specific state can be added here without duplicating movement or transform.
+// Inventory data belongs to the player, independently of world item entities.
 class Player : public Character
 {
+public:
+    Inventory& GetInventory() { return inventory; }
+    const Inventory& GetInventory() const { return inventory; }
+private:
+    Inventory inventory;
 };

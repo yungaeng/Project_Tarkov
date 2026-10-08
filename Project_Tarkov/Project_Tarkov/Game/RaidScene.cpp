@@ -20,6 +20,8 @@ void RaidScene::Init()
         throw std::runtime_error("Shader load failed");
     cubeMesh.CreateCube();
     playerVisual.Init();
+    loot.Init();
+    hud.Init(glfwGetCurrentContext());
 }
 
 void RaidScene::Update(float dt)
@@ -31,6 +33,7 @@ void RaidScene::Update(float dt)
     player->Update(dt);
     playerVisual.Update(dt, *player);
     cameraController.Follow(camera, *player);
+    loot.Update(dt, *player, camera, collisionWorld, playerController.IsGameplayInputEnabled(), Input::GetKeyDown(GLFW_KEY_F));
 }
 
 void RaidScene::Render()
@@ -49,12 +52,16 @@ void RaidScene::Render()
         Renderer::Draw(shader, cubeMesh, camera, transform,
             static_cast<float>(width), static_cast<float>(height));
     }
+    loot.Render(shader, cubeMesh, camera, static_cast<float>(width), static_cast<float>(height));
     playerVisual.Render(*player, shader, camera,
         static_cast<float>(width), static_cast<float>(height));
+    hud.Render(player->GetInventory(), loot, playerController.IsInventoryOpen());
 }
 
 void RaidScene::Shutdown()
 {
+    hud.Shutdown();
+    loot.Reset();
     player.reset();
     playerVisual.Reset();
     collisionWorld.Clear();

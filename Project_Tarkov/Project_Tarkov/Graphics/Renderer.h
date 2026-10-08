@@ -23,7 +23,7 @@ public:
         Camera& camera,
         glm::mat4 model,
         float width,
-        float height);
+        float height, const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f));
 
     static void DrawCube(
         Shader& shader,

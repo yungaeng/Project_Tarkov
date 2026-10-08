@@ -12,6 +12,13 @@
     "glm",
     "assimp",
     "stb",
-    "glfw3"
+    "glfw3",
+    {
+      "name": "imgui",
+      "features": [
+        "glfw-binding",
+        "opengl3-binding"
+      ]
+    }
   ]
 }

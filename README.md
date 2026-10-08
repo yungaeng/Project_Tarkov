@@ -57,3 +57,7 @@ Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로
 ## 소스 구조
 
 폴더별 역할과 업데이트 순서는 [구조 가이드](docs/STRUCTURE.md)를 참고하세요.
+
+## 아이템과 인벤토리
+
+F키로 가까운 아이템을 줍고 I키로 인벤토리를 확인합니다. [사용법과 구조](docs/INVENTORY.md)를 참고하세요.

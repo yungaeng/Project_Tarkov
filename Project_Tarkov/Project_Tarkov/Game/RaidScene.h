@@ -3,6 +3,8 @@
 #include "../Physics/CollisionWorld.h"
 #include "Player.h"
 #include "PlayerController.h"
+#include "LootSystem.h"
+#include "RaidHud.h"
 #include "../Graphics/ThirdPersonCameraController.h"
 #include "../Animation/CharacterVisual.h"
 #include "../Graphics/Shader.h"
@@ -28,4 +30,6 @@ private:
     Shader shader;
     Mesh cubeMesh;
     Camera camera;
+    LootSystem loot;
+    RaidHud hud;
 };

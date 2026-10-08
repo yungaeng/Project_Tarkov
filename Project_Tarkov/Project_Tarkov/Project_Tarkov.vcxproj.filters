@@ -72,4 +72,13 @@
     <ClCompile Include="Graphics\ThirdPersonCameraController.cpp"><Filter>Graphics</Filter></ClCompile>
     <ClInclude Include="Graphics\ThirdPersonCameraController.h"><Filter>Graphics</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\Inventory.h"><Filter>Game</Filter></ClInclude>
+    <ClCompile Include="Game\Inventory.cpp"><Filter>Game</Filter></ClCompile>
+    <ClInclude Include="Game\LootSystem.h"><Filter>Game</Filter></ClInclude>
+    <ClCompile Include="Game\LootSystem.cpp"><Filter>Game</Filter></ClCompile>
+    <ClInclude Include="Game\RaidHud.h"><Filter>Game</Filter></ClInclude>
+    <ClCompile Include="Game\RaidHud.cpp"><Filter>Game</Filter></ClCompile>
+    <ClInclude Include="Physics\Raycast.h"><Filter>Physics</Filter></ClInclude>
+  </ItemGroup>
 </Project>
