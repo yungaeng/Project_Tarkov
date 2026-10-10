@@ -325,36 +325,38 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ItemType equipmentTarget = ItemType::Shirt;
     auto target = [&](bool stashTarget, int accepts) {
         if (!hideout.ready || !Input::IsFocused()) return;
-        // Reject incompatible targets before accepting: acceptance consumes a delivered payload.
+        if (!ImGui::BeginDragDropTarget()) return;
         const auto* candidate = ImGui::GetDragDropPayload();
-        if (!candidate || !candidate->IsDataType(GearPayload) || candidate->DataSize != sizeof(GearDrag)) return;
-        const auto data = *static_cast<const GearDrag*>(candidate->Data);
-        if (data.fromStash == stashTarget || data.type < 0 || data.type > RifleGear || data.quantity <= 0 ||
-            (accepts >= 0 && data.type != accepts) || (!stashTarget && data.type == RifleGear && accepts != RifleGear)) return;
-        if (ImGui::BeginDragDropTarget()) {
-            if (const auto* payload = ImGui::AcceptDragDropPayload(GearPayload)) {
-                if (payload->IsDelivery()) {
-                    pending = data; transfer = true; toStash = stashTarget;
+        if (candidate && candidate->IsDataType(GearPayload) && candidate->DataSize == sizeof(GearDrag)) {
+            const auto data = *static_cast<const GearDrag*>(candidate->Data);
+            if (data.fromStash != stashTarget && data.type >= 0 && data.type <= RifleGear &&
+                data.quantity > 0 && (accepts < 0 || data.type == accepts) &&
+                (stashTarget || data.type != RifleGear || accepts == RifleGear)) {
+                if (const auto* payload = ImGui::AcceptDragDropPayload(GearPayload)) {
+                    if (payload->IsDelivery()) {
+                        pending = data; transfer = true; toStash = stashTarget;
+                    }
                 }
             }
-            ImGui::EndDragDropTarget();
         }
+        ImGui::EndDragDropTarget();
     };
     auto equipmentDropTarget = [&](ItemType type) {
         if (!hideout.ready || !Input::IsFocused()) return;
+        if (!ImGui::BeginDragDropTarget()) return;
         const auto* candidate=ImGui::GetDragDropPayload();
-        if (!candidate||!candidate->IsDataType(GearPayload)||candidate->DataSize!=sizeof(GearDrag)) return;
-        const auto data=*static_cast<const GearDrag*>(candidate->Data);
-        if (data.type!=static_cast<int>(type)||data.quantity<=0||
-            (hideout.clothingMask&ClothingBit(type))) return;
-        if (ImGui::BeginDragDropTarget()) {
-            if (const auto* payload=ImGui::AcceptDragDropPayload(GearPayload);payload&&payload->IsDelivery()) {
-                pending=data;
-                equipmentTarget=type;
-                equipPending=true;
+        if (candidate&&candidate->IsDataType(GearPayload)&&candidate->DataSize==sizeof(GearDrag)) {
+            const auto data=*static_cast<const GearDrag*>(candidate->Data);
+            if (data.type==static_cast<int>(type)&&data.quantity>0&&
+                !(hideout.clothingMask&ClothingBit(type))) {
+                if (const auto* payload=ImGui::AcceptDragDropPayload(GearPayload);payload&&payload->IsDelivery()) {
+                    pending=data;
+                    equipmentTarget=type;
+                    equipPending=true;
+                }
             }
-            ImGui::EndDragDropTarget();
         }
+        ImGui::EndDragDropTarget();
     };
     auto card = [&](int id, const char* name, int type, int count, bool sourceStash, StackId stack, float width, float height) {
         ImGui::PushID(id);
@@ -372,7 +374,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             ImGui::Text("%s x%d",name,type==RifleGear?1:data.quantity);
             ImGui::EndDragDropSource();
         }
-        target(sourceStash,sourceStash ? -1 : type);
+        target(sourceStash,sourceStash || type != RifleGear ? -1 : RifleGear);
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
             ImGui::TextUnformatted(name);
@@ -449,8 +451,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             slot(600+i,leftTypes[i],leftNames[i],{origin.x,modelPosition.y+8+i*step});
         for (int i=0;i<3;++i)
             slot(610+i,rightTypes[i],rightNames[i],{origin.x+panelWidth-slotWidth,modelPosition.y+44+i*step});
-        ImGui::SetCursorScreenPos({origin.x,modelPosition.y+modelHeight+12.f});
-        ImGui::TextWrapped("장착 상태는 캐릭터 외형과 휴대 공간에 반영되며 자동 저장됩니다.");
         ImGui::EndChild();
     };
 
