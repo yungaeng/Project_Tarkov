@@ -16,7 +16,7 @@ bool Hideout::Save()
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 4\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
+    out << "HIDEOUT 5\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
     for (int count : stash) out << count << ' ';
     out << '\n' << clothingMask << '\n' << loadout.Items().size() << '\n';
     for (const auto& item : loadout.Items()) out << static_cast<int>(item.type) << ' ' << item.quantity << '\n';
@@ -38,15 +38,20 @@ void Hideout::Load()
     std::error_code error;
     const bool exists = std::filesystem::exists("Saves/hideout.txt", error);
     if (error) { message = "은신처 저장 폴더를 읽을 수 없습니다."; return; }
-    if (!exists) { ready = true; Save(); return; }
+    if (!exists) {
+        loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
+        ready = true;
+        Save();
+        return;
+    }
     std::ifstream in("Saves/hideout.txt");
     Hideout next;
     std::string tag, end;
     int version = 0, equipped = 0, count = 0;
     bool valid = static_cast<bool>(in >> tag >> version >> next.rifles >> equipped >> next.magazine);
-    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 4) && next.rifles >= 0 && next.rifles <= MaxStored &&
+    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 5) && next.rifles >= 0 && next.rifles <= MaxStored &&
         (equipped == 0 || equipped == 1) && next.magazine >= 0 && next.magazine <= 30 && (equipped || next.magazine == 0);
-    const int stockCount = version == 1 ? 3 : version < 4 ? 7 : ItemTypeCount;
+    const int stockCount = version == 1 ? 3 : version < 4 ? 7 : version < 5 ? 9 : ItemTypeCount;
     for (int i = 0; i < stockCount; ++i) {
         auto& stock = next.stash[i];
         valid = static_cast<bool>(in >> stock) && valid;
@@ -55,7 +60,7 @@ void Hideout::Load()
     if (version >= 2) {
         int clothing = -1;
         valid = static_cast<bool>(in >> clothing) && valid;
-        const int allowedMask = version < 4 ? 15 : static_cast<int>(AllClothingMask);
+        const int allowedMask = version < 4 ? 15 : version < 5 ? 63 : static_cast<int>(AllClothingMask);
         valid = valid && clothing >= 0 && clothing <= allowedMask;
         if (valid) next.clothingMask = static_cast<std::uint32_t>(clothing);
     }
@@ -67,8 +72,13 @@ void Hideout::Load()
     // Existing profiles receive the new carrier and helmet in storage. Preserve
     // their equipped state, including a deliberately empty loadout after a raid.
     if (version < 4) next.clothingMask &= 15u;
+    if (version < 5) {
+        next.clothingMask &= (1u << 6) - 1;
+        next.stash[static_cast<int>(ItemType::Backpack)] = 1;
+    }
+    if (valid) next.loadout.SetSlotCapacity(InventorySlotsForGear(next.clothingMask));
     valid = static_cast<bool>(in >> count) && valid;
-    valid = valid && count >= 0 && count <= static_cast<int>(Inventory::Capacity);
+    valid = valid && count >= 0 && count <= next.loadout.SlotCapacity();
     for (int i = 0; valid && i < count; ++i) {
         int type = -1, quantity = 0;
         valid = static_cast<bool>(in >> type >> quantity) && type >= 0 && type < stockCount && quantity > 0;
@@ -142,7 +152,7 @@ void Hideout::LoadMagazine()
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
 }
 
-void Hideout::ToggleClothing(ItemType type)
+void Hideout::ToggleClothing(ItemType type, bool fromStash)
 {
     if (!ready || !IsClothing(type)) return;
     Hideout before = *this;
@@ -150,14 +160,23 @@ void Hideout::ToggleClothing(ItemType type)
     auto& stock = stash[static_cast<std::size_t>(type)];
     if (clothingMask & bit) {
         if (stock >= MaxStored) { message = "창고가 가득 찼습니다."; return; }
+        const auto nextMask = clothingMask & ~bit;
+        if (!loadout.SetSlotCapacity(InventorySlotsForGear(nextMask))) {
+            message = "장착 해제 전에 휴대품을 줄여 해당 슬롯을 비우세요.";
+            return;
+        }
         ++stock;
-        clothingMask &= ~bit;
+        clothingMask = nextMask;
     } else {
         // Prefer a carried item; otherwise equip directly from the secure stash.
-        if (loadout.Count(type) > 0) loadout.Take(type, 1);
+        if (fromStash) {
+            if (stock <= 0) { message = "창고에 해당 장비가 없습니다."; return; }
+            --stock;
+        } else if (loadout.Count(type) > 0) loadout.Take(type, 1);
         else if (stock > 0) --stock;
         else { message = "착용할 의상이 없습니다."; return; }
         clothingMask |= bit;
+        loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
     }
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
 }
@@ -176,5 +195,6 @@ void Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint
 {
     loadout = items; rifle = weapon; magazine = weapon ? rounds : 0;
     clothingMask = clothing & AllClothingMask;
+    loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
     Save(); // On failure keep recovered items in memory, and allow retry in the hideout.
 }

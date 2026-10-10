@@ -9,7 +9,7 @@
 
 struct CharacterVisual::Assets
 {
-    Mesh mesh;
+    Mesh mesh, backpack;
     Texture texture;
     MotionClip deathClip, holdClip, reloadClip, aimClip, recoilClip;
     std::array<MotionClip, 5> stances;
@@ -34,6 +34,7 @@ void CharacterVisual::Init()
         auto shared = std::make_shared<Assets>();
         if (!shared->texture.Load("Assets/Models/Player/KimGawon/character.png"))
             throw std::runtime_error("Character texture load failed");
+        shared->backpack.CreateCube();
         shared->deathClip.Load("Assets/Animations/Characters/Death.anim");
         shared->holdClip.Load("Assets/Animations/Characters/RifleHold.anim");
         shared->reloadClip.Load("Assets/Animations/Characters/RifleReload.anim");
@@ -163,6 +164,16 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     glBindTexture(GL_TEXTURE_BUFFER, paletteTexture);
     glActiveTexture(GL_TEXTURE0);
     Renderer::Draw(shader, assets->mesh, camera, model, width, height, glm::vec3(dying ? 0.65f : 1.f), true, assets->texture.id, static_cast<int>(character.clothingMask));
+    if (character.clothingMask & ClothingBit(ItemType::Backpack)) {
+        auto pack = glm::translate(actor, glm::vec3(0, 1.05f, -0.24f));
+        pack = glm::scale(pack, glm::vec3(.48f,.62f,.25f));
+        Renderer::Draw(shader, assets->backpack, camera, pack, width, height, glm::vec3(.20f,.24f,.18f));
+        for (float side : {-.17f,.17f}) {
+            auto strap = glm::translate(actor, glm::vec3(side,1.10f,-.045f));
+            strap = glm::scale(strap, glm::vec3(.055f,.49f,.08f));
+            Renderer::Draw(shader, assets->backpack, camera, strap, width, height, glm::vec3(.35f,.32f,.22f));
+        }
+    }
     if (state.hasWeapon) weapon.Render(actor * weaponModel, shader, camera, width, height);
 }
 
