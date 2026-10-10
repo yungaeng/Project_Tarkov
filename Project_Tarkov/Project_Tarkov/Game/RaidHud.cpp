@@ -419,9 +419,9 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         draw->AddCallback(ImDrawCallback_ResetRenderState,nullptr);
 
         const ItemType leftTypes[]{ItemType::Helmet,ItemType::Shirt,ItemType::UnderShirt,ItemType::Backpack};
-        const char* leftNames[]{"머리","상의","내의","배낭"};
+        const char* leftNames[]{"머리","상의","브라","배낭"};
         const ItemType rightTypes[]{ItemType::Vest,ItemType::Trousers,ItemType::Underpants};
-        const char* rightNames[]{"전술조끼","하의","하의 내의"};
+        const char* rightNames[]{"전술조끼","하의","팬티"};
         auto slot=[&](int id,ItemType type,const char* name,ImVec2 position) {
             ImGui::PushID(id);
             ImGui::SetCursorScreenPos(position);

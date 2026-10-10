@@ -13,8 +13,8 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     static const ItemDefinition vest{ "멀티캠 숏 전술조끼", 1, 1.2f };
     static const ItemDefinition helmet{ "멀티캠 방탄헬멧", 1, 1.3f };
     static const ItemDefinition backpack{ "전술 배낭", 1, 1.5f };
-    static const ItemDefinition underShirt{ "상의 내의", 1, 0.15f };
-    static const ItemDefinition underpants{ "하의 내의", 1, 0.1f };
+    static const ItemDefinition underShirt{ "검은 스포츠 브라", 1, 0.15f };
+    static const ItemDefinition underpants{ "검은 티팬티", 1, 0.1f };
     switch (type)
     {
     case ItemType::Bandage: return bandage;
