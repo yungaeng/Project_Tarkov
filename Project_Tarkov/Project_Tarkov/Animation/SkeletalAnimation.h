@@ -22,6 +22,7 @@ public:
     SkeletalAnimation(const SkeletalAnimation&) = delete;
     SkeletalAnimation& operator=(const SkeletalAnimation&) = delete;
     bool LoadModel(const std::string& path);
+    bool LoadAppearance(const std::string& path);
     bool LoadClip(const std::string& name, const std::string& path);
     void Update(float dt, const std::string& clip, bool playing, bool skin = true);
     const std::vector<AnimatedVertex>& Vertices() const;
@@ -37,6 +38,8 @@ public:
     glm::vec3 BoundsMax() const;
     void CreateMesh(Mesh& mesh) const;
     glm::vec3 NodePosition(const std::string& name) const;
+    void SolveArm(const std::string& side, const glm::vec3& target, const glm::vec3& pole,
+        const glm::vec3& palmDirection, float weight);
 private:
     struct Data;
     std::unique_ptr<Data> data;

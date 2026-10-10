@@ -70,12 +70,19 @@ bool Renderer::IsVisible(const glm::vec3& minimum, const glm::vec3& maximum,
 }
 
 void Renderer::Draw(Shader& shader, Mesh& mesh, Camera&, glm::mat4 model,
-    float, float, const glm::vec3& color, bool skinned)
+    float, float, const glm::vec3& color, bool skinned, GLuint texture, int clothingMask)
 {
     // PrepareFrame binds the scene shader and uploads frame constants once.
     shader.SetVec3("objectColor", color);
     shader.SetMat4("model", model);
     shader.SetInt("skinned", skinned ? 1 : 0);
+    shader.SetInt("textured", texture ? 1 : 0);
+    shader.SetInt("clothingMask", clothingMask);
+    if (texture) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        shader.SetInt("diffuseTexture", 0);
+    }
     mesh.Draw();
 }
 

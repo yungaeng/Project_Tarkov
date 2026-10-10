@@ -12,6 +12,9 @@ public:
     void Init();
     void Update(float dt, bool equipped, bool aiming, float reloadRemaining, bool fired, bool moving, bool dead, bool sprinting = false, bool crouching = false);
     void Render(const glm::mat4& grip, Shader& shader, Camera& camera, float width, float height);
+    glm::mat4 ModelMatrix(const glm::mat4& shoulder) const;
+    glm::vec3 SupportGrip() const;
+    static glm::vec3 FiringGrip() { return {-0.045f, -0.025f, -0.048f}; }
     void Reset();
 private:
     struct Assets;

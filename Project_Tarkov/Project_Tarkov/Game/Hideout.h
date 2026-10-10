@@ -7,7 +7,8 @@
 class Hideout
 {
 public:
-    std::array<int, 3> stash{{10, 8, 180}};
+    std::array<int, ItemTypeCount> stash{{10, 8, 180, 1, 1, 1, 1}};
+    std::uint32_t clothingMask = AllClothingMask;
     int rifles = 3;
     Inventory loadout;
     bool rifle = false;
@@ -20,7 +21,8 @@ public:
     void Transfer(ItemType type, int quantity, bool take);
     void StoreStack(StackId id);
     void ToggleRifle();
+    void ToggleClothing(ItemType type);
     void LoadMagazine();
     bool Depart();
-    void Recover(const Inventory& items, bool weapon, int rounds);
+    void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
 };

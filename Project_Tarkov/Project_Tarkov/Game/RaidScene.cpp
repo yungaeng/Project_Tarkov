@@ -22,6 +22,7 @@ void RaidScene::Init()
     player->position = IndustrialZone::Spawns[0];
     playerController.Reset();
     camera = Camera{};
+    freeLook = false;
     cameraController.Follow(camera, *player);
     if (!shader.LoadFromFile("Assets/Shaders/cube.vs", "Assets/Shaders/cube.fs"))
         throw std::runtime_error("Shader load failed");
@@ -58,8 +59,14 @@ void RaidScene::Update(float dt)
     focusGeneration = Input::FocusGeneration();
     playerController.UpdateInterface();
     actions.Update(*player, loot, camera, collisionWorld, playerController.IsInventoryOpen() && Input::IsFocused());
-    if (playerController.IsGameplayInputEnabled() && player->vitals.Alive())
-        cameraController.Rotate(camera, Input::GetMouseDelta());
+    const bool canLook = playerController.IsGameplayInputEnabled() && player->vitals.Alive();
+    const bool wantsFreeLook = canLook &&
+        (Input::GetKey(GLFW_KEY_LEFT_ALT) || Input::GetKey(GLFW_KEY_RIGHT_ALT));
+    if (wantsFreeLook && !freeLook)
+        previewCamera = camera;
+    freeLook = wantsFreeLook;
+    if (canLook)
+        cameraController.Rotate(freeLook ? previewCamera : camera, Input::GetMouseDelta());
     playerController.UpdateMovement(*player, camera);
     player->Update(dt);
     player->vitals.Update(dt, player->IsSprinting() && player->IsMoving());
@@ -72,6 +79,8 @@ void RaidScene::Update(float dt)
         combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasRifle()});
     cameraController.Follow(camera, *player);
     loot.Update(dt, *player, camera, collisionWorld, playerController.IsGameplayInputEnabled() && player->vitals.Alive(), Input::GetKeyDown(GLFW_KEY_F));
+    if (freeLook)
+        cameraController.Follow(previewCamera, *player);
     if (!player->vitals.Alive()) { FinishRaid(RaidPhase::Dead); return; }
     const auto offset = player->position - IndustrialZone::Exits[raid.assignedExit].position;
     raid.exitDistance = glm::length(glm::vec2(offset.x, offset.z));
@@ -93,23 +102,25 @@ void RaidScene::Render()
         deployRequested = hud.RenderHideout(hideout);
         return;
     }
-    Renderer::PrepareFrame(shader, camera, static_cast<float>(width), static_cast<float>(height));
+    Camera& viewCamera = freeLook ? previewCamera : camera;
+    Renderer::PrepareFrame(shader, viewCamera, static_cast<float>(width), static_cast<float>(height));
     for (auto& batch : mapBatches)
     {
         const glm::mat4 identity(1);
         if (!Renderer::IsVisible(batch.low, batch.high, identity)) continue;
-        Renderer::Draw(shader, batch.mesh, camera, identity,
+        Renderer::Draw(shader, batch.mesh, viewCamera, identity,
             static_cast<float>(width), static_cast<float>(height), batch.color);
     }
-    loot.Render(shader, cubeMesh, camera, static_cast<float>(width), static_cast<float>(height));
-    playerVisual.Render(*player, shader, camera,
+    loot.Render(shader, cubeMesh, viewCamera, static_cast<float>(width), static_cast<float>(height));
+    playerVisual.Render(*player, shader, viewCamera,
         static_cast<float>(width), static_cast<float>(height));
-    combat.Render(shader, camera, static_cast<float>(width), static_cast<float>(height));
+    combat.Render(shader, viewCamera, static_cast<float>(width), static_cast<float>(height));
     hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid);
 }
 
 void RaidScene::FinishRaid(RaidPhase result)
 {
+    freeLook = false;
     raid.phase = result;
     actions.Cancel();
     combat.CancelInput();
@@ -117,10 +128,11 @@ void RaidScene::FinishRaid(RaidPhase result)
     Input::SetCursorCaptured(false);
     if (result == RaidPhase::Extracted) {
         raid.recovered = player->GetInventory();
-        hideout.Recover(raid.recovered, combat.HasRifle(), combat.Magazine());
+        raid.recoveredClothing = player->clothingMask;
+        hideout.Recover(raid.recovered, combat.HasRifle(), combat.Magazine(), player->clothingMask);
     } else {
         player->GetInventory() = Inventory{};
-        hideout.Recover(Inventory{}, false, 0);
+        hideout.Recover(Inventory{}, false, 0, 0);
     }
     raid.saveMessage = hideout.message;
 }
@@ -128,6 +140,7 @@ void RaidScene::FinishRaid(RaidPhase result)
 void RaidScene::StartRaid()
 {
     if (!hideout.ready || !hideout.Depart()) return;
+    freeLook = false;
     raid = RaidStatus{};
     raid.phase = RaidPhase::Active;
     raid.assignedExit = hideout.spawn;
@@ -135,6 +148,7 @@ void RaidScene::StartRaid()
     player->SetCollisionWorld(&collisionWorld);
     player->position = IndustrialZone::Spawns[hideout.spawn];
     player->GetInventory() = hideout.loadout;
+    player->clothingMask = hideout.clothingMask;
     playerController.Reset();
     camera = Camera{};
     cameraController.Follow(camera, *player);

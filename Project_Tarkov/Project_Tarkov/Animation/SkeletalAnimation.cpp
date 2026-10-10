@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <utility>
 #include <limits>
+#include <fstream>
+#include <cstdint>
 
 namespace
 {
@@ -65,7 +67,7 @@ struct SkeletalAnimation::Data
     struct Node { std::string name; int parent; Pose bind; };
     struct Bone { size_t node; aiMatrix4x4 offset; };
     struct Weight { size_t bone; float value; };
-    struct Source { AnimatedVertex vertex; size_t node; std::vector<Weight> weights; };
+    struct Source { AnimatedVertex vertex; size_t node; std::vector<Weight> weights; int garment = 0; };
     struct Track
     {
         std::vector<aiVectorKey> positions, scales;
@@ -81,6 +83,7 @@ struct SkeletalAnimation::Data
         std::vector<unsigned int> indices;
         std::unordered_map<std::string, Clip> clips;
         std::unordered_map<std::string, std::string> clipPaths;
+        std::vector<aiVector3D> animationBindPositions;
         aiMatrix4x4 inverseRoot;
         std::vector<glm::vec3> boundsMin, boundsMax;
     };
@@ -97,7 +100,7 @@ struct SkeletalAnimation::Data
     float blendTime = 0.15f;
     bool playing = false;
 
-    void RefreshPose()
+    void RefreshGlobals()
     {
         const auto& nodes = asset->nodes;
         globals.resize(nodes.size());
@@ -107,6 +110,12 @@ struct SkeletalAnimation::Data
             const aiMatrix4x4 local(p.scale, p.rotation, p.position);
             globals[i] = nodes[i].parent < 0 ? local : globals[nodes[i].parent] * local;
         }
+    }
+
+    void RefreshPose()
+    {
+        RefreshGlobals();
+        const auto& nodes = asset->nodes;
         const size_t count = asset->bones.size() + nodes.size();
         palette.resize(count);
         normals.resize(count);
@@ -219,6 +228,80 @@ glm::vec3 SkeletalAnimation::NodePosition(const std::string& name) const
     return {point.x, point.y, point.z};
 }
 
+void SkeletalAnimation::SolveArm(const std::string& side, const glm::vec3& target, const glm::vec3& pole,
+    const glm::vec3& palmDirection, float weight)
+{
+    const auto upper = data->asset->nodeIds.find(side + "Arm");
+    const auto lower = data->asset->nodeIds.find(side + "ForeArm");
+    const auto hand = data->asset->nodeIds.find(side + "Hand");
+    if (upper == data->asset->nodeIds.end() || lower == data->asset->nodeIds.end() ||
+        hand == data->asset->nodeIds.end() || weight <= 0) return;
+    // Solve in imported scene space, preserving the original bone lengths.
+    auto root = data->asset->inverseRoot;
+    root.Inverse();
+    auto convert = [&](const glm::vec3& p) {
+        const auto v = root * aiVector3D(p.x, p.y, p.z);
+        return glm::vec3(v.x, v.y, v.z);
+    };
+    auto position = [&](size_t id) {
+        const auto v = data->globals[id] * aiVector3D();
+        return glm::vec3(v.x, v.y, v.z);
+    };
+    const glm::vec3 shoulder = position(upper->second);
+    const glm::vec3 elbow = position(lower->second);
+    const glm::vec3 wrist = position(hand->second);
+    const float a = glm::length(elbow - shoulder), b = glm::length(wrist - elbow);
+    if (a < 0.001f || b < 0.001f) return;
+    const glm::vec3 desired = glm::mix(wrist, convert(target), std::clamp(weight, 0.f, 1.f));
+    const float distance = glm::length(desired - shoulder);
+    if (distance < 0.001f) return;
+    const glm::vec3 forward = (desired - shoulder) / distance;
+    const float reach = std::clamp(distance, std::abs(a - b) + 0.001f, a + b - 0.001f);
+    glm::vec3 bend = convert(pole) - shoulder;
+    bend -= forward * glm::dot(bend, forward);
+    if (glm::length(bend) < 0.001f) {
+        bend = glm::cross(forward, glm::vec3(0, 1, 0));
+        if (glm::length(bend) < 0.001f) bend = glm::cross(forward, glm::vec3(1, 0, 0));
+    }
+    const float along = (a * a - b * b + reach * reach) / (2 * reach);
+    const glm::vec3 elbowTarget = shoulder + forward * along + glm::normalize(bend) *
+        std::sqrt((std::max)(0.f, a * a - along * along));
+    auto align = [&](size_t joint, size_t child, const glm::vec3& destination) {
+        const auto origin = position(joint);
+        const auto from = glm::normalize(position(child) - origin);
+        const auto to = glm::normalize(destination - origin);
+        const float cosine = std::clamp(glm::dot(from, to), -1.f, 1.f);
+        auto axis = glm::cross(from, to);
+        if (glm::length(axis) < 0.00001f) {
+            if (cosine > 0) return;
+            axis = glm::cross(from, glm::vec3(0, 1, 0));
+            if (glm::length(axis) < 0.00001f) axis = glm::cross(from, glm::vec3(1, 0, 0));
+        }
+        axis = glm::normalize(axis);
+        const aiQuaternion delta(aiVector3D(axis.x, axis.y, axis.z), std::acos(cosine));
+        aiQuaternion parentRotation;
+        aiVector3D scale, translation;
+        const int parent = data->asset->nodes[joint].parent;
+        if (parent >= 0) data->globals[parent].Decompose(scale, parentRotation, translation);
+        auto inverseParent = parentRotation;
+        inverseParent.Conjugate();
+        data->pose[joint].rotation = inverseParent * delta * parentRotation * data->pose[joint].rotation;
+        data->pose[joint].rotation.Normalize();
+        data->RefreshGlobals();
+    };
+    align(upper->second, lower->second, elbowTarget);
+    align(lower->second, hand->second, shoulder + forward * reach);
+    const auto finger = data->asset->nodeIds.find(side + "HandMiddle1");
+    if (finger != data->asset->nodeIds.end()) {
+        const auto direction = convert(palmDirection) - convert(glm::vec3(0));
+        const auto current = position(finger->second) - position(hand->second);
+        if (glm::length(direction) > 0.001f && glm::length(current) > 0.001f) {
+            const auto blended = glm::mix(glm::normalize(current), glm::normalize(direction), std::clamp(weight, 0.f, 1.f));
+            if (glm::length(blended) > 0.001f) align(hand->second, finger->second, position(hand->second) + blended);
+        }
+    }
+}
+
 bool SkeletalAnimation::LoadModel(const std::string& path)
 {
     Reset();
@@ -309,6 +392,118 @@ bool SkeletalAnimation::LoadModel(const std::string& path)
     return true;
 }
 
+bool SkeletalAnimation::LoadAppearance(const std::string& path)
+{
+    if (data->asset->nodes.empty() || !data->asset->clips.empty()) {
+        data->error = "Load character appearance after the rig and before animation clips"; return false;
+    }
+    static std::unordered_map<std::string, std::weak_ptr<Data::Asset>> cache;
+    if (auto shared = cache[path].lock()) {
+        data->asset = std::move(shared);
+        data->pose.clear();
+        for (const auto& node : data->asset->nodes) data->pose.push_back(node.bind);
+        data->RefreshPose();
+        return true;
+    }
+    std::ifstream in(path, std::ios::binary);
+    auto read = [&](auto& value) { in.read(reinterpret_cast<char*>(&value), sizeof(value)); };
+    char magic[8]{};
+    in.read(magic, 8);
+    std::uint32_t jointCount = 0, vertexCount = 0, indexCount = 0;
+    read(jointCount); read(vertexCount); read(indexCount);
+    auto fail = [&]() { data->error = "Invalid character appearance: " + path; return false; };
+    const bool legacyGarments = std::string(magic, 8) == "TKCHAR02";
+    const bool garmentData = legacyGarments || std::string(magic, 8) == "TKCHAR03";
+    if (!in || (!garmentData && std::string(magic, 8) != "TKCHAR01") || jointCount == 0 || jointCount > 256 ||
+        vertexCount == 0 || vertexCount > 1000000 || indexCount == 0 || indexCount > 6000000 || indexCount % 3) return fail();
+    auto next = std::make_shared<Data::Asset>(*data->asset);
+    std::unordered_map<size_t, aiVector3D> positions;
+    std::vector<size_t> joints;
+    auto root = next->inverseRoot;
+    root.Inverse();
+    for (std::uint32_t i = 0; i < jointCount; ++i) {
+        std::uint32_t length = 0;
+        read(length);
+        if (!in || length == 0 || length > 128) return fail();
+        std::string name(length, '\0');
+        in.read(name.data(), length);
+        aiVector3D position;
+        read(position.x); read(position.y); read(position.z);
+        const auto node = next->nodeIds.find(name);
+        if (!in || node == next->nodeIds.end() || !std::isfinite(position.x) ||
+            !std::isfinite(position.y) || !std::isfinite(position.z)) return fail();
+        joints.push_back(node->second);
+        positions.emplace(node->second, root * position);
+    }
+    // Retain the reference rig's local axes, while fitting joint positions to the PMX body.
+    std::vector<aiMatrix4x4> globals(next->nodes.size());
+    for (size_t i = 0; i < next->nodes.size(); ++i) {
+        auto& node = next->nodes[i];
+        next->animationBindPositions.push_back(node.bind.position);
+        const aiMatrix4x4 parent = node.parent < 0 ? aiMatrix4x4() : globals[node.parent];
+        if (const auto target = positions.find(i); target != positions.end()) {
+            auto inverse = parent;
+            inverse.Inverse();
+            node.bind.position = inverse * target->second;
+        }
+        globals[i] = parent * aiMatrix4x4(node.bind.scale, node.bind.rotation, node.bind.position);
+    }
+    next->bones.clear(); next->sources.clear(); next->indices.clear();
+    for (const auto node : joints) {
+        auto inverse = globals[node];
+        inverse.Inverse();
+        next->bones.push_back({node, inverse * root});
+    }
+    next->sources.reserve(vertexCount);
+    for (std::uint32_t i = 0; i < vertexCount; ++i) {
+        float values[8]{};
+        std::uint32_t bone[4]{};
+        float weights[4]{};
+        for (auto& v : values) read(v);
+        for (auto& b : bone) read(b);
+        for (auto& w : weights) read(w);
+        std::uint32_t garment = 0;
+        if (garmentData) read(garment);
+        if (garment > 5) return fail();
+        if (legacyGarments && (garment == 3 || garment == 4)) garment = 0;
+        if (!in) return fail();
+        for (auto v : values) if (!std::isfinite(v)) return fail();
+        Data::Source source{{{values[0], values[1], values[2]}, {values[3], values[4], values[5]},
+            {values[6], values[7], 0}}, joints.front(), {}};
+        source.garment = static_cast<int>(garment);
+        float total = 0;
+        for (int j = 0; j < 4; ++j) {
+            if (bone[j] >= jointCount || !std::isfinite(weights[j]) || weights[j] < 0) return fail();
+            if (weights[j] > 0) source.weights.push_back({bone[j], weights[j]});
+            total += weights[j];
+        }
+        if (std::abs(total - 1.f) > 0.001f) return fail();
+        next->sources.push_back(std::move(source));
+    }
+    for (std::uint32_t i = 0; i < indexCount; ++i) {
+        std::uint32_t index = 0; read(index);
+        if (!in || index >= vertexCount) return fail();
+        next->indices.push_back(index);
+    }
+    if (in.peek() != std::char_traits<char>::eof()) return fail();
+    const size_t count = next->bones.size() + next->nodes.size();
+    next->boundsMin.assign(count, glm::vec3((std::numeric_limits<float>::max)()));
+    next->boundsMax.assign(count, glm::vec3(-(std::numeric_limits<float>::max)()));
+    for (const auto& source : next->sources) {
+        const glm::vec3 p(source.vertex.position.x, source.vertex.position.y, source.vertex.position.z);
+        for (const auto& w : source.weights) {
+            next->boundsMin[w.bone] = (glm::min)(next->boundsMin[w.bone], p);
+            next->boundsMax[w.bone] = (glm::max)(next->boundsMax[w.bone], p);
+        }
+    }
+    data->asset = next;
+    data->pose.clear();
+    for (const auto& node : next->nodes) data->pose.push_back(node.bind);
+    data->RefreshPose();
+    cache[path] = next;
+    return true;
+}
+
 bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& path)
 {
     if (data->asset->nodes.empty()) { data->error = "Load the model before clips"; return false; }
@@ -347,7 +542,13 @@ bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& pat
         const auto found = data->asset->nodeIds.find(NodeName(channel->mNodeName));
         if (found == data->asset->nodeIds.end()) continue;
         Data::Track track;
-        if (channel->mNumPositionKeys) track.positions.assign(channel->mPositionKeys, channel->mPositionKeys + channel->mNumPositionKeys);
+        if (channel->mNumPositionKeys) {
+            track.positions.assign(channel->mPositionKeys, channel->mPositionKeys + channel->mNumPositionKeys);
+            if (!data->asset->animationBindPositions.empty()) {
+                const auto offset = data->asset->nodes[found->second].bind.position - data->asset->animationBindPositions[found->second];
+                for (auto& key : track.positions) key.mValue += offset;
+            }
+        }
         if (channel->mNumRotationKeys) track.rotations.assign(channel->mRotationKeys, channel->mRotationKeys + channel->mNumRotationKeys);
         if (channel->mNumScalingKeys) track.scales.assign(channel->mScalingKeys, channel->mScalingKeys + channel->mNumScalingKeys);
         clip.tracks.emplace(found->second, std::move(track));
@@ -438,6 +639,8 @@ void SkeletalAnimation::CreateMesh(Mesh& mesh) const
         SkinVertex vertex;
         vertex.pos = {source.vertex.position.x, source.vertex.position.y, source.vertex.position.z};
         vertex.normal = {source.vertex.normal.x, source.vertex.normal.y, source.vertex.normal.z};
+        vertex.uv = {source.vertex.uv.x, source.vertex.uv.y};
+        vertex.garment = source.garment;
         vertex.influences.x = static_cast<int>(weights.size());
         if (source.weights.empty())
             weights.emplace_back(static_cast<float>(data->asset->bones.size() + source.node), 1.0f);

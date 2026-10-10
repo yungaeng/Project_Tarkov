@@ -1,6 +1,7 @@
 #include "CharacterVisual.h"
 #include "../Game/Character.h"
 #include "../Graphics/Renderer.h"
+#include "../Graphics/Texture.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <algorithm>
@@ -9,6 +10,7 @@
 struct CharacterVisual::Assets
 {
     Mesh mesh;
+    Texture texture;
     MotionClip deathClip, holdClip, reloadClip, aimClip, recoilClip;
     std::array<MotionClip, 5> stances;
 };
@@ -19,6 +21,7 @@ void CharacterVisual::Init()
 {
     Reset();
     if (!animation.LoadModel("Assets/Models/Player/Ch22_nonPBR.fbx") ||
+        !animation.LoadAppearance("Assets/Models/Player/KimGawon/character.mesh") ||
         !animation.LoadClip("idle", "Assets/Idle.fbx") ||
         !animation.LoadClip("walk", "Assets/Walking.fbx") ||
         !animation.LoadClip("run", "Assets/Fast Run.fbx") ||
@@ -29,6 +32,8 @@ void CharacterVisual::Init()
     if (!assets)
     {
         auto shared = std::make_shared<Assets>();
+        if (!shared->texture.Load("Assets/Models/Player/KimGawon/character.png"))
+            throw std::runtime_error("Character texture load failed");
         shared->deathClip.Load("Assets/Animations/Characters/Death.anim");
         shared->holdClip.Load("Assets/Animations/Characters/RifleHold.anim");
         shared->reloadClip.Load("Assets/Animations/Characters/RifleReload.anim");
@@ -72,13 +77,17 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     state = next;
     state.equipped = state.equipped && state.hasWeapon;
     recoilTime = state.fired ? 0 : recoilTime + dt;
-    weapon.Update(dt, state.equipped, state.aiming, state.reloadRemaining, state.fired, character.IsMoving(), state.dead, character.IsSprinting() && character.IsMoving() && !state.aiming, character.IsCrouching());
+    firePending |= state.fired;
     if (state.dead)
     {
+        weapon.Update(dt, state.equipped, false, 0, false, false, true);
         if (!dying) { animation.CapturePose(); dying = true; deathTime = 0; }
         else if (deathTime >= assets->deathClip.Duration()) return; // Preserve the corpse, no loop or idle breathing.
         deathTime = (std::min)(assets->deathClip.Duration(), deathTime + dt);
+        const auto previousHand = animation.NodePosition("RightHand");
         animation.ApplyMotion(assets->deathClip, deathTime, 1, false, true);
+        weaponModel[3] += glm::vec4((animation.NodePosition("RightHand") - previousHand) *
+            character.scale * character.GetSettings().modelScale, 0);
         deathRoot = assets->deathClip.Sample("Root", deathTime);
         // Keep the rotated mesh above the feet/support plane, including crouched deaths.
         const auto rotation = MotionPose{glm::vec3(0), deathRoot.rotation}.Matrix();
@@ -96,6 +105,8 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (poseElapsed < poseInterval) return;
     dt = poseElapsed;
     poseElapsed = 0;
+    weapon.Update(dt, state.equipped, state.aiming, state.reloadRemaining, firePending, character.IsMoving(), false, character.IsSprinting() && character.IsMoving() && !state.aiming, character.IsCrouching());
+    firePending = false;
     const bool moving = character.IsMoving();
     const bool crouching = character.IsCrouching();
     const char* clip = crouching ? "crouch" : moving ? (character.IsSprinting() ? "run" : "walk") : "idle";
@@ -117,6 +128,22 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     animation.ApplyMotion(assets->recoilClip, recoilTime, holdWeight, false, false, false);
     if (state.reloadRemaining > 0) animation.ApplyMotion(assets->reloadClip, 2 - state.reloadRemaining, holdWeight, false, false, false);
     animation.RefreshPose();
+    if (state.hasWeapon && holdWeight > 0.001f) {
+        const glm::vec3 scale = character.scale * character.GetSettings().modelScale;
+        // RightArm is the shoulder joint. Anchor the butt pad ahead of the torso,
+        // not behind a freely animated right hand.
+        const glm::vec3 shoulder = animation.NodePosition("RightArm") * scale + glm::vec3(0.035f, -0.035f, 0.08f);
+        auto grip = glm::translate(glm::mat4(1), shoulder);
+        grip = glm::rotate(grip, glm::radians(-std::clamp(state.aimPitch, -89.f, 89.f)), glm::vec3(1, 0, 0));
+        weaponModel = weapon.ModelMatrix(grip);
+        const auto right = glm::vec3(weaponModel * glm::vec4(WeaponVisual::FiringGrip(), 1)) / scale;
+        const auto left = glm::vec3(weaponModel * glm::vec4(weapon.SupportGrip(), 1)) / scale;
+        const glm::vec3 rightPalm = glm::vec3(weaponModel * glm::vec4(1, 0, 0.4f, 0)) / scale;
+        const glm::vec3 leftPalm = glm::vec3(weaponModel * glm::vec4(-0.3f, 0, 1, 0)) / scale;
+        animation.SolveArm("Right", right, (shoulder + glm::vec3(-0.3f, -0.4f, 0.1f)) / scale, rightPalm, holdWeight);
+        animation.SolveArm("Left", left, (shoulder + glm::vec3(0.5f, -0.4f, 0.1f)) / scale, leftPalm, holdWeight);
+        animation.RefreshPose();
+    }
     UploadPalette();
 }
 
@@ -126,6 +153,7 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     glm::mat4 model = glm::translate(glm::mat4(1), character.position);
     model = glm::rotate(model, glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
     if (dying) model *= deathRoot.Matrix();
+    const glm::mat4 actor = model;
     model = glm::scale(model, character.scale * character.GetSettings().modelScale);
     // Bone envelopes conservatively enclose the current skinned pose.
     // Padding also covers the attached rifle, magazine and muzzle flash.
@@ -134,13 +162,8 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_BUFFER, paletteTexture);
     glActiveTexture(GL_TEXTURE0);
-    Renderer::Draw(shader, assets->mesh, camera, model, width, height, dying ? color * 0.65f : color, true);
-    const glm::vec3 hand = glm::vec3(model * glm::vec4(animation.NodePosition("RightHand"), 1));
-    auto grip = glm::translate(glm::mat4(1), hand);
-    grip = glm::rotate(grip, glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
-    if (dying) grip *= MotionPose{glm::vec3(0), deathRoot.rotation}.Matrix();
-    else grip = glm::rotate(grip, glm::radians(-state.aimPitch), glm::vec3(1, 0, 0));
-    if (state.hasWeapon) weapon.Render(grip, shader, camera, width, height);
+    Renderer::Draw(shader, assets->mesh, camera, model, width, height, glm::vec3(dying ? 0.65f : 1.f), true, assets->texture.id, static_cast<int>(character.clothingMask));
+    if (state.hasWeapon) weapon.Render(actor * weaponModel, shader, camera, width, height);
 }
 
 void CharacterVisual::Reset()
@@ -152,7 +175,9 @@ void CharacterVisual::Reset()
     poseElapsed = 0;
     animation.Reset();
     weapon.Reset();
+    weaponModel = glm::mat4(1);
     dying = false;
+    firePending = false;
     deathTime = holdWeight = motionClock = aimWeight = 0;
     recoilTime = 1;
     stanceWeights = {};

@@ -16,7 +16,7 @@ namespace IndustrialZone
     struct Exit { const char* name; glm::vec3 position; };
     inline const std::array<glm::vec3, 2> Spawns{{ {-210, 0, 210}, {-210, 0, -210} }};
     inline const std::array<Exit, 2> Exits{{
-        {"X1 NE Checkpoint", {225, 0, -220}}, {"X2 SE Abandoned Road", {225, 0, 220}}
+        {"X1 북동쪽 검문소", {225, 0, -220}}, {"X2 남동쪽 폐도로", {225, 0, 220}}
     }};
     inline const std::array<glm::vec3, 5> Buildings{{
         {-125, 0, -105}, {-125, 0, -35}, {0, 0, 0}, {-120, 0, 110}, {120, 0, 110}

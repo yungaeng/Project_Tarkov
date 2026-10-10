@@ -35,6 +35,9 @@ private:
     Shader shader;
     Mesh cubeMesh;
     Camera camera;
+    // Free look changes only the rendered view; gameplay keeps using camera.
+    Camera previewCamera;
+    bool freeLook = false;
     LootSystem loot;
     RaidHud hud;
     InventoryActions actions;

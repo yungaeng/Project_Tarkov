@@ -70,8 +70,6 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
     enabled = enabled && player.vitals.Alive();
     if (!enabled) reload = 0;
     if (enabled && hasRifle && Input::GetKeyDown(GLFW_KEY_1)) { equipped = !equipped; reload = 0; }
-    aiming = enabled && equipped && Input::Mouse(GLFW_MOUSE_BUTTON_RIGHT);
-    camera.fieldOfView = aiming ? 50.0f : 75.0f;
     if (reload > 0)
     {
         reload = (std::max)(0.0f, reload - dt);
@@ -80,11 +78,13 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
     if (enabled && equipped && Input::GetKeyDown(GLFW_KEY_R) && reload == 0)
     {
         if (magazine < 30 && player.GetInventory().Count(ItemType::Ammo) > 0) reload = 2;
-        else { message = "Magazine full or no reserve ammunition"; messageTime = 2; }
+        else { message = "탄창이 가득 찼거나 예비 탄약이 없습니다"; messageTime = 2; }
     }
+    aiming = enabled && equipped && reload == 0 && Input::Mouse(GLFW_MOUSE_BUTTON_RIGHT);
+    camera.fieldOfView = aiming ? 50.0f : 75.0f;
     if (enabled && equipped && reload == 0 && cooldown == 0 && Input::MouseDown(GLFW_MOUSE_BUTTON_LEFT))
     {
-        if (magazine == 0) { message = "Empty - press R to reload"; messageTime = 2; }
+        if (magazine == 0) { message = "탄약 소진 - R키로 재장전하세요"; messageTime = 2; }
         else
         {
             --magazine;
@@ -111,9 +111,9 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 for (std::size_t i = 0; i < enemies.size(); ++i)
                     if (enemies[i].health > 0 && HitBody(enemies[i].body, origin, direction, nearest, hit) && hit < nearest)
                     { nearest = hit; victim = static_cast<int>(i); }
-                message = victim >= 0 ? "Hit" : wall ? "Hit cover" : "Miss";
+                message = victim >= 0 ? "명중" : wall ? "엄폐물에 명중" : "빗나감";
             }
-            else message = "Aim blocked by cover";
+            else message = "엄폐물이 사격을 가로막고 있습니다";
             if (victim >= 0)
             {
                 auto& enemy = enemies[static_cast<std::size_t>(victim)];
@@ -121,7 +121,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 enemy.lastSeen = player.position;
                 enemy.state = enemy.health == 0 ? EnemyState::Dead : EnemyState::Chase;
                 enemy.searchTimer = 5;
-                if (enemy.health == 0) message = "Enemy killed";
+                if (enemy.health == 0) message = "적 처치";
             }
             messageTime = 1;
             camera.pitch = std::clamp(camera.pitch + (aiming ? 0.7f : 1.6f), -89.0f, 89.0f);

@@ -5,21 +5,29 @@
 
 const ItemDefinition& GetItemDefinition(ItemType type)
 {
-    static const ItemDefinition bandage{ "Bandage", 5, 0.1f };
-    static const ItemDefinition water{ "Water", 2, 0.6f };
-    static const ItemDefinition ammo{ "5.45 Ammo", 60, 0.01f };
+    static const ItemDefinition bandage{ "붕대", 5, 0.1f };
+    static const ItemDefinition water{ "물", 2, 0.6f };
+    static const ItemDefinition ammo{ "5.45mm 탄약", 60, 0.01f };
+    static const ItemDefinition shirt{ "상의", 1, 0.4f };
+    static const ItemDefinition skirt{ "치마", 1, 0.35f };
+    static const ItemDefinition underShirt{ "상의 내의", 1, 0.15f };
+    static const ItemDefinition underpants{ "하의 내의", 1, 0.1f };
     switch (type)
     {
     case ItemType::Bandage: return bandage;
     case ItemType::Water: return water;
     case ItemType::Ammo: return ammo;
+    case ItemType::Shirt: return shirt;
+    case ItemType::Skirt: return skirt;
+    case ItemType::UnderShirt: return underShirt;
+    case ItemType::Underpants: return underpants;
     }
     throw std::invalid_argument("Unknown item type");
 }
 
 bool Inventory::TryAdd(ItemStack stack)
 {
-    if (stack.quantity <= 0) return false;
+    if (stack.quantity <= 0 || static_cast<int>(stack.type) < 0 || stack.type >= ItemType::Count) return false;
     const int limit = GetItemDefinition(stack.type).maxStack;
     // Work on a copy so failed pickups never partially consume a world item.
     auto next = items;
@@ -89,4 +97,22 @@ float Inventory::TotalWeight() const
     for (const auto& entry : items)
         weight += GetItemDefinition(entry.type).weight * entry.quantity;
     return weight;
+}
+
+bool Inventory::EquipClothing(StackId id, std::uint32_t& equipped)
+{
+    const auto* stack = Find(id);
+    if (!stack || !IsClothing(stack->type)) return false;
+    const auto bit = ClothingBit(stack->type);
+    if ((equipped & bit) || !Remove(id, 1)) return false;
+    equipped |= bit;
+    return true;
+}
+
+bool Inventory::UnequipClothing(ItemType type, std::uint32_t& equipped)
+{
+    const auto bit = ClothingBit(type);
+    if (!bit || !(equipped & bit) || !TryAdd({type, 1})) return false;
+    equipped &= ~bit;
+    return true;
 }

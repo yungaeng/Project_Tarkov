@@ -20,7 +20,8 @@ struct CharacterSettings
 struct ThirdPersonCameraSettings
 {
     float sensitivity = 0.1f;
-    float distance = 6.0f;
-    float heightOffset = 1.0f;
+    // At neutral pitch and 75-degree FOV, feet sit near the bottom (NDC Y=-0.95).
+    float distance = 2.4f;
+    float heightOffset = 0.05f;
     float pitchLimit = 89.0f;
 };

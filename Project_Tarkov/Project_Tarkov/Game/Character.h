@@ -1,6 +1,7 @@
 #pragma once
 #include "Entity.h"
 #include "CharacterSettings.h"
+#include "Inventory.h"
 
 class CollisionWorld;
 
@@ -20,6 +21,7 @@ private:
     CharacterSettings settings;
 
 public:
+    std::uint32_t clothingMask = AllClothingMask;
     Character() { rotation.y = -90.0f; }
     const CharacterSettings& GetSettings() const { return settings; }
     bool IsCrouching() const { return crouching; }

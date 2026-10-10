@@ -19,6 +19,8 @@ struct Vertex
 struct SkinVertex
 {
     glm::vec3 pos{0}, normal{0};
+    glm::vec2 uv{0};
+    int garment = 0;
     glm::ivec2 influences{0};
 };
 
@@ -208,9 +210,13 @@ public:
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SkinVertex), (void*)offsetof(SkinVertex, pos));
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SkinVertex), (void*)offsetof(SkinVertex, normal));
         glVertexAttribIPointer(2, 2, GL_INT, sizeof(SkinVertex), (void*)offsetof(SkinVertex, influences));
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(SkinVertex), (void*)offsetof(SkinVertex, uv));
+        glVertexAttribIPointer(4, 1, GL_INT, sizeof(SkinVertex), (void*)offsetof(SkinVertex, garment));
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
+        glEnableVertexAttribArray(4);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
         glGenBuffers(1, &weightBuffer);

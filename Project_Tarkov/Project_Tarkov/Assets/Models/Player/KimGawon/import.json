@@ -1,0 +1,108 @@
+{
+  "source": "F:\\Koikatsu\\Export_PMX\\20261010085443_김가원\\model.pmx",
+  "height_m": 1.8,
+  "vertices": 31550,
+  "triangles": 48842,
+  "joints": 52,
+  "materials": [
+    {
+      "material": "cf_m_tooth",
+      "texture": "cf_m_tooth_MT_CT.png"
+    },
+    {
+      "material": "cf_m_face_00",
+      "texture": "cf_m_face_00_MT_CT.png"
+    },
+    {
+      "material": "cf_m_mayuge_00",
+      "texture": "cf_m_mayuge_00_MT_CT.png"
+    },
+    {
+      "material": "cf_m_noseline_00",
+      "texture": "cf_m_noseline_00_MT_CT.png"
+    },
+    {
+      "material": "cf_m_eyeline_00_up",
+      "texture": "cf_m_eyeline_00_up_MT_CT.png"
+    },
+    {
+      "material": "cf_m_eyeline_kage",
+      "texture": "cf_m_eyeline_kage_MT_CT.png"
+    },
+    {
+      "material": "cf_m_eyeline_down",
+      "texture": "cf_m_eyeline_down_MT_CT.png"
+    },
+    {
+      "material": "cf_m_sirome_00",
+      "texture": "cf_m_sirome_00_MT_CT.png"
+    },
+    {
+      "material": "cf_m_hitomi_00_cf_Ohitomi_L02",
+      "texture": "cf_m_hitomi_00_cf_Ohitomi_L02_MT_00.png"
+    },
+    {
+      "material": "cf_m_hitomi_00_cf_Ohitomi_R02",
+      "texture": "cf_m_hitomi_00_cf_Ohitomi_R02_MT_00.png"
+    },
+    {
+      "material": "cf_m_tang",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_body",
+      "texture": "cf_m_body_MT_CT.png"
+    },
+    {
+      "material": "cf_m_hair_b_01_00 4090",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_b_01_00 4090 00",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_b_01_00 4090 01",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_b_01_00 4090 02",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_b_01_00 4090 03",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_f_112_00 4380",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_f_112_00 4380 00",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_f_112_00 4380 01",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_f_112_00 4380 02",
+      "texture": "material color"
+    },
+    {
+      "material": "cf_m_hair_f_112_00 4380 03",
+      "texture": "material color"
+    }
+  ],
+  "clothing": [],
+  "bounds_min": [
+    -72.82703031635393,
+    3.596052403448991,
+    -19.821063480425764
+  ],
+  "bounds_max": [
+    72.82669715715483,
+    180.0,
+    11.385391819015231
+  ]
+}

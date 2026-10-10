@@ -9,7 +9,7 @@ bool Application::Init()
 {
     Logger::Init();
 
-    if (!window.Create("Project_Tarkov"))
+    if (!window.Create("프로젝트 타르코프"))
         return false;
 
     Renderer::Init();

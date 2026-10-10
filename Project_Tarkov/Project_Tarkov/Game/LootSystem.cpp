@@ -24,7 +24,7 @@ void LootSystem::Init()
 {
     Reset();
     std::mt19937 random(std::random_device{}());
-    std::uniform_int_distribution<int> kind(0, 2);
+    std::uniform_int_distribution<int> kind(0, ItemTypeCount - 1);
     // Four reachable floor pickups per building; existing MVP item definitions.
     for (const auto& building : IndustrialZone::Buildings)
         for (int point = 0; point < RaidConfig::MvpLootCount / 5; ++point) {
@@ -74,11 +74,11 @@ void LootSystem::Update(float dt, Player& player, const Camera& camera, const Co
     if (!pickupPressed) return;
     if (player.GetInventory().TryAdd(item.stack))
     {
-        message = std::string("Picked up: ") + GetItemDefinition(item.stack.type).name;
+        message = std::string("획득: ") + GetItemDefinition(item.stack.type).name;
         items.erase(items.begin() + target);
         target = -1;
     }
-    else message = "Inventory full - item left on the ground";
+    else message = "인벤토리가 가득 차 아이템을 줍지 못했습니다";
     messageTime = 2.5f;
 }
 
@@ -90,7 +90,8 @@ void LootSystem::Render(Shader& shader, Mesh& mesh, Camera& camera, float width,
         model = glm::scale(model, glm::vec3(WorldItem::HalfSize * 2));
         const glm::vec3 color = static_cast<int>(i) == target ? glm::vec3(1, 0.85f, 0.2f) :
             items[i].stack.type == ItemType::Bandage ? glm::vec3(0.9f, 0.35f, 0.35f) :
-            items[i].stack.type == ItemType::Water ? glm::vec3(0.25f, 0.6f, 1) : glm::vec3(0.7f, 0.6f, 0.35f);
+            items[i].stack.type == ItemType::Water ? glm::vec3(0.25f, 0.6f, 1) :
+            IsClothing(items[i].stack.type) ? glm::vec3(0.65f, 0.4f, 0.85f) : glm::vec3(0.7f, 0.6f, 0.35f);
         Renderer::Draw(shader, mesh, camera, model, width, height, color);
     }
 }
@@ -113,7 +114,7 @@ void LootSystem::Spawn(glm::vec3 center, ItemStack stack)
 bool LootSystem::Drop(Player& player, StackId id, bool all, const Camera& camera, const CollisionWorld& world)
 {
     const auto* entry = player.GetInventory().Find(id);
-    if (!entry || !player.IsGrounded()) { Notify("Cannot drop while airborne or without a selection"); return false; }
+    if (!entry || !player.IsGrounded()) { Notify("공중에 있거나 선택한 아이템이 없어 버릴 수 없습니다"); return false; }
     const ItemStack dropped{entry->type, all ? entry->quantity : 1};
     glm::vec3 forward(camera.front.x, 0, camera.front.z);
     if (glm::length(forward) < 0.001f) forward = {0, 0, -1};
@@ -155,9 +156,9 @@ bool LootSystem::Drop(Player& player, StackId id, bool all, const Camera& camera
         items.reserve(items.size() + 1);
         if (!player.GetInventory().Remove(id, dropped.quantity)) return false;
         Spawn(center, dropped);
-        Notify("Item dropped");
+        Notify("아이템을 버렸습니다");
         return true;
     }
-    Notify("No clear supported space to drop the item");
+    Notify("아이템을 내려놓을 안전한 공간이 없습니다");
     return false;
 }

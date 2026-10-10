@@ -37,10 +37,12 @@ private:
     float poseElapsed = 0;
     SkeletalAnimation animation;
     WeaponVisual weapon;
+    glm::mat4 weaponModel{1}; // Character-local meters, shared by IK and rendering.
     MotionPose deathRoot;
     CharacterVisualState state;
     float deathTime = 0, holdWeight = 0;
     float motionClock = 0, aimWeight = 0, recoilTime = 1;
     std::array<float, 5> stanceWeights{};
     bool dying = false;
+    bool firePending = false;
 };

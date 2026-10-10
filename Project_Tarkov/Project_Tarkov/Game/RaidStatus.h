@@ -12,6 +12,7 @@ struct RaidStatus
     int assignedExit = 0;
     float exitDistance = 0;
     Inventory recovered;
+    std::uint32_t recoveredClothing = 0;
     std::string saveMessage;
     bool returnToHideout = false;
     bool Finished() const { return phase == RaidPhase::Extracted || phase == RaidPhase::Dead || phase == RaidPhase::Missing; }

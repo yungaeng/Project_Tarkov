@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <glm/gtc/matrix_transform.hpp>
 
 struct WeaponVisual::Assets
 {
@@ -64,10 +65,10 @@ void WeaponVisual::Update(float dt, bool equipped, bool aiming, float reloadRema
     if (dead) { recoilTime = 10; reloadTime = -1; }
 }
 
-void WeaponVisual::Render(const glm::mat4& grip, Shader& shader, Camera& camera, float width, float height)
+glm::mat4 WeaponVisual::ModelMatrix(const glm::mat4& shoulder) const
 {
-    if (!assets || !visible) return;
-    glm::mat4 model = grip;
+    if (!assets) return shoulder;
+    glm::mat4 model = shoulder;
     if (!dead)
     {
         auto idle = assets->idle.Sample("Weapon", std::fmod(clock, assets->idle.Duration()));
@@ -86,6 +87,28 @@ void WeaponVisual::Render(const glm::mat4& grip, Shader& shader, Camera& camera,
         model *= assets->fire.Sample("Weapon", recoilTime).Matrix();
         if (reloadTime >= 0) model *= assets->reload.Sample("Weapon", reloadTime).Matrix();
     }
+    // OBJ length is 1.070 m. Use a 0.943 m AK-74-sized silhouette for all parts.
+    constexpr float scale = 0.943f / 1.070f;
+    // Rotate around the butt pad, keeping it in front of the shoulder at any aim pitch.
+    model = glm::translate(model, -glm::vec3(0, 0.073f, -0.32f) * scale);
+    return glm::scale(model, glm::vec3(scale));
+}
+
+glm::vec3 WeaponVisual::SupportGrip() const
+{
+    // Wrist socket: the palm/fingers extend forward underneath the rear handguard.
+    const glm::vec3 foregrip(0.035f, 0.025f, 0.09f);
+    if (!assets || reloadTime < 0) return foregrip;
+    // The support hand follows the detachable magazine, then returns to the handguard.
+    const float blend = (std::min)(std::clamp(reloadTime / 0.25f, 0.f, 1.f),
+        std::clamp((1.8f - reloadTime) / 0.35f, 0.f, 1.f));
+    const auto magazine = assets->reload.Sample("Magazine", reloadTime).Matrix();
+    return glm::mix(foregrip, glm::vec3(magazine * glm::vec4(0.04f, -0.13f, 0.08f, 1)), blend);
+}
+
+void WeaponVisual::Render(const glm::mat4& model, Shader& shader, Camera& camera, float width, float height)
+{
+    if (!assets || !visible) return;
     Renderer::Draw(shader, assets->rifle, camera, model, width, height, glm::vec3(0.24f, 0.28f, 0.24f));
     const auto magazine = model * assets->reload.Sample("Magazine", reloadTime >= 0 ? reloadTime : 0).Matrix();
     Renderer::Draw(shader, assets->magazine, camera, magazine, width, height, glm::vec3(0.12f, 0.14f, 0.13f));

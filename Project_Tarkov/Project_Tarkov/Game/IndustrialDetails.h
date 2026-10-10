@@ -129,6 +129,61 @@ namespace IndustrialZone
             for (int layer=0;layer<3;++layer) for (int bag=0;bag<4;++bag)
                 solid(p+glm::vec3(-2+bag*1.1f+(layer%2)*.25f,.2f+layer*.38f,7), {1.05f,.36f,.65f},{.44f,.42f,.28f});
         }
+        // Dense growth in the interior blocks, with reproducible placement.
+        auto plantingSpace = [&](glm::vec3 p, float radius) {
+            if (std::abs(p.x)>198-radius || std::abs(p.z)>198-radius) return false;
+            if (std::abs(p.x-70)<8+radius || std::abs(p.z-70)<8+radius) return false;
+            for (std::size_t i=0;i<Buildings.size();++i) {
+                const auto offset=p-Buildings[i];
+                const float halfW=i==2?32.f:20.f, halfD=i==2?27.f:15.f;
+                if (std::abs(offset.x)<halfW+3+radius && std::abs(offset.z)<halfD+3+radius) return false;
+                // Reserve the approaches to both entrances.
+                if (std::abs(offset.x)<7+radius && std::abs(offset.z)<halfD+16+radius) return false;
+            }
+            if (p.x>73-radius && p.x<155+radius && p.z>-165-radius && p.z<-73+radius) return false;
+            for (auto spawn : Spawns) if (glm::length(p-spawn)<16+radius) return false;
+            for (const auto& exit : Exits) if (glm::length(p-exit.position)<18+radius) return false;
+            for (auto enemy : Enemies) if (glm::length(p-enemy)<9+radius) return false;
+            return world.CanOccupy(p+glm::vec3(0,.05f,0),radius,12.f);
+        };
+        const glm::vec3 pine(.13f,.25f,.12f), leaf(.19f,.30f,.13f);
+        const glm::vec3 shrubGreen(.23f,.31f,.14f), grassGreen(.30f,.36f,.17f);
+        for (int row=0;row<27;++row) for (int col=0;col<27;++col) {
+            const int seed=row*97+col*53;
+            const glm::vec3 p(-190.f+col*14.5f+std::sin(float(seed))*3.8f,0,
+                -190.f+row*14.5f+std::cos(float(seed*3))*3.8f);
+            if (seed%5==0 || !plantingSpace(p,3.5f)) continue;
+            const float height=6.5f+(seed%7)*.65f;
+            part(p+glm::vec3(0,height*.35f,0), {.65f,height*.7f,.65f},wood,Shape::Cylinder);
+            world.AddBox({p-glm::vec3(.325f,0,.325f),p+glm::vec3(.325f,height*.7f,.325f)});
+            if (seed%3) {
+                for (int tier=0;tier<3;++tier)
+                    part(p+glm::vec3(0,height*.48f+tier*1.35f,0),
+                        {5.5f-tier,4.2f,5.5f-tier},pine,Shape::Cone);
+            } else {
+                for (int crown=0;crown<3;++crown)
+                    part(p+glm::vec3((crown-1)*1.2f,height-.5f+crown*.35f,crown%2),
+                        {4.8f,4.2f,4.8f},leaf,Shape::Rock,{0,float(seed+crown*47),0});
+            }
+        }
+        // Low growth is visual only, allowing movement through shrubs and grass.
+        for (int row=0;row<55;++row) for (int col=0;col<55;++col) {
+            const int seed=row*71+col*43;
+            const glm::vec3 p(-194.f+col*7.2f+std::sin(float(seed))*2.2f,0,
+                -194.f+row*7.2f+std::cos(float(seed*2))*2.2f);
+            if (seed%6==0 || !plantingSpace(p,1.6f)) continue;
+            if (seed%3==0) {
+                for (int clump=0;clump<3;++clump)
+                    part(p+glm::vec3((clump-1)*.65f,.5f,clump%2*.45f),
+                        {1.65f,1.2f,1.5f},shrubGreen,Shape::Rock,{0,float(seed+clump*31),0});
+            } else {
+                for (int tuft=0;tuft<3;++tuft) {
+                    const float height=.35f+(seed+tuft)%4*.12f;
+                    part(p+glm::vec3((tuft-1)*.4f,height*.5f,tuft%2*.35f),
+                        {.55f,height,.55f},grassGreen,Shape::Cone);
+                }
+            }
+        }
         // Deterministic forest variation; clear the spawn/extraction approaches.
         auto clear = [&](glm::vec3 p) {
             for (auto spawn : Spawns) if (glm::length(p-spawn)<15) return false;
