@@ -25,4 +25,5 @@ private:
     bool contextReady = false;
     bool windowReady = false;
     bool rendererReady = false;
+    float hideoutPreviewRotation = 0.f;
 };
