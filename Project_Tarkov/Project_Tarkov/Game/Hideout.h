@@ -7,9 +7,9 @@
 class Hideout
 {
 public:
-    std::array<int, ItemTypeCount> stash{{10, 8, 180, 1, 1, 1, 1, 1, 1, 1}};
+    std::array<int, ItemTypeCount> stash{{50, 50, 50, 50, 50, 50, 50, 50, 50, 50}};
     std::uint32_t clothingMask = DefaultClothingMask;
-    int rifles = 3;
+    int rifles = 50;
     Inventory loadout;
     bool rifle = false;
     int magazine = 0;

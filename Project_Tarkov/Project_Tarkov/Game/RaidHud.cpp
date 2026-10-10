@@ -387,7 +387,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     const bool wide=ImGui::GetContentRegionAvail().x>=1050;
     Player previewCharacter=character;
     previewCharacter.position={0,0,0};
-    previewCharacter.rotation.y=180.f;
+    previewCharacter.rotation.y=0.f;
     previewCharacter.clothingMask=hideout.clothingMask;
     CharacterPreview preview{&visual,&previewCharacter,&shader,{}, {}, {}, io.DisplayFramebufferScale,hideout.rifle};
     preview.camera.position={0,1.0f,3.4f};

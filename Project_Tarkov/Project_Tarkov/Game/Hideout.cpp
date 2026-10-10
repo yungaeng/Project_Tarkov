@@ -16,7 +16,7 @@ bool Hideout::Save()
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 5\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
+    out << "HIDEOUT 6\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
     for (int count : stash) out << count << ' ';
     out << '\n' << clothingMask << '\n' << loadout.Items().size() << '\n';
     for (const auto& item : loadout.Items()) out << static_cast<int>(item.type) << ' ' << item.quantity << '\n';
@@ -46,10 +46,11 @@ void Hideout::Load()
     }
     std::ifstream in("Saves/hideout.txt");
     Hideout next;
+    next.stash.fill(0);
     std::string tag, end;
     int version = 0, equipped = 0, count = 0;
     bool valid = static_cast<bool>(in >> tag >> version >> next.rifles >> equipped >> next.magazine);
-    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 5) && next.rifles >= 0 && next.rifles <= MaxStored &&
+    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 6) && next.rifles >= 0 && next.rifles <= MaxStored &&
         (equipped == 0 || equipped == 1) && next.magazine >= 0 && next.magazine <= 30 && (equipped || next.magazine == 0);
     const int stockCount = version == 1 ? 3 : version < 4 ? 7 : version < 5 ? 9 : ItemTypeCount;
     for (int i = 0; i < stockCount; ++i) {
@@ -66,15 +67,16 @@ void Hideout::Load()
     }
     if (version == 2) {
         // v2 footwear is now permanently worn; its IDs must not become underwear.
-        next.stash[5] = next.stash[6] = 1;
         next.clothingMask = (next.clothingMask & 3u) | 12u;
     }
-    // Existing profiles receive the new carrier and helmet in storage. Preserve
-    // their equipped state, including a deliberately empty loadout after a raid.
     if (version < 4) next.clothingMask &= 15u;
     if (version < 5) {
         next.clothingMask &= (1u << 6) - 1;
-        next.stash[static_cast<int>(ItemType::Backpack)] = 1;
+    }
+    // One-time test grant for existing profiles; preserve their saved inventory.
+    if (version < 6) {
+        next.rifles = (std::min)(MaxStored, next.rifles + 50);
+        for (auto& stock : next.stash) stock = (std::min)(MaxStored, stock + 50);
     }
     if (valid) next.loadout.SetSlotCapacity(InventorySlotsForGear(next.clothingMask));
     valid = static_cast<bool>(in >> count) && valid;
@@ -94,8 +96,9 @@ void Hideout::Load()
     if (!valid) { ready = false; message = "은신처 저장 파일이 손상되었습니다. 원본은 보존했으며, 플레이 전에 복구해야 합니다."; return; }
     next.rifle = equipped != 0;
     next.ready = true;
-    next.message = "은신처를 불러왔습니다.";
+    next.message = version < 6 ? "테스트 아이템 50개를 지급했습니다." : "은신처를 불러왔습니다.";
     *this = std::move(next);
+    if (version < 6) Save();
 }
 
 void Hideout::Transfer(ItemType type, int quantity, bool take)
