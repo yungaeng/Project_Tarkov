@@ -45,14 +45,18 @@ namespace IndustrialZone
                 1.05f*std::abs(std::sin(angle))+1.8f*std::abs(std::cos(angle)));
             world.AddBox({p-half,p+half});
         };
-        const std::array<std::vector<glm::vec3>,4> trails{{
+        const std::array<std::vector<glm::vec3>,7> trails{{
             {{-197,0,-193},{-190,0,-179},{-197,0,-157},{-181,0,-143},{-190,0,-124},{-166,0,-103}},
             {{-198,0,-76},{-179,0,-58},{-192,0,-37},{-173,0,-19},{-187,0,1},{-166,0,22},{-176,0,44}},
             {{-194,0,179},{-174,0,161},{-189,0,141},{-169,0,123},{-179,0,101}},
-            {{166,0,-184},{184,0,-163},{168,0,-142},{187,0,-121},{170,0,-101},{184,0,-80},{166,0,-60},{180,0,-39}}
+            {{166,0,-184},{184,0,-163},{168,0,-142},{187,0,-121},{170,0,-101},{184,0,-80},{166,0,-60},{180,0,-39}},
+            {{-81,0,-188},{-63,0,-174},{-78,0,-158},{-60,0,-143}},
+            {{-87,0,177},{-68,0,165},{-83,0,150},{-65,0,136},{-79,0,120}},
+            {{169,0,48},{184,0,29},{168,0,10},{186,0,-10},{171,0,-31}}
         }};
-        const std::array<glm::vec3,4> camps{{
-            {-174,0,-145},{-174,0,-31},{-170,0,145},{174,0,-112}
+        const std::array<glm::vec3,7> camps{{
+            {-174,0,-145},{-174,0,-31},{-170,0,145},{174,0,-112},
+            {-94,0,-159},{-56,0,157},{194,0,1}
         }};
         auto nearTrail = [&](glm::vec3 p, float clearance) {
             for (const auto& trail : trails) for (std::size_t i=1;i<trail.size();++i) {
@@ -231,11 +235,31 @@ namespace IndustrialZone
                 }
             }
         }
+        // Fill open grass clearings with denser low tufts, while retaining reserved paths.
+        for (int field=0;field<3;++field) {
+            const float startX=field==2 ? 158.f : -96.f;
+            const float endX=field==2 ? 198.f : -48.f;
+            const float startZ=field==0 ? -195.f : field==1 ? 82.f : -55.f;
+            const float endZ=field==0 ? -145.f : field==1 ? 195.f : 55.f;
+            for (float z=startZ;z<=endZ;z+=4.6f) for (float x=startX;x<=endX;x+=4.6f) {
+                const int seed=static_cast<int>((x+250)*31+(z+250)*17)+field*193;
+                const glm::vec3 p(x+std::sin(float(seed))*1.1f,0,z+std::cos(float(seed*3))*1.1f);
+                if (seed%5==0 || !plantingSpace(p,.55f)) continue;
+                const glm::vec3 color=seed%3==0 ? glm::vec3(.33f,.39f,.18f) :
+                    seed%3==1 ? glm::vec3(.27f,.35f,.16f) : grassGreen;
+                for (int tuft=0;tuft<5;++tuft) {
+                    const float height=.42f+float((seed+tuft*7)%5)*.13f;
+                    part(p+glm::vec3((tuft-2)*.19f,height*.5f,(tuft%2)*.22f),
+                        {.32f,height,.32f},color,Shape::Cone);
+                }
+            }
+        }
         // Extra saplings frame the clearings while keeping the paths and tent footprints open.
-        for (std::size_t i=0;i<camps.size();++i) for (int sapling=0;sapling<4;++sapling) {
+        for (std::size_t i=0;i<camps.size();++i) for (int sapling=0;sapling<6;++sapling) {
             const float signX=sapling%2 ? 1.0f : -1.0f;
-            const float signZ=sapling<2 ? 1.0f : -1.0f;
-            const glm::vec3 p=camps[i]+glm::vec3(signX*(12.0f+(i%2)*2.0f),0,signZ*11.0f);
+            const float signZ=sapling<2 || (sapling>=4&&sapling%2==0) ? 1.0f : -1.0f;
+            const float offset=sapling<4 ? 12.0f+(i%2)*2.0f : 16.0f;
+            const glm::vec3 p=camps[i]+glm::vec3(signX*offset,0,signZ*(sapling<4?11.0f:4.0f));
             if (!plantingSpace(p,2.8f)) continue;
             const float height=4.2f+float((i*3+sapling)%4)*.45f;
             part(p+glm::vec3(0,height*.38f,0), {.42f,height*.76f,.42f},wood,Shape::Cylinder);

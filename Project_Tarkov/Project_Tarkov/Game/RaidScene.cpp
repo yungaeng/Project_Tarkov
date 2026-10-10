@@ -106,7 +106,7 @@ void RaidScene::Render()
     glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
     if (width <= 0 || height <= 0) return;
     if (raid.phase == RaidPhase::Hideout) {
-        deployRequested = hud.RenderHideout(hideout);
+        deployRequested = hud.RenderHideout(hideout,*player,playerVisual,shader);
         return;
     }
     Camera& viewCamera = freeLook ? previewCamera : camera;

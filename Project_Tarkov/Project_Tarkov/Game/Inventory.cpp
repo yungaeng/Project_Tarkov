@@ -12,6 +12,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     static const ItemDefinition trousers{ "멀티캠 전투 하의", 1, 0.6f };
     static const ItemDefinition vest{ "멀티캠 숏 전술조끼", 1, 1.2f };
     static const ItemDefinition helmet{ "멀티캠 방탄헬멧", 1, 1.3f };
+    static const ItemDefinition backpack{ "전술 배낭", 1, 1.5f };
     static const ItemDefinition underShirt{ "상의 내의", 1, 0.15f };
     static const ItemDefinition underpants{ "하의 내의", 1, 0.1f };
     switch (type)
@@ -23,6 +24,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     case ItemType::Trousers: return trousers;
     case ItemType::Vest: return vest;
     case ItemType::Helmet: return helmet;
+    case ItemType::Backpack: return backpack;
     case ItemType::UnderShirt: return underShirt;
     case ItemType::Underpants: return underpants;
     }
@@ -44,7 +46,7 @@ bool Inventory::TryAdd(ItemStack stack)
         stack.quantity -= amount;
         if (stack.quantity == 0) break;
     }
-    while (stack.quantity > 0 && next.size() < Capacity)
+    while (stack.quantity > 0 && next.size() < static_cast<std::size_t>(slotCapacity))
     {
         const int amount = (std::min)(limit, stack.quantity);
         next.push_back({ stack.type, amount, availableId++ });
@@ -95,6 +97,14 @@ int Inventory::Take(ItemType type, int quantity)
     return taken;
 }
 
+bool Inventory::SetSlotCapacity(int capacity)
+{
+    if (capacity < static_cast<int>(items.size()) || capacity < static_cast<int>(Capacity) || capacity > 48)
+        return false;
+    slotCapacity = capacity;
+    return true;
+}
+
 float Inventory::TotalWeight() const
 {
     float weight = 0;
@@ -110,13 +120,21 @@ bool Inventory::EquipClothing(StackId id, std::uint32_t& equipped)
     const auto bit = ClothingBit(stack->type);
     if ((equipped & bit) || !Remove(id, 1)) return false;
     equipped |= bit;
+    SetSlotCapacity(InventorySlotsForGear(equipped));
     return true;
 }
 
 bool Inventory::UnequipClothing(ItemType type, std::uint32_t& equipped)
 {
     const auto bit = ClothingBit(type);
-    if (!bit || !(equipped & bit) || !TryAdd({type, 1})) return false;
-    equipped &= ~bit;
+    if (!bit || !(equipped & bit)) return false;
+    const auto next = equipped & ~bit;
+    const int previousCapacity = slotCapacity;
+    if (!SetSlotCapacity(InventorySlotsForGear(next))) return false;
+    if (!TryAdd({type, 1})) {
+        slotCapacity = previousCapacity;
+        return false;
+    }
+    equipped = next;
     return true;
 }
