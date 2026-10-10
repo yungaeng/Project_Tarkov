@@ -42,6 +42,13 @@ void RaidScene::Update(float dt)
         if (raid.returnToHideout) {
             raid.phase = RaidPhase::Hideout;
             raid.returnToHideout = false;
+            raid.remaining = RaidConfig::RaidDuration;
+            raid.extraction = 0.0f;
+            raid.assignedExit = 0;
+            raid.exitDistance = 0.0f;
+            raid.recovered = Inventory{};
+            raid.recoveredClothing = 0;
+            raid.saveMessage.clear();
             Input::SetCursorCaptured(false);
         }
         return;
@@ -122,6 +129,7 @@ void RaidScene::FinishRaid(RaidPhase result)
 {
     freeLook = false;
     raid.phase = result;
+    raid.returnToHideout = false;
     actions.Cancel();
     combat.CancelInput();
     player->StopMovement();
@@ -130,11 +138,21 @@ void RaidScene::FinishRaid(RaidPhase result)
         raid.recovered = player->GetInventory();
         raid.recoveredClothing = player->clothingMask;
         hideout.Recover(raid.recovered, combat.HasRifle(), combat.Magazine(), player->clothingMask);
-    } else {
+        raid.saveMessage = "탈출 성공: 보급품을 은신처로 반입했습니다.";
+    }
+    else if (result == RaidPhase::Dead) {
         player->GetInventory() = Inventory{};
         hideout.Recover(Inventory{}, false, 0, 0);
+        raid.saveMessage = "전사 처리: 장비와 소지품이 모두 손실되었습니다.";
     }
-    raid.saveMessage = hideout.message;
+    else {
+        player->GetInventory() = Inventory{};
+        hideout.Recover(Inventory{}, false, 0, 0);
+        raid.saveMessage = "타이머 종료: MIA 처리되어 장비를 잃었습니다.";
+    }
+
+    if (!hideout.message.empty())
+        raid.saveMessage = hideout.message;
 }
 
 void RaidScene::StartRaid()

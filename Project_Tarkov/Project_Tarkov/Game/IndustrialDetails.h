@@ -20,6 +20,50 @@ namespace IndustrialZone
             for (float y : {.12f, .95f}) part(p+glm::vec3(0,y,0), {.9f,.09f,.9f}, steel, Shape::Cylinder);
             world.AddBox({p-glm::vec3(.43f,0,.43f),p+glm::vec3(.43f,1.2f,.43f)});
         };
+        auto burningDrum = [&](glm::vec3 p) {
+            drum(p);
+            part(p+glm::vec3(0,1.28f,0), {.42f,.16f,.42f}, {1.0f,.22f,.025f}, Shape::Cylinder);
+            part(p+glm::vec3(0,1.7f,0), {.5f,.9f,.5f}, {1.0f,.24f,.025f}, Shape::Cone);
+            part(p+glm::vec3(.08f,1.56f,0), {.25f,.55f,.25f}, {1.0f,.72f,.08f}, Shape::Cone);
+        };
+        auto tent = [&](glm::vec3 p, float yaw) {
+            const float angle = glm::radians(yaw);
+            const glm::vec3 right(std::cos(angle),0,-std::sin(angle));
+            const glm::vec3 side = right * .62f;
+            const glm::vec3 khaki(.39f,.39f,.26f), canvas(.31f,.34f,.23f);
+            part(p+glm::vec3(0,.035f,0), {2.5f,.07f,4.0f}, dark);
+            part(p+side+glm::vec3(0,.78f,0), {1.75f,.12f,4.0f}, khaki, Shape::Box, {0,yaw,48});
+            part(p-side+glm::vec3(0,.78f,0), {1.75f,.12f,4.0f}, canvas, Shape::Box, {0,yaw,-48});
+            part(p+glm::vec3(0,1.39f,0), {.12f,.12f,4.1f}, steel, Shape::Box, {0,yaw,0});
+            for (float z : {-1.85f,1.85f}) {
+                const glm::vec3 end(std::sin(angle)*z,0,std::cos(angle)*z);
+                part(p+glm::vec3(0,.69f,0)+end, {1.9f,.08f,.08f}, wood,Shape::Box,{0,yaw,0});
+            }
+            const glm::vec3 half(
+                1.05f*std::abs(std::cos(angle))+1.8f*std::abs(std::sin(angle)),
+                .78f,
+                1.05f*std::abs(std::sin(angle))+1.8f*std::abs(std::cos(angle)));
+            world.AddBox({p-half,p+half});
+        };
+        const std::array<std::vector<glm::vec3>,4> trails{{
+            {{-197,0,-193},{-190,0,-179},{-197,0,-157},{-181,0,-143},{-190,0,-124},{-166,0,-103}},
+            {{-198,0,-76},{-179,0,-58},{-192,0,-37},{-173,0,-19},{-187,0,1},{-166,0,22},{-176,0,44}},
+            {{-194,0,179},{-174,0,161},{-189,0,141},{-169,0,123},{-179,0,101}},
+            {{166,0,-184},{184,0,-163},{168,0,-142},{187,0,-121},{170,0,-101},{184,0,-80},{166,0,-60},{180,0,-39}}
+        }};
+        const std::array<glm::vec3,4> camps{{
+            {-174,0,-145},{-174,0,-31},{-170,0,145},{174,0,-112}
+        }};
+        auto nearTrail = [&](glm::vec3 p, float clearance) {
+            for (const auto& trail : trails) for (std::size_t i=1;i<trail.size();++i) {
+                const glm::vec2 a(trail[i-1].x,trail[i-1].z), b(trail[i].x,trail[i].z);
+                const glm::vec2 point(p.x,p.z), span=b-a;
+                const float length2=glm::dot(span,span);
+                const float t=length2>0 ? std::clamp(glm::dot(point-a,span)/length2,0.0f,1.0f) : 0.0f;
+                if (glm::length(point-(a+span*t))<clearance) return true;
+            }
+            return false;
+        };
         auto pallet = [&](glm::vec3 p) {
             for (float x : {-.65f,0.f,.65f}) part(p+glm::vec3(x,.12f,0), {.16f,.24f,1.5f},wood);
             for (int k=0;k<5;++k) part(p+glm::vec3(0,.28f,-.6f+k*.3f), {1.6f,.12f,.22f},wood);
@@ -133,6 +177,9 @@ namespace IndustrialZone
         auto plantingSpace = [&](glm::vec3 p, float radius) {
             if (std::abs(p.x)>198-radius || std::abs(p.z)>198-radius) return false;
             if (std::abs(p.x-70)<8+radius || std::abs(p.z-70)<8+radius) return false;
+            if (nearTrail(p,3.8f+radius)) return false;
+            for (const auto camp : camps)
+                if (glm::length(glm::vec2(p.x-camp.x,p.z-camp.z))<9.0f+radius) return false;
             for (std::size_t i=0;i<Buildings.size();++i) {
                 const auto offset=p-Buildings[i];
                 const float halfW=i==2?32.f:20.f, halfD=i==2?27.f:15.f;
@@ -184,6 +231,20 @@ namespace IndustrialZone
                 }
             }
         }
+        // Extra saplings frame the clearings while keeping the paths and tent footprints open.
+        for (std::size_t i=0;i<camps.size();++i) for (int sapling=0;sapling<4;++sapling) {
+            const float signX=sapling%2 ? 1.0f : -1.0f;
+            const float signZ=sapling<2 ? 1.0f : -1.0f;
+            const glm::vec3 p=camps[i]+glm::vec3(signX*(12.0f+(i%2)*2.0f),0,signZ*11.0f);
+            if (!plantingSpace(p,2.8f)) continue;
+            const float height=4.2f+float((i*3+sapling)%4)*.45f;
+            part(p+glm::vec3(0,height*.38f,0), {.42f,height*.76f,.42f},wood,Shape::Cylinder);
+            world.AddBox({p-glm::vec3(.21f,0,.21f),p+glm::vec3(.21f,height*.76f,.21f)});
+            const glm::vec3 crownColor=sapling%2 ? glm::vec3(.20f,.32f,.15f) : glm::vec3(.25f,.34f,.16f);
+            for (int crown=0;crown<2;++crown)
+                part(p+glm::vec3((crown?.6f:-.6f),height*.77f+crown*.25f,0),
+                    {3.6f,3.2f,3.4f},crownColor,Shape::Rock,{0,float(i*67+sapling*31+crown*19),0});
+        }
         // Deterministic forest variation; clear the spawn/extraction approaches.
         auto clear = [&](glm::vec3 p) {
             for (auto spawn : Spawns) if (glm::length(p-spawn)<15) return false;
@@ -216,6 +277,45 @@ namespace IndustrialZone
                 // Inset proxy avoids an invisible square around the irregular rock silhouette.
                 world.AddBox({rock-glm::vec3(.8f,0,.7f),rock+glm::vec3(.8f,1.25f,.7f)});
             }
+        }
+        // Meandering dirt tracks link the wooded approaches without replacing the main roads.
+        const glm::vec3 trailColor(.34f,.29f,.20f), trailEdge(.39f,.33f,.22f);
+        for (std::size_t route=0;route<trails.size();++route) {
+            const auto& points=trails[route];
+            for (std::size_t i=1;i<points.size();++i) {
+                const glm::vec3 delta=points[i]-points[i-1];
+                const float length=glm::length(glm::vec2(delta.x,delta.z));
+                const float yaw=glm::degrees(std::atan2(delta.x,delta.z));
+                const float width=route==3 ? 4.6f : 4.0f;
+                part((points[i]+points[i-1])*.5f+glm::vec3(0,.018f,0),
+                    {width,.025f,length+.35f},route%2 ? trailColor : trailEdge,Shape::Box,{0,yaw,0});
+                if ((i+route)%2==0) {
+                    const float side=(i%2) ? 1.0f : -1.0f;
+                    const glm::vec3 midpoint=(points[i]+points[i-1])*.5f;
+                    const glm::vec3 offset(side*std::cos(glm::radians(yaw))*2.5f,0,
+                        -side*std::sin(glm::radians(yaw))*2.5f);
+                    for (int tuft=0;tuft<3;++tuft)
+                        part(midpoint+offset+glm::vec3((tuft-1)*.55f,.32f,tuft%2*.3f),
+                            {.8f,.7f,.8f},tuft%2 ? shrubGreen : grassGreen,Shape::Rock,
+                            {0,float(route*37+i*19+tuft*41),0});
+                }
+            }
+        }
+        // Small canvas camps sit just off the tracks; the fire barrels also block movement.
+        for (std::size_t i=0;i<camps.size();++i) {
+            const float yaw=static_cast<float>((i*37)%90)-35.0f;
+            tent(camps[i],yaw);
+            burningDrum(camps[i]+glm::vec3(3.0f,0,1.0f));
+            for (int log=0;log<3;++log) {
+                const float angle=glm::radians(float(log*60+i*23));
+                const glm::vec3 offset(std::cos(angle)*4.3f,0,std::sin(angle)*4.3f);
+                part(camps[i]+offset+glm::vec3(0,.16f,0), {1.5f,.28f,.28f},wood,
+                    Shape::Cylinder,{0,float(log*60+i*23),90});
+            }
+            const glm::vec3 shrub=camps[i]+glm::vec3(-3,0,-2.7f);
+            for (int clump=0;clump<4;++clump)
+                part(shrub+glm::vec3((clump%2)*.8f,.48f,(clump/2)*.75f),
+                    {1.4f,1.1f,1.3f},shrubGreen,Shape::Rock,{0,float(i*53+clump*29),0});
         }
     }
 }

@@ -15,6 +15,7 @@
 #include <imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <filesystem>
+#include <string_view>
 #include <Windows.h>
 
 RaidHud::~RaidHud() { Shutdown(); }
@@ -87,7 +88,7 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
     }
     else {
         ImGui::TextUnformatted(raid.phase == RaidPhase::Extracted ? "생존 및 탈출 성공" :
-            raid.phase == RaidPhase::Dead ? "전사 - 장비 손실" : "실종 - 장비 손실");
+            raid.phase == RaidPhase::Dead ? "전사 - 장비 손실" : "실종 - MIA 처리, 장비 손실");
         ImGui::Text("회수한 물품: %d묶음 | %.2f kg", static_cast<int>(raid.recovered.Items().size()), raid.recovered.TotalWeight());
         for (const auto& stack : raid.recovered.Items())
             ImGui::Text("%s x%d", GetItemDefinition(stack.type).name, stack.quantity);
@@ -258,10 +259,22 @@ bool RaidHud::RenderHideout(Hideout& hideout)
     ImGui::SetNextWindowPos({0,0});
     ImGui::SetNextWindowSize(io.DisplaySize);
     ImGui::Begin("은신처", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
-    ImGui::TextColored(accent, "프로젝트 타르코프    /    은신처");
-    ImGui::TextDisabled("캐릭터와 창고                                      산업지대 / 출전 준비");
+    ImGui::TextColored(accent, "PROJECT TARKOV");
+    ImGui::SameLine();
+    ImGui::TextDisabled("/ HIDEOUT");
+    ImGui::SameLine();
+    ImGui::SetCursorPosX((std::max)(ImGui::GetCursorPosX(),io.DisplaySize.x*.39f));
+    for (const char* tab : {"OVERVIEW","GEAR","HEALTH","SKILLS","MAP","TASKS"}) {
+        if (std::string_view(tab)=="GEAR") ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.38f,.37f,.29f,1));
+        else ImGui::BeginDisabled();
+        ImGui::SmallButton(tab);
+        if (std::string_view(tab)=="GEAR") ImGui::PopStyleColor(); else ImGui::EndDisabled();
+        ImGui::SameLine();
+    }
+    ImGui::NewLine();
     ImGui::Separator();
-    ImGui::TextWrapped("장비를 끌어서 창고와 캐릭터 사이로 옮기세요. 캐릭터 영역에 놓으면 소총은 무기 칸에, 보급품은 휴대품 칸에 들어갑니다.");
+    ImGui::TextDisabled("GEAR PREPARATION   /   INDUSTRIAL ZONE   /   FAILED RAIDS LOSE DEPLOYED GEAR");
+    ImGui::Separator();
     ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
 
     GearDrag pending{};
@@ -283,16 +296,16 @@ bool RaidHud::RenderHideout(Hideout& hideout)
             ImGui::EndDragDropTarget();
         }
     };
-    auto card = [&](int id, const char* name, int type, int count, bool sourceStash, StackId stack, float width) {
+    auto card = [&](int id, const char* name, int type, int count, bool sourceStash, StackId stack, float width, float height) {
         ImGui::PushID(id);
         const auto start = ImGui::GetCursorScreenPos();
-        ImGui::Button("##gear", {width,96});
+        ImGui::Button("##gear", {width,height});
         auto* draw = ImGui::GetWindowDrawList();
-        if (count > 0) GearIcon(draw,{start.x+8,start.y+6},type,
+        if (count > 0) GearIcon(draw,{start.x+8,start.y+5},type,
             type==1 ? IM_COL32(122,155,168,255) : IM_COL32(182,171,130,255));
-        draw->AddText({start.x+8,start.y+57},IM_COL32(216,215,195,255),name);
+        draw->AddText({start.x+8,start.y+height-35},IM_COL32(216,215,195,255),name);
         const std::string amount = count ? "x"+std::to_string(count) : "비어 있음";
-        draw->AddText({start.x+8,start.y+76},IM_COL32(155,155,138,255),amount.c_str());
+        draw->AddText({start.x+8,start.y+height-17},IM_COL32(155,155,138,255),amount.c_str());
         if (count > 0 && ImGui::BeginDragDropSource()) {
             GearDrag data{type,sourceStash && type<RifleGear ? (std::min)(count,GetItemDefinition(static_cast<ItemType>(type)).maxStack) : count,sourceStash,stack};
             ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
@@ -309,17 +322,22 @@ bool RaidHud::RenderHideout(Hideout& hideout)
         ImGui::PopID();
     };
 
-    const bool wide=ImGui::GetContentRegionAvail().x>=850;
-    const float panelHeight=(std::max)(440.f,io.DisplaySize.y-235.f);
-    if (ImGui::BeginTable("HideoutLayout",wide?2:1,ImGuiTableFlags_SizingStretchSame)) {
+    const float available=ImGui::GetContentRegionAvail().y;
+    const float panelHeight=(std::max)(260.f,(std::min)(available-100.f,io.DisplaySize.y-300.f));
+    const bool wide=ImGui::GetContentRegionAvail().x>=1050;
+    if (wide && ImGui::BeginTable("HideoutLayout",3,
+        ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
+        ImGui::TableSetupColumn("Character",ImGuiTableColumnFlags_WidthStretch,0.78f);
+        ImGui::TableSetupColumn("Loadout",ImGuiTableColumnFlags_WidthStretch,1.0f);
+        ImGui::TableSetupColumn("Stash",ImGuiTableColumnFlags_WidthStretch,1.45f);
         ImGui::TableNextColumn();
         ImGui::BeginChild("CharacterPanel",{0,panelHeight},true);
-        ImGui::TextColored(accent,"캐릭터 / 출전 장비");
-        ImGui::TextDisabled("탈출에 실패하면 휴대한 장비를 잃습니다");
+        ImGui::TextColored(accent,"CHARACTER");
+        ImGui::TextDisabled("OPERATOR / GEAR SLOTS");
         const auto p=ImGui::GetCursorScreenPos();
         const float center=p.x+ImGui::GetContentRegionAvail().x*.5f;
         auto* draw=ImGui::GetWindowDrawList();
-        const ImU32 body=IM_COL32(69,76,65,255), edge=IM_COL32(123,130,104,255);
+        const ImU32 body=IM_COL32(67,73,62,255), edge=IM_COL32(126,132,105,255);
         draw->AddCircleFilled({center,p.y+24},17,body);
         draw->AddQuadFilled({center-27,p.y+47},{center+27,p.y+47},{center+21,p.y+117},{center-21,p.y+117},body);
         draw->AddLine({center-30,p.y+51},{center-45,p.y+112},edge,10);
@@ -327,50 +345,124 @@ bool RaidHud::RenderHideout(Hideout& hideout)
         draw->AddLine({center-12,p.y+116},{center-20,p.y+172},edge,14);
         draw->AddLine({center+12,p.y+116},{center+20,p.y+172},edge,14);
         ImGui::Dummy({0,185});
-        card(100,"주무기 / 소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x);
-        ImGui::Text("장전 탄약 %d/30",hideout.magazine);
-        ImGui::SameLine();
-        ImGui::BeginDisabled(!hideout.rifle || hideout.magazine>=30 || hideout.stash[2]==0);
-        if (ImGui::SmallButton("창고 탄약으로 장전")) hideout.LoadMagazine();
-        ImGui::EndDisabled();
         ImGui::Separator();
-        ImGui::TextUnformatted("착용 의상 / 해제하면 창고에 보관됩니다");
-        for (int slot = 0; slot < ClothingSlotCount; ++slot) {
-            const auto type = ClothingType(slot);
-            const bool worn = (hideout.clothingMask & ClothingBit(type)) != 0;
-            ImGui::PushID(400 + slot);
-            ImGui::Text("%s: %s", GetItemDefinition(type).name, worn ? "착용 중" : "미착용");
+        ImGui::TextUnformatted("CLOTHING");
+        for (int slot=0;slot<ClothingSlotCount;++slot) {
+            const auto type=ClothingType(slot);
+            const bool worn=(hideout.clothingMask&ClothingBit(type))!=0;
+            ImGui::PushID(400+slot);
+            ImGui::BeginDisabled(!worn&&hideout.stash[static_cast<int>(type)]==0&&hideout.loadout.Count(type)==0);
+            if (ImGui::SmallButton(worn?GetItemDefinition(type).name:"EMPTY SLOT"))
+                hideout.ToggleClothing(type);
             ImGui::SameLine();
-            ImGui::BeginDisabled(!worn && hideout.stash[static_cast<int>(type)] == 0 && hideout.loadout.Count(type) == 0);
-            if (ImGui::SmallButton(worn ? "해제" : "착용")) hideout.ToggleClothing(type);
+            ImGui::TextDisabled("%s",worn?"EQUIPPED":"AVAILABLE");
             ImGui::EndDisabled();
             ImGui::PopID();
         }
+        ImGui::EndChild();
+        target(false,-1);
+
+        ImGui::TableNextColumn();
+        ImGui::BeginChild("LoadoutPanel",{0,panelHeight},true);
+        ImGui::TextColored(accent,"TACTICAL RIG");
+        ImGui::TextDisabled("WEAPON / CARRIED SUPPLIES");
         ImGui::Separator();
-        ImGui::Text("휴대 아이템  %d/12 | %.2f kg",static_cast<int>(hideout.loadout.Items().size()),hideout.loadout.TotalWeight());
-        const int columns=(std::max)(1,static_cast<int>(ImGui::GetContentRegionAvail().x/135));
-        const float cell=(ImGui::GetContentRegionAvail().x-(columns-1)*8)/columns;
+        ImGui::TextUnformatted("PRIMARY");
+        card(100,"RIFLE",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,88);
+        ImGui::Text("MAGAZINE   %d / 30",hideout.magazine);
+        ImGui::SameLine();
+        ImGui::BeginDisabled(!hideout.rifle||hideout.magazine>=30||hideout.stash[2]==0);
+        if (ImGui::SmallButton("LOAD")) hideout.LoadMagazine();
+        ImGui::EndDisabled();
+        ImGui::Separator();
+        ImGui::Text("POCKETS / BACKPACK   %d / 12     %.1f kg",
+            static_cast<int>(hideout.loadout.Items().size()),hideout.loadout.TotalWeight());
         const auto& items=hideout.loadout.Items();
+        const int columns=(std::max)(1,static_cast<int>(ImGui::GetContentRegionAvail().x/105));
+        const float gap=6.f;
+        const float cell=(ImGui::GetContentRegionAvail().x-(columns-1)*gap)/columns;
         for (int i=0;i<static_cast<int>(Inventory::Capacity);++i) {
-            if (i%columns) ImGui::SameLine();
+            if (i%columns) ImGui::SameLine(0,gap);
             if (i<static_cast<int>(items.size())) {
                 const auto& stack=items[i];
-                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell);
-            } else card(200+i,"보급품 칸",0,0,false,0,cell);
+                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell,88);
+            } else card(200+i,"EMPTY",0,0,false,0,cell,88);
         }
         ImGui::EndChild();
-        // EndChild exposes the panel rectangle as a fallback drop target.
         target(false,-1);
 
         ImGui::TableNextColumn();
         ImGui::BeginChild("StashPanel",{0,panelHeight},true);
-        ImGui::TextColored(accent,"창고 / 안전 보관함");
-        ImGui::TextWrapped("레이드에 실패해도 보관한 물품은 유지됩니다. 휴대품을 여기에 끌어 놓아 보관하세요.");
+        ImGui::TextColored(accent,"STASH");
+        ImGui::SameLine();
+        ImGui::TextDisabled("SECURE STORAGE");
+        ImGui::TextDisabled("Stored items are safe if a raid is lost.");
+        ImGui::Separator();
         const float stashWidth=ImGui::GetContentRegionAvail().x;
-        card(300,"소총",RifleGear,hideout.rifles,true,0,stashWidth);
-        for (int i=0;i<ItemTypeCount;++i)
-            card(301+i,GetItemDefinition(static_cast<ItemType>(i)).name,i,hideout.stash[i],true,0,stashWidth);
-        ImGui::Button("여기에 놓아 보관",{stashWidth,72});
+        const int stashColumns=(std::max)(1,static_cast<int>(stashWidth/125));
+        const float stashGap=6.f;
+        const float stashCell=(stashWidth-(stashColumns-1)*stashGap)/stashColumns;
+        card(300,"RIFLE",RifleGear,hideout.rifles,true,0,stashCell,88);
+        if (stashColumns>1) ImGui::SameLine(0,stashGap);
+        for (int i=0;i<ItemTypeCount;++i) {
+            if ((i+1)%stashColumns) ImGui::SameLine(0,stashGap);
+            card(301+i,GetItemDefinition(static_cast<ItemType>(i)).name,i,hideout.stash[i],true,0,stashCell,88);
+        }
+        ImGui::Dummy({0,8});
+        ImGui::Button("DROP HERE TO STORE",{stashWidth,58});
+        target(true,-1);
+        ImGui::EndChild();
+        target(true,-1);
+        ImGui::EndTable();
+    } else if (ImGui::BeginTable("HideoutLayoutNarrow",2,ImGuiTableFlags_SizingStretchSame)) {
+        ImGui::TableNextColumn();
+        ImGui::BeginChild("LoadoutPanelNarrow",{0,panelHeight},true);
+        ImGui::TextColored(accent,"CHARACTER / TACTICAL RIG");
+        card(100,"RIFLE",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,88);
+        ImGui::Text("MAGAZINE %d/30",hideout.magazine);
+        ImGui::SameLine();
+        ImGui::BeginDisabled(!hideout.rifle||hideout.magazine>=30||hideout.stash[2]==0);
+        if (ImGui::SmallButton("LOAD")) hideout.LoadMagazine();
+        ImGui::EndDisabled();
+        ImGui::Text("CARRIED SUPPLIES %d/12 | %.1f kg",
+            static_cast<int>(hideout.loadout.Items().size()),hideout.loadout.TotalWeight());
+        const auto& items=hideout.loadout.Items();
+        const float carriedCell=(ImGui::GetContentRegionAvail().x-6)/2;
+        for (int i=0;i<static_cast<int>(Inventory::Capacity);++i) {
+            if (i%2) ImGui::SameLine();
+            if (i<static_cast<int>(items.size())) {
+                const auto& stack=items[i];
+                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,carriedCell,88);
+            } else card(200+i,"EMPTY",0,0,false,0,carriedCell,88);
+        }
+        ImGui::Separator();
+        ImGui::TextUnformatted("CLOTHING");
+        for (int slot=0;slot<ClothingSlotCount;++slot) {
+            const auto type=ClothingType(slot);
+            const bool worn=(hideout.clothingMask&ClothingBit(type))!=0;
+            ImGui::PushID(500+slot);
+            ImGui::BeginDisabled(!worn&&hideout.stash[static_cast<int>(type)]==0&&hideout.loadout.Count(type)==0);
+            if (ImGui::SmallButton(worn?GetItemDefinition(type).name:"EMPTY SLOT"))
+                hideout.ToggleClothing(type);
+            ImGui::EndDisabled();
+            ImGui::PopID();
+            if (slot%2==0) ImGui::SameLine();
+        }
+        ImGui::EndChild();
+        target(false,-1);
+        ImGui::TableNextColumn();
+        ImGui::BeginChild("StashPanelNarrow",{0,panelHeight},true);
+        ImGui::TextColored(accent,"STASH / SECURE STORAGE");
+        const float stashWidth=ImGui::GetContentRegionAvail().x;
+        const int stashColumns=(std::max)(1,static_cast<int>(stashWidth/125));
+        const float stashCell=(stashWidth-(stashColumns-1)*6)/stashColumns;
+        card(300,"RIFLE",RifleGear,hideout.rifles,true,0,stashCell,88);
+        if (stashColumns>1) ImGui::SameLine(0,6);
+        for (int i=0;i<ItemTypeCount;++i) {
+            if ((i+1)%stashColumns) ImGui::SameLine(0,6);
+            card(301+i,GetItemDefinition(static_cast<ItemType>(i)).name,i,hideout.stash[i],true,0,stashCell,88);
+        }
+        ImGui::Button("DROP HERE TO STORE",{stashWidth,58});
         target(true,-1);
         ImGui::EndChild();
         target(true,-1);
@@ -387,14 +479,18 @@ bool RaidHud::RenderHideout(Hideout& hideout)
         }
     }
     ImGui::Separator();
-    ImGui::RadioButton("남서쪽 출전 / 북동쪽 탈출",&hideout.spawn,0);
+    ImGui::Text("DEPLOYMENT   ");
     ImGui::SameLine();
-    ImGui::RadioButton("북서쪽 출전 / 남동쪽 탈출",&hideout.spawn,1);
-    if (!hideout.rifle) ImGui::TextColored(accent,"장착한 무기 없음 - 비무장 상태로 출전합니다");
-    const bool deploy=ImGui::Button("레이드 진입",{240,44});
+    ImGui::RadioButton("SOUTHWEST  →  NORTHEAST",&hideout.spawn,0);
     ImGui::SameLine();
-    if (ImGui::Button("저장 / 재시도",{140,44})) hideout.Save();
+    ImGui::RadioButton("NORTHWEST  →  SOUTHEAST",&hideout.spawn,1);
+    if (!hideout.rifle) ImGui::SameLine();
+    if (!hideout.rifle) ImGui::TextColored(accent,"UNARMED");
+    const bool deploy=ImGui::Button("ENTER RAID",{220,44});
+    ImGui::SameLine();
+    if (ImGui::Button("SAVE / RETRY",{150,44})) hideout.Save();
     ImGui::EndDisabled();
+    ImGui::SameLine();
     ImGui::TextWrapped("%s",hideout.message.c_str());
     ImGui::End();
     ImGui::PopStyleVar(2);
