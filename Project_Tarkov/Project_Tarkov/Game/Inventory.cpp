@@ -8,8 +8,10 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     static const ItemDefinition bandage{ "붕대", 5, 0.1f };
     static const ItemDefinition water{ "물", 2, 0.6f };
     static const ItemDefinition ammo{ "5.45mm 탄약", 60, 0.01f };
-    static const ItemDefinition shirt{ "상의", 1, 0.4f };
-    static const ItemDefinition skirt{ "치마", 1, 0.35f };
+    static const ItemDefinition shirt{ "멀티캠 전투 상의", 1, 0.4f };
+    static const ItemDefinition trousers{ "멀티캠 전투 하의", 1, 0.6f };
+    static const ItemDefinition vest{ "멀티캠 숏 전술조끼", 1, 1.2f };
+    static const ItemDefinition helmet{ "멀티캠 방탄헬멧", 1, 1.3f };
     static const ItemDefinition underShirt{ "상의 내의", 1, 0.15f };
     static const ItemDefinition underpants{ "하의 내의", 1, 0.1f };
     switch (type)
@@ -18,7 +20,9 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     case ItemType::Water: return water;
     case ItemType::Ammo: return ammo;
     case ItemType::Shirt: return shirt;
-    case ItemType::Skirt: return skirt;
+    case ItemType::Trousers: return trousers;
+    case ItemType::Vest: return vest;
+    case ItemType::Helmet: return helmet;
     case ItemType::UnderShirt: return underShirt;
     case ItemType::Underpants: return underpants;
     }

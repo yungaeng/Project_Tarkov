@@ -40,7 +40,6 @@
     <ClInclude Include="Game\Character.h"><Filter>Game</Filter></ClInclude>
     <ClInclude Include="Physics\CollisionWorld.h"><Filter>Physics</Filter></ClInclude>
     <ClInclude Include="Game\EntityManager.h"><Filter>Game</Filter></ClInclude>
-    <ClInclude Include="Game\GameUnit.h"><Filter>Game</Filter></ClInclude>
     <ClInclude Include="Core\Input.h"><Filter>Core</Filter></ClInclude>
     <ClInclude Include="Core\Logger.h"><Filter>Core</Filter></ClInclude>
     <ClInclude Include="Graphics\Mesh.h"><Filter>Graphics</Filter></ClInclude>

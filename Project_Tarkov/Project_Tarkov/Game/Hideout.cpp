@@ -16,7 +16,7 @@ bool Hideout::Save()
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 3\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
+    out << "HIDEOUT 4\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
     for (int count : stash) out << count << ' ';
     out << '\n' << clothingMask << '\n' << loadout.Items().size() << '\n';
     for (const auto& item : loadout.Items()) out << static_cast<int>(item.type) << ' ' << item.quantity << '\n';
@@ -44,9 +44,9 @@ void Hideout::Load()
     std::string tag, end;
     int version = 0, equipped = 0, count = 0;
     bool valid = static_cast<bool>(in >> tag >> version >> next.rifles >> equipped >> next.magazine);
-    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 3) && next.rifles >= 0 && next.rifles <= MaxStored &&
+    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 4) && next.rifles >= 0 && next.rifles <= MaxStored &&
         (equipped == 0 || equipped == 1) && next.magazine >= 0 && next.magazine <= 30 && (equipped || next.magazine == 0);
-    const int stockCount = version == 1 ? 3 : ItemTypeCount;
+    const int stockCount = version == 1 ? 3 : version < 4 ? 7 : ItemTypeCount;
     for (int i = 0; i < stockCount; ++i) {
         auto& stock = next.stash[i];
         valid = static_cast<bool>(in >> stock) && valid;
@@ -55,7 +55,8 @@ void Hideout::Load()
     if (version >= 2) {
         int clothing = -1;
         valid = static_cast<bool>(in >> clothing) && valid;
-        valid = valid && clothing >= 0 && clothing <= static_cast<int>(AllClothingMask);
+        const int allowedMask = version < 4 ? 15 : static_cast<int>(AllClothingMask);
+        valid = valid && clothing >= 0 && clothing <= allowedMask;
         if (valid) next.clothingMask = static_cast<std::uint32_t>(clothing);
     }
     if (version == 2) {
@@ -63,6 +64,9 @@ void Hideout::Load()
         next.stash[5] = next.stash[6] = 1;
         next.clothingMask = (next.clothingMask & 3u) | 12u;
     }
+    // Existing profiles receive the new carrier and helmet in storage. Preserve
+    // their equipped state, including a deliberately empty loadout after a raid.
+    if (version < 4) next.clothingMask &= 15u;
     valid = static_cast<bool>(in >> count) && valid;
     valid = valid && count >= 0 && count <= static_cast<int>(Inventory::Capacity);
     for (int i = 0; valid && i < count; ++i) {

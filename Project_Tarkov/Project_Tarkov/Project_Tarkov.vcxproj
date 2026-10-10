@@ -173,7 +173,6 @@
     <ClInclude Include="Game\Character.h" />
     <ClInclude Include="Physics\CollisionWorld.h" />
     <ClInclude Include="Game\EntityManager.h" />
-    <ClInclude Include="Game\GameUnit.h" />
     <ClInclude Include="Core\Input.h" />
     <ClInclude Include="Core\Logger.h" />
     <ClInclude Include="Graphics\Mesh.h" />

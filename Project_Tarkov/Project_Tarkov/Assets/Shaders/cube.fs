@@ -20,6 +20,8 @@ void main()
     vec3 color = objectColor;
     if (textured) {
         if (Garment >= 1 && Garment <= 4 && (clothingMask & (1 << (Garment - 1))) == 0) discard;
+        // 5 is the body; 6/7 are independent carrier/helmet slots 4/5.
+        if (Garment >= 6 && Garment <= 7 && (clothingMask & (1 << (Garment - 2))) == 0) discard;
         // Inner layers remain equipped underneath outerwear without intersecting it.
         if (Garment == 3 && (clothingMask & 1) != 0) discard;
         if (Garment == 4 && (clothingMask & 2) != 0) discard;

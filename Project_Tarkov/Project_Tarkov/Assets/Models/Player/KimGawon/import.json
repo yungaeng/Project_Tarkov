@@ -1,8 +1,8 @@
 {
   "source": "F:\\Koikatsu\\Export_PMX\\20261010085443_김가원\\model.pmx",
   "height_m": 1.8,
-  "vertices": 31550,
-  "triangles": 48842,
+  "vertices": 74078,
+  "triangles": 63018,
   "joints": 52,
   "materials": [
     {
@@ -96,13 +96,419 @@
   ],
   "clothing": [],
   "bounds_min": [
-    -72.82703031635393,
-    3.596052403448991,
-    -19.821063480425764
+    -72.82703399658203,
+    3.596052408218384,
+    -19.821063995361328
   ],
   "bounds_max": [
-    72.82669715715483,
-    180.0,
-    11.385391819015231
-  ]
+    72.82669830322266,
+    181.8000030517578,
+    18.174999237060547
+  ],
+  "tactical_outfit": {
+    "generator": "Tools/create_tactical_outfit.py",
+    "base_vertices": 31550,
+    "base_triangles": 48842,
+    "garments": {
+      "1": "shirt",
+      "2": "trousers",
+      "6": "vest",
+      "7": "helmet"
+    },
+    "texture": "Tactical/multicam.png",
+    "atlas_region": [
+      0,
+      2048,
+      2048,
+      2048
+    ],
+    "parts": [
+      {
+        "name": "combat_shirt",
+        "garment": 1,
+        "first_vertex": 31550,
+        "vertex_count": 20148,
+        "triangles": 6716
+      },
+      {
+        "name": "combat_trousers",
+        "garment": 2,
+        "first_vertex": 51698,
+        "vertex_count": 13704,
+        "triangles": 4568
+      },
+      {
+        "name": "trouser_belt",
+        "garment": 2,
+        "first_vertex": 65402,
+        "vertex_count": 288,
+        "triangles": 96
+      },
+      {
+        "name": "belt_buckle",
+        "garment": 2,
+        "first_vertex": 65690,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "shirt_collar",
+        "garment": 1,
+        "first_vertex": 65726,
+        "vertex_count": 288,
+        "triangles": 96
+      },
+      {
+        "name": "shirt_zip",
+        "garment": 1,
+        "first_vertex": 66014,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "trouser_cargo_pocket",
+        "garment": 2,
+        "first_vertex": 66050,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "cargo_flap",
+        "garment": 2,
+        "first_vertex": 66086,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "knee_reinforcement",
+        "garment": 2,
+        "first_vertex": 66122,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "sleeve_pocket",
+        "garment": 1,
+        "first_vertex": 66158,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "trouser_cargo_pocket",
+        "garment": 2,
+        "first_vertex": 66194,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "cargo_flap",
+        "garment": 2,
+        "first_vertex": 66230,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "knee_reinforcement",
+        "garment": 2,
+        "first_vertex": 66266,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "sleeve_pocket",
+        "garment": 1,
+        "first_vertex": 66302,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "carrier_front",
+        "garment": 6,
+        "first_vertex": 66338,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "carrier_back",
+        "garment": 6,
+        "first_vertex": 66374,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "carrier_side",
+        "garment": 6,
+        "first_vertex": 66410,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "shoulder_strap",
+        "garment": 6,
+        "first_vertex": 66446,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "front_strap",
+        "garment": 6,
+        "first_vertex": 66482,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "strap_buckle",
+        "garment": 6,
+        "first_vertex": 66518,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "carrier_side",
+        "garment": 6,
+        "first_vertex": 66554,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "shoulder_strap",
+        "garment": 6,
+        "first_vertex": 66590,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "front_strap",
+        "garment": 6,
+        "first_vertex": 66626,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "strap_buckle",
+        "garment": 6,
+        "first_vertex": 66662,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "magazine_pouch",
+        "garment": 6,
+        "first_vertex": 66698,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "pouch_flap",
+        "garment": 6,
+        "first_vertex": 66734,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "magazine_pouch",
+        "garment": 6,
+        "first_vertex": 66770,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "pouch_flap",
+        "garment": 6,
+        "first_vertex": 66806,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "magazine_pouch",
+        "garment": 6,
+        "first_vertex": 66842,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "pouch_flap",
+        "garment": 6,
+        "first_vertex": 66878,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_webbing",
+        "garment": 6,
+        "first_vertex": 66914,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 66950,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 66986,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67022,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67058,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67094,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67130,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_webbing",
+        "garment": 6,
+        "first_vertex": 67166,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67202,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67238,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67274,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67310,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67346,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "molle_stitch",
+        "garment": 6,
+        "first_vertex": 67382,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_shell",
+        "garment": 7,
+        "first_vertex": 67418,
+        "vertex_count": 6144,
+        "triangles": 2048
+      },
+      {
+        "name": "helmet_crown",
+        "garment": 7,
+        "first_vertex": 73562,
+        "vertex_count": 192,
+        "triangles": 64
+      },
+      {
+        "name": "helmet_side_rail",
+        "garment": 7,
+        "first_vertex": 73754,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_velcro",
+        "garment": 7,
+        "first_vertex": 73790,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_side_rail",
+        "garment": 7,
+        "first_vertex": 73826,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_velcro",
+        "garment": 7,
+        "first_vertex": 73862,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_nvg_mount",
+        "garment": 7,
+        "first_vertex": 73898,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_mount_insert",
+        "garment": 7,
+        "first_vertex": 73934,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_retention",
+        "garment": 7,
+        "first_vertex": 73970,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_retention",
+        "garment": 7,
+        "first_vertex": 74006,
+        "vertex_count": 36,
+        "triangles": 12
+      },
+      {
+        "name": "helmet_chin_cup",
+        "garment": 7,
+        "first_vertex": 74042,
+        "vertex_count": 36,
+        "triangles": 12
+      }
+    ],
+    "note": "Original procedural MultiCam-style approximation; no ballistic gameplay effect."
+  }
 }
