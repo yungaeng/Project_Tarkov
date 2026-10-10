@@ -389,7 +389,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     const bool wide=ImGui::GetContentRegionAvail().x>=1050;
     Player previewCharacter=character;
     previewCharacter.position={0,0,0};
-    previewCharacter.rotation.y=0.f;
+    previewCharacter.rotation.y=hideoutPreviewRotation;
     previewCharacter.clothingMask=hideout.clothingMask;
     CharacterPreview preview{&visual,&previewCharacter,&shader,{}, {}, {}, io.DisplayFramebufferScale,hideout.rifle};
     preview.camera.position={0,1.0f,3.4f};
@@ -400,7 +400,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     auto drawCharacterPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
         ImGui::TextColored(accent,"캐릭터 장비");
-        ImGui::TextDisabled("부위 슬롯을 눌러 착용/해제하거나 아이템을 끌어 놓으세요");
+        ImGui::TextDisabled("캐릭터 좌클릭: 90° 회전  |  부위 슬롯을 눌러 착용/해제하거나 아이템을 끌어 놓으세요");
         const ImVec2 origin=ImGui::GetCursorScreenPos();
         const float panelWidth=ImGui::GetContentRegionAvail().x;
         const float slotWidth=(std::min)(104.f,(panelWidth-126.f)*.5f);
@@ -417,6 +417,10 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         preview.size=modelSize;
         draw->AddCallback(DrawCharacterPreview,&preview);
         draw->AddCallback(ImDrawCallback_ResetRenderState,nullptr);
+        ImGui::SetCursorScreenPos(modelPosition);
+        ImGui::InvisibleButton("CharacterRotationTarget",modelSize);
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+            hideoutPreviewRotation=std::fmod(hideoutPreviewRotation+90.f,360.f);
 
         const ItemType leftTypes[]{ItemType::Helmet,ItemType::Shirt,ItemType::UnderShirt,ItemType::Backpack};
         const char* leftNames[]{"머리","상의","브라","배낭"};

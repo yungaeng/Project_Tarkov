@@ -30,65 +30,77 @@ namespace
         AddTriangle(vertices, a, c, d);
     }
 
+    float BraSurface(float x, float y)
+    {
+        float z = 7.2f + (y - 126.f) * (1.7f / 6.f);
+        if (y > 132.f && y <= 136.f) z = 8.9f + (y - 132.f) * .525f;
+        else if (y > 136.f && y <= 140.f) z = 11.f;
+        else if (y > 140.f) z = 11.f - (y - 140.f) * 1.95f;
+        return z - 2.4f * (x / 12.f) * (x / 12.f) + .25f;
+    }
+
+    float ThongFrontSurface(float x)
+    {
+        return 4.8f - 1.6f * (x / 13.f) * (x / 13.f) + .25f;
+    }
+
+    float ThongBackSurface(float x, float y)
+    {
+        const float drop = std::clamp((y - 82.f) / 14.f, 0.f, 1.f);
+        return -10.f - 4.f * drop + 8.f * (x / 13.f) * (x / 13.f) - .25f;
+    }
+
     void CreateSportsBra(Mesh& mesh)
     {
         std::vector<Vertex> vertices;
-        const float front = 20.f;
-        AddQuad(vertices, {-19, 126, front}, {19, 126, front},
-            {19, 132, front}, {-19, 132, front});
-        AddQuad(vertices, {-19, 131, front}, {-2, 131, front},
-            {-4, 146, front}, {-15, 146, front});
-        AddQuad(vertices, {2, 131, front}, {19, 131, front},
-            {15, 146, front}, {4, 146, front});
-        AddQuad(vertices, {-17, 140, front}, {-13, 140, front},
-            {-9, 164, front}, {-13, 164, front});
-        AddQuad(vertices, {13, 140, front}, {17, 140, front},
-            {13, 164, front}, {9, 164, front});
+        auto point = [](float x, float y) { return glm::vec3(x, y, BraSurface(x, y)); };
+        AddQuad(vertices, point(-11.5f, 126.f), point(11.5f, 126.f),
+            point(11.5f, 131.f), point(-11.5f, 131.f));
+        AddQuad(vertices, point(-11.5f, 131.f), point(-.5f, 131.f),
+            point(-1.5f, 142.f), point(-9.5f, 140.5f));
+        AddQuad(vertices, point(.5f, 131.f), point(11.5f, 131.f),
+            point(9.5f, 140.5f), point(1.5f, 142.f));
+        AddQuad(vertices, point(-9.5f, 139.f), point(-7.2f, 138.f),
+            point(-9.4f, 144.f), point(-11.2f, 143.f));
+        AddQuad(vertices, point(7.2f, 138.f), point(9.5f, 139.f),
+            point(11.2f, 143.f), point(9.4f, 144.f));
         mesh.Create(vertices);
     }
 
     void CreateSportsBraTrim(Mesh& mesh)
     {
         std::vector<Vertex> vertices;
-        const float front = 20.6f;
-        AddQuad(vertices, {-19, 126, front}, {19, 126, front},
-            {19, 129, front}, {-19, 129, front});
+        auto point = [](float x, float y) { return glm::vec3(x, y, BraSurface(x, y) + .12f); };
+        AddQuad(vertices, point(-11.5f, 126.f), point(11.5f, 126.f),
+            point(11.5f, 128.5f), point(-11.5f, 128.5f));
         mesh.Create(vertices);
     }
 
     void CreateThong(Mesh& mesh)
     {
         std::vector<Vertex> vertices;
-        const float front = 13.f;
-        const float back = -13.f;
-        AddQuad(vertices, {-18, 95, front}, {18, 95, front},
-            {18, 100, front}, {-18, 100, front});
-        AddQuad(vertices, {-18, 95, front}, {18, 95, front},
-            {7, 78, front}, {-7, 78, front});
-        AddQuad(vertices, {-18, 95, front}, {-14, 94, front},
-            {-9, 91, front}, {-7, 78, front});
-        AddQuad(vertices, {18, 95, front}, {14, 94, front},
-            {9, 91, front}, {7, 78, front});
-        AddQuad(vertices, {-18, 95, back}, {18, 95, back},
-            {18, 100, back}, {-18, 100, back});
-        AddQuad(vertices, {-18, 95, back}, {-14, 94, front},
-            {-14, 94, back}, {-18, 95, front});
-        AddQuad(vertices, {18, 95, back}, {14, 94, back},
-            {14, 94, front}, {18, 95, front});
-        AddQuad(vertices, {-3, 95, back}, {3, 95, back},
-            {3, 80, back}, {-3, 80, back});
+        auto front = [](float x, float y) { return glm::vec3(x, y, ThongFrontSurface(x)); };
+        auto back = [](float x, float y) { return glm::vec3(x, y, ThongBackSurface(x, y)); };
+        AddQuad(vertices, front(-5.f, 80.f), front(5.f, 80.f),
+            front(13.f, 94.f), front(-13.f, 94.f));
+        AddQuad(vertices, back(-13.f, 94.f), back(13.f, 94.f),
+            back(5.f, 80.f), back(-5.f, 80.f));
+        AddQuad(vertices, front(-13.f, 96.f), front(13.f, 96.f),
+            front(13.f, 99.f), front(-13.f, 99.f));
+        AddQuad(vertices, back(-13.f, 96.f), back(-13.f, 99.f),
+            back(13.f, 99.f), back(13.f, 96.f));
         mesh.Create(vertices);
     }
 
     void CreateThongTrim(Mesh& mesh)
     {
         std::vector<Vertex> vertices;
-        const float front = 13.6f;
-        const float back = -13.6f;
-        AddQuad(vertices, {-18, 97, front}, {18, 97, front},
-            {18, 99.5f, front}, {-18, 99.5f, front});
-        AddQuad(vertices, {-18, 97, back}, {-18, 99.5f, back},
-            {18, 99.5f, back}, {18, 97, back});
+        auto front = [](float x, float y) { return glm::vec3(x, y, ThongFrontSurface(x) + .12f); };
+        auto back = [](float x, float y) { return glm::vec3(x, y, ThongBackSurface(x, y) - .12f); };
+        AddQuad(vertices, front(-13.f, 96.5f), front(13.f, 96.5f),
+            front(13.f, 99.f), front(-13.f, 99.f));
+        AddQuad(vertices, back(-13.f, 96.5f), back(-13.f, 99.f),
+            back(13.f, 99.f), back(13.f, 96.5f));
         mesh.Create(vertices);
     }
 
@@ -297,12 +309,14 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
         Renderer::Draw(shader, assets->thongTrim, camera, garmentModel, width, height, glm::vec3(.48f,.48f,.45f));
     }
     if (character.clothingMask & ClothingBit(ItemType::Backpack)) {
+        auto backpackModel = glm::translate(actor, glm::vec3(0, .17f, 0));
+        backpackModel = glm::scale(backpackModel, glm::vec3(.55f, .85f, .85f));
         auto cubePart = [&](const glm::vec3& position, const glm::vec3& size, const glm::vec3& color) {
-            auto part = glm::translate(actor, position);
+            auto part = glm::translate(backpackModel, position);
             part = glm::scale(part, size);
             Renderer::Draw(shader, assets->backpack, camera, part, width, height, color);
         };
-        auto pack = glm::translate(actor, glm::vec3(0, 1.13f, -0.25f));
+        auto pack = glm::translate(backpackModel, glm::vec3(0, 1.13f, -0.25f));
         pack = glm::scale(pack, glm::vec3(.40f,.52f,.22f));
         Renderer::Draw(shader, assets->backpack, camera, pack, width, height, glm::vec3(.20f,.24f,.18f));
         cubePart({0,1.01f,-.375f},{.31f,.24f,.065f},{.24f,.27f,.20f});
@@ -313,8 +327,10 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
         const glm::vec3 camoColors[]{
             {.30f,.32f,.23f}, {.16f,.19f,.14f}, {.38f,.35f,.27f}, {.10f,.13f,.10f}
         };
+        auto camouflageModel = glm::translate(actor, glm::vec3(0, .17f, 0));
+        camouflageModel = glm::scale(camouflageModel, glm::vec3(1.f, .85f, 1.f));
         for (std::size_t shade = 0; shade < assets->backpackCamouflage.size(); ++shade)
-            Renderer::Draw(shader,assets->backpackCamouflage[shade],camera,actor,width,height,camoColors[shade]);
+            Renderer::Draw(shader,assets->backpackCamouflage[shade],camera,camouflageModel,width,height,camoColors[shade]);
         for (float row = .91f; row <= 1.27f; row += .075f) {
             cubePart({0,row,-.422f},{.31f,.018f,.014f},{.19f,.22f,.17f});
             for (float side : {-.105f,.105f})
