@@ -13,6 +13,7 @@ public:
     static void Init()
     {
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_MULTISAMPLE);
     }
     static void BeginFrame();
     // Call once after binding the scene framebuffer and before scene Draw calls.
