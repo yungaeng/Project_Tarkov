@@ -4,7 +4,7 @@
 
 void Renderer::BeginFrame()
 {
-    glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
+    glClearColor(0.20f, 0.23f, 0.24f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -27,6 +27,9 @@ void Renderer::PrepareFrame(Shader& shader, Camera& camera, float width, float h
     shader.SetMat4("view", view);
     shader.SetMat4("projection", projection);
     shader.SetVec3("lightPos", glm::vec3(5, 10, 5));
+    shader.SetVec3("lightDirection", glm::vec3(-0.45f, -1.0f, -0.35f));
+    shader.SetVec3("lightColor", glm::vec3(1.0f, 0.91f, 0.78f));
+    shader.SetVec3("fogColor", glm::vec3(0.47f, 0.51f, 0.50f));
     shader.SetVec3("viewPos", camera.position);
     shader.SetInt("skinWeights", 6);
     shader.SetInt("bonePalette", 7);
