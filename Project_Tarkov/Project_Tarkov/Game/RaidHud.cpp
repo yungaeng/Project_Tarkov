@@ -481,6 +481,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     bool transfer = false, toStash = false, equipPending = false;
     bool healPending = false;
     bool healDialogRequested = false;
+    bool equipRifleByClick = false;
     BodyPart healTarget = BodyPart::Head;
     ItemType equipmentTarget = ItemType::Shirt;
     auto target = [&](bool stashTarget, int accepts) {
@@ -758,9 +759,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 if (hideoutHealthTab && item.type==static_cast<int>(ItemType::Bandage)) {
                     healDialogRequested=true;
                 } else if (item.type==RifleGear) {
-                    pending={RifleGear,1,true,0};
-                    transfer=true;
-                    toStash=false;
+                    equipRifleByClick=true;
                 } else if (IsClothing(static_cast<ItemType>(item.type))) {
                     pending={item.type,1,true,0};
                     equipmentTarget=static_cast<ItemType>(item.type);
@@ -778,6 +777,11 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 ImGui::EndTooltip();
             }
             ImGui::PopID();
+            if (equipRifleByClick) {
+                if (!hideout.rifle) hideout.ToggleRifle();
+                else hideout.message="이미 소총을 장착했습니다.";
+                equipRifleByClick=false;
+            }
         }
         ImGui::EndChild();
         ImGui::EndChild();
