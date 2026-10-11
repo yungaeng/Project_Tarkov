@@ -14,12 +14,6 @@ namespace
 {
     constexpr int StashColumns = 20;
     constexpr int StashRows = 4;
-    constexpr int BandageBonus = 6;
-
-    int StashItemLimit(std::size_t type)
-    {
-        return type == static_cast<std::size_t>(ItemType::Bandage) ? 16 : 10;
-    }
 
     std::pair<int, int> StashItemSize(int type)
     {
@@ -64,8 +58,7 @@ std::vector<StashPlacement> Hideout::StashLayout() const
 void Hideout::NormalizeStash()
 {
     rifles = (std::clamp)(rifles, 0, 10);
-    for (std::size_t type = 0; type < stash.size(); ++type)
-        stash[type] = (std::clamp)(stash[type], 0, StashItemLimit(type));
+    for (auto& count : stash) count = (std::clamp)(count, 0, 10);
     std::array<int, ItemTypeCount + 1> remaining{};
     for (int type = 0; type <= ItemTypeCount; ++type)
         remaining[static_cast<std::size_t>(type)] =
@@ -144,7 +137,7 @@ bool Hideout::Save()
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 9\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
+    out << "HIDEOUT 8\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
     for (int count : stash) out << count << ' ';
     out << '\n' << stashLayout.size() << '\n';
     for (const auto& item : stashLayout)
@@ -174,7 +167,6 @@ void Hideout::Load()
     if (!exists) {
         loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
         ready = true;
-        stash[static_cast<std::size_t>(ItemType::Bandage)] += BandageBonus;
         Save();
         return;
     }
@@ -184,7 +176,7 @@ void Hideout::Load()
     std::string tag, end;
     int version = 0, equipped = 0, count = 0;
     bool valid = static_cast<bool>(in >> tag >> version >> next.rifles >> equipped >> next.magazine);
-    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 9) && next.rifles >= 0 && next.rifles <= MaxStored &&
+    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 8) && next.rifles >= 0 && next.rifles <= MaxStored &&
         (equipped == 0 || equipped == 1) && next.magazine >= 0 && next.magazine <= 30 && (equipped || next.magazine == 0);
     const int stockCount = version == 1 ? 3 : version < 4 ? 7 : version < 5 ? 9 : ItemTypeCount;
     for (int i = 0; i < stockCount; ++i) {
@@ -247,13 +239,11 @@ void Hideout::Load()
     if (in >> extra) valid = false;
     if (!valid) { ready = false; message = "은신처 저장 파일이 손상되었습니다. 원본은 보존했으며, 플레이 전에 복구해야 합니다."; return; }
     next.rifle = equipped != 0;
-    if (version < 9)
-        next.stash[static_cast<std::size_t>(ItemType::Bandage)] += BandageBonus;
     next.NormalizeStash();
     next.ready = true;
-    next.message = version < 9 ? "붕대 6개를 보충하고 저장 데이터를 변환했습니다." : "은신처를 불러왔습니다.";
+    next.message = version < 8 ? "저장 데이터를 새 형식으로 변환했습니다." : "은신처를 불러왔습니다.";
     *this = std::move(next);
-    if (version < 9) Save();
+    if (version < 8) Save();
 }
 
 void Hideout::Transfer(ItemType type, int quantity, bool take)
@@ -267,10 +257,7 @@ void Hideout::Transfer(ItemType type, int quantity, bool take)
         if (!loadout.TryAdd({type, quantity})) { message = "출전 장비 공간이 가득 찼습니다."; return; }
         stock -= quantity;
     } else {
-        if (stock > StashItemLimit(static_cast<std::size_t>(type)) - quantity) {
-            message = "해당 아이템의 창고 보관 한도를 초과합니다.";
-            return;
-        }
+        if (stock > MaxStored - quantity) { message = "창고가 가득 찼습니다."; return; }
         stock += loadout.Take(type, quantity);
     }
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
@@ -283,10 +270,7 @@ void Hideout::StoreStack(StackId id)
     if (!item) { message = "해당 아이템이 더 이상 없습니다."; return; }
     const auto type = static_cast<std::size_t>(item->type);
     const int quantity = item->quantity;
-    if (stash[type] > StashItemLimit(type) - quantity) {
-        message = "해당 아이템의 창고 보관 한도를 초과합니다.";
-        return;
-    }
+    if (stash[type] > MaxStored - quantity) { message = "창고가 가득 찼습니다."; return; }
     Hideout before = *this;
     if (!loadout.Remove(id, quantity)) return;
     stash[type] += quantity;
