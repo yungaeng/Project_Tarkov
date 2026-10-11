@@ -11,6 +11,7 @@
 #include <fstream>
 #include <filesystem>
 #include <memory>
+#include <random>
 #include <utility>
 
 RaidScene::RaidScene(SceneManager& manager)
@@ -147,6 +148,7 @@ void RaidScene::Render()
 
 void RaidScene::FinishRaid(RaidPhase result)
 {
+    hideout.vitals = player->vitals;
     freeLook = false;
     raid.phase = result;
     raid.returnToHideout = false;
@@ -198,16 +200,24 @@ void RaidScene::FinishRaid(RaidPhase result)
 
 void RaidScene::StartRaid()
 {
-    if (!hideout.ready || !hideout.Depart()) return;
+    if (!hideout.ready) return;
+    if (!hideout.vitals.Alive()) {
+        hideout.message = "건강 탭에서 피격 부위를 치료한 뒤 출격하세요.";
+        return;
+    }
+    if (!hideout.Depart()) return;
     freeLook = false;
     raid = RaidStatus{};
     raid.phase = RaidPhase::Active;
+    static std::mt19937 randomEngine(std::random_device{}());
+    hideout.spawn = std::uniform_int_distribution<int>(0, static_cast<int>(IndustrialZone::Spawns.size()) - 1)(randomEngine);
     raid.assignedExit = hideout.spawn;
     player = std::make_unique<Player>();
     player->SetCollisionWorld(&collisionWorld);
     player->position = IndustrialZone::Spawns[hideout.spawn];
     player->GetInventory() = hideout.loadout;
     player->clothingMask = hideout.clothingMask;
+    player->vitals = hideout.vitals;
     startingInventory = player->GetInventory();
     startingClothingMask = player->clothingMask;
     playerController.Reset();

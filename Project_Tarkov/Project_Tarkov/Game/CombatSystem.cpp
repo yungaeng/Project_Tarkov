@@ -184,7 +184,8 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         {
             if (enemy.attackTimer == 0 && seesPlayer)
             {
-                player.vitals.Damage(8);
+                const int hitPart = (static_cast<int>(i) + static_cast<int>(elapsedSeconds)) % BodyPartCount;
+                player.vitals.Damage(static_cast<BodyPart>(hitPart), 40);
                 enemy.fired = true;
                 enemy.attackTimer = 1.2f;
             }

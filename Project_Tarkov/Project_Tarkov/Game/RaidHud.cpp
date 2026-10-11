@@ -21,7 +21,73 @@
 #include <imgui_impl_opengl3.h>
 #include <stdexcept>
 #include <filesystem>
-#include <string_view>
+#include <array>
+
+namespace
+{
+    std::array<ImVec4, BodyPartCount> BodyPartRects(ImVec2 origin, float scale)
+    {
+        const float rectangles[BodyPartCount][4]{
+            {52, 0, 84, 35}, {39, 43, 97, 112}, {42, 120, 94, 153},
+            {8, 47, 31, 133}, {105, 47, 128, 133}, {43, 163, 68, 254}, {77, 163, 102, 254}
+        };
+        std::array<ImVec4, BodyPartCount> result{};
+        for (int i = 0; i < BodyPartCount; ++i)
+            result[i] = {origin.x + rectangles[i][0] * scale, origin.y + rectangles[i][1] * scale,
+                origin.x + rectangles[i][2] * scale, origin.y + rectangles[i][3] * scale};
+        return result;
+    }
+
+    ImU32 BodyPartColor(float health)
+    {
+        if (health <= 10) return IM_COL32(10, 12, 12, 180);
+        if (health <= 50) return IM_COL32(210, 48, 42, 155);
+        return IM_COL32(220, 226, 220, 92);
+    }
+
+    void DrawBodyMannequin(const PlayerVitals& vitals, ImVec2 origin, float scale, ImDrawList* target = nullptr)
+    {
+        auto* draw = target ? target : ImGui::GetWindowDrawList();
+        const auto rectangles = BodyPartRects(origin, scale);
+        const float headRadius = 16 * scale;
+        draw->AddCircleFilled({origin.x + 68 * scale, origin.y + 17 * scale}, headRadius,
+            BodyPartColor(vitals.BodyHealth(BodyPart::Head)), 20);
+        for (int i = 1; i < BodyPartCount; ++i) {
+            const auto& rectangle = rectangles[static_cast<std::size_t>(i)];
+            draw->AddRectFilled({rectangle.x, rectangle.y}, {rectangle.z, rectangle.w},
+                BodyPartColor(vitals.BodyHealth(static_cast<BodyPart>(i))), 5 * scale);
+        }
+        for (int i = 0; i < BodyPartCount; ++i) {
+            const auto& rectangle = rectangles[static_cast<std::size_t>(i)];
+            if (i == static_cast<int>(BodyPart::Head))
+                draw->AddCircle({origin.x + 68 * scale, origin.y + 17 * scale}, 16 * scale,
+                    IM_COL32(238, 235, 218, 100), 20, 1 * scale);
+            else draw->AddRect({rectangle.x, rectangle.y}, {rectangle.z, rectangle.w},
+                IM_COL32(238, 235, 218, 100), 5 * scale, 0, 1 * scale);
+        }
+    }
+
+    template<typename Handler>
+    void BodyPartButtons(const PlayerVitals& vitals, ImVec2 origin, float scale, const char* id,
+        bool enabled, Handler&& handler)
+    {
+        const auto rectangles = BodyPartRects(origin, scale);
+        for (int i = 0; i < BodyPartCount; ++i) {
+            const auto& rectangle = rectangles[static_cast<std::size_t>(i)];
+            ImGui::SetCursorScreenPos({rectangle.x, rectangle.y});
+            ImGui::PushID(id);
+            ImGui::InvisibleButton(BodyPartNames[i], {rectangle.z - rectangle.x, rectangle.w - rectangle.y});
+            if (enabled && ImGui::IsItemClicked(ImGuiMouseButton_Left))
+                handler(static_cast<BodyPart>(i));
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::Text("%s: %.0f / 100",BodyPartNames[i],vitals.BodyHealth(static_cast<BodyPart>(i)));
+                ImGui::EndTooltip();
+            }
+            ImGui::PopID();
+        }
+    }
+}
 
 RaidHud::~RaidHud() { Shutdown(); }
 
@@ -65,29 +131,15 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
     const auto& io = ImGui::GetIO();
     const ImGuiWindowFlags overlay = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing;
-    ImGui::SetNextWindowPos(ImVec2(16, 16));
-    ImGui::SetNextWindowBgAlpha(0.8f);
-    ImGui::Begin("조작 안내", nullptr, overlay);
-    ImGui::TextUnformatted("WASD 이동 | T 탈출 지점 이동 | I 인벤토리 | Q 종료");
-    ImGui::Text("인벤토리: %d / %d칸 | %.2f kg", static_cast<int>(inventory.Items().size()),
-        inventory.SlotCapacity(), inventory.TotalWeight());
-    ImGui::Text("체력 %.0f/100 | 수분 %.0f/100 | 스태미나 %.0f/100", player.vitals.Health(), player.vitals.Hydration(), player.vitals.Stamina());
-    ImGui::Text("소총: %s | %d/30 | 예비 탄약 %d | 남은 적 %d", combat.Equipped() ? "장착 중" : combat.HasRifle() ? "수납 중" : "미보유", combat.Magazine(), inventory.Count(ItemType::Ammo), combat.LivingEnemies());
-    ImGui::TextUnformatted("1 장착/수납 | 마우스 왼쪽 사격 | 오른쪽 조준 | R 재장전");
-    if (combat.ReloadTime() > 0) ImGui::Text("재장전 중 %.1f초", combat.ReloadTime());
-    if (!combat.Message().empty()) ImGui::TextUnformatted(combat.Message().c_str());
-    if (!player.vitals.Alive()) ImGui::TextUnformatted("사망했습니다 - Q키로 종료");
-    ImGui::End();
-
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 16, 16), ImGuiCond_Always, ImVec2(1, 0));
     ImGui::Begin("레이드", nullptr, raid.Finished() ? (overlay & ~ImGuiWindowFlags_NoInputs) : overlay);
     const int seconds = static_cast<int>(std::ceil(raid.remaining));
-    ImGui::Text("산업지대 | %02d:%02d", seconds / 60, seconds % 60);
-    ImGui::Text("위치 X %.0f / Z %.0f (북쪽 = -Z)", player.position.x, player.position.z);
+    ImGui::Text("%02d:%02d", seconds / 60, seconds % 60);
+    ImGui::Text("위치 X %.0f / Z %.0f", player.position.x, player.position.z);
     if (raid.phase == RaidPhase::Active) {
         const auto& exit = IndustrialZone::Exits[raid.assignedExit];
         ImGui::Text("지정 탈출구: %s | %.0fm", exit.name, raid.exitDistance);
-        ImGui::Text("탈출구 X %.0f / Z %.0f | 초록색 사각형 안에서 대기", exit.position.x, exit.position.z);
+        ImGui::Text("탈출구 X %.0f / Z %.0f", exit.position.x, exit.position.z);
         if (raid.extraction > 0)
             ImGui::Text("탈출까지 %.1f초", RaidConfig::DefaultExtractTime - raid.extraction);
     }
@@ -107,6 +159,47 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
         ImGui::EndDisabled();
     }
     ImGui::End();
+
+    if (raid.phase == RaidPhase::Active) {
+        auto* draw = ImGui::GetForegroundDrawList();
+        const float scale = (std::min)(0.78f, (std::max)(0.45f, io.DisplaySize.y / 900.0f));
+        float nextY = 16.0f;
+        if (player.vitals.Health() < 100 || actions.healingMode) {
+            const ImVec2 origin(16, nextY);
+            DrawBodyMannequin(player.vitals, origin, scale, draw);
+            if (actions.healingMode) {
+                ImGui::SetNextWindowPos(origin);
+                ImGui::SetNextWindowSize({150 * scale + 20, 310 * scale + 20});
+                ImGui::Begin("치료 부위 선택", nullptr, ImGuiWindowFlags_NoDecoration |
+                    ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove |
+                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+                    ImGuiWindowFlags_NoBringToFrontOnFocus);
+                BodyPartButtons(player.vitals, origin, scale, "RaidHeal", Input::IsFocused(),
+                    [&](BodyPart part) { actions.RequestHeal(part); });
+                draw->AddText({16, origin.y + 264 * scale}, IM_COL32(238, 222, 170, 240),
+                    "치료 부위 클릭");
+                ImGui::End();
+            }
+            nextY += 310 * scale;
+        }
+        if (player.vitals.Hydration() <= 10) {
+            const ImVec2 low(16, nextY);
+            const ImVec2 high(74, nextY + 54);
+            draw->AddRectFilled(low, high, IM_COL32(20, 25, 28, 100), 5);
+            draw->AddCircleFilled({45, nextY + 34}, 11, IM_COL32(96, 190, 221, 135), 20);
+            draw->AddTriangleFilled({45, nextY + 6}, {34, nextY + 33}, {56, nextY + 33},
+                IM_COL32(96, 190, 221, 135));
+            nextY += 62;
+        }
+        if (player.vitals.Stamina() <= 10) {
+            const ImVec2 low(16, nextY);
+            const ImVec2 high(74, nextY + 54);
+            draw->AddRectFilled(low, high, IM_COL32(20, 25, 28, 100), 5);
+            draw->AddRect({35, nextY + 10}, {55, nextY + 45}, IM_COL32(220, 226, 220, 150), 2, 0, 2);
+            draw->AddTriangleFilled({20, nextY + 27}, {33, nextY + 18}, {33, nextY + 36},
+                IM_COL32(220, 226, 220, 170));
+        }
+    }
 
     if (raid.phase == RaidPhase::Active && !inventoryOpen)
     {
@@ -133,9 +226,16 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
     }
     else if (raid.phase == RaidPhase::Active && inventoryOpen)
     {
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
+        const float inventoryWidth=actions.healingMode?
+            (std::max)(160.f,(std::min)(560.f,io.DisplaySize.x-190.f)):
+            (io.DisplaySize.x < 560 ? io.DisplaySize.x : 560);
+        const float inventoryLeft=actions.healingMode?
+            180.f+(std::max)(0.f,io.DisplaySize.x-180.f-inventoryWidth)*.5f:
+            (io.DisplaySize.x-inventoryWidth)*.5f;
+        const float inventoryCenterX=inventoryLeft+inventoryWidth*.5f;
+        ImGui::SetNextWindowPos(ImVec2(inventoryCenterX, io.DisplaySize.y * 0.5f),
             ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x < 560 ? io.DisplaySize.x : 560,
+        ImGui::SetNextWindowSize(ImVec2(inventoryWidth,
             io.DisplaySize.y < 420 ? io.DisplaySize.y : 420));
         ImGui::Begin("인벤토리 [I키로 닫기]", nullptr,
             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
@@ -180,7 +280,7 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
             ImGui::Separator();
             ImGui::Text("%s | %d/%d | 개당 %.2f kg | 묶음 %.2f kg", definition.name, stack->quantity, definition.maxStack, definition.weight, definition.weight * stack->quantity);
             ImGui::TextUnformatted(IsClothing(stack->type) ? "착용하면 캐릭터 외형에 반영됩니다. 해제 후 버릴 수 있습니다." :
-                stack->type == ItemType::Bandage ? "효과: 체력 +20" : stack->type == ItemType::Water ? "효과: 수분 +30" : "탄약: 인벤토리를 닫고 R키로 재장전하세요");
+                stack->type == ItemType::Bandage ? "효과: 선택한 부위 체력 +20" : stack->type == ItemType::Water ? "효과: 수분 +30" : "탄약: 인벤토리를 닫고 R키로 재장전하세요");
             ImGui::BeginDisabled(!Input::IsFocused() || !player.vitals.Alive());
             const bool usable = IsClothing(stack->type) ? !(player.clothingMask & ClothingBit(stack->type)) :
                 stack->type == ItemType::Bandage ? player.vitals.Health() < 100 : stack->type == ItemType::Water && player.vitals.Hydration() < 100;
@@ -309,22 +409,31 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::SameLine();
     ImGui::TextDisabled("/ 은신처");
     ImGui::SameLine();
-    ImGui::SetCursorPosX((std::max)(ImGui::GetCursorPosX(),io.DisplaySize.x*.39f));
-    for (const char* tab : {"전체","장비","건강","기술","지도","임무"}) {
-        if (std::string_view(tab)=="장비") ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.38f,.37f,.29f,1));
-        else ImGui::BeginDisabled();
-        ImGui::SmallButton(tab);
-        if (std::string_view(tab)=="장비") ImGui::PopStyleColor(); else ImGui::EndDisabled();
-        ImGui::SameLine();
-    }
+    ImGui::SetCursorPosX((std::max)(ImGui::GetCursorPosX(),io.DisplaySize.x*.34f));
+    const bool equipmentTabActive=!hideoutHealthTab;
+    if (equipmentTabActive) ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.38f,.37f,.29f,1));
+    if (ImGui::SmallButton("장비")) hideoutHealthTab=false;
+    if (equipmentTabActive) ImGui::PopStyleColor();
+    ImGui::SameLine();
+    const bool healthTabActive=hideoutHealthTab;
+    if (healthTabActive) ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.38f,.37f,.29f,1));
+    if (ImGui::SmallButton("건강")) hideoutHealthTab=true;
+    if (healthTabActive) ImGui::PopStyleColor();
+    ImGui::SameLine();
+    ImGui::BeginDisabled();
+    for (const char* tab : {"기술","지도","임무"}) { ImGui::SmallButton(tab); ImGui::SameLine(); }
+    ImGui::EndDisabled();
+    ImGui::SetCursorPosX(io.DisplaySize.x-115.f);
+    if (ImGui::Button("게임 종료",{95,27}))
+        glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
     ImGui::NewLine();
-    ImGui::Separator();
-    ImGui::TextDisabled("장비 준비   /   산업지대   /   레이드 실패 시 휴대한 장비를 잃습니다");
     ImGui::Separator();
     ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
 
     GearDrag pending{};
     bool transfer = false, toStash = false, equipPending = false;
+    bool healPending = false;
+    BodyPart healTarget = BodyPart::Head;
     ItemType equipmentTarget = ItemType::Shirt;
     auto target = [&](bool stashTarget, int accepts) {
         if (!hideout.ready || !Input::IsFocused()) return;
@@ -381,7 +490,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
             ImGui::TextUnformatted(name);
-            ImGui::TextUnformatted(sourceStash ? "캐릭터 인벤토리로 끌어 옮기세요." : "창고로 끌어 옮겨 보관하세요.");
+            ImGui::TextUnformatted(sourceStash ? "출전 장비로 끌어 옮기세요." : "보관 영역으로 끌어 옮기세요.");
             ImGui::EndTooltip();
         }
         ImGui::PopID();
@@ -402,8 +511,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
     auto drawCharacterPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        ImGui::TextColored(accent,"캐릭터 장비");
-        ImGui::TextDisabled("캐릭터 좌클릭: 90° 회전  |  부위 슬롯을 눌러 착용/해제하거나 아이템을 끌어 놓으세요");
         const ImVec2 origin=ImGui::GetCursorScreenPos();
         const float panelWidth=ImGui::GetContentRegionAvail().x;
         const float slotWidth=(std::min)(104.f,(panelWidth-126.f)*.5f);
@@ -461,10 +568,54 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::EndChild();
     };
 
+    auto drawHealthPanel=[&](const char* childId) {
+        ImGui::BeginChild(childId,{0,panelHeight},true);
+        const ImVec2 origin=ImGui::GetCursorScreenPos();
+        const float panelWidth=ImGui::GetContentRegionAvail().x;
+        const float scale=(std::min)(.72f,(panelHeight-20.f)/260.f);
+        const ImVec2 bodyOrigin(origin.x+8.f,origin.y+8.f);
+        DrawBodyMannequin(hideout.vitals,bodyOrigin,scale);
+        const auto rectangles=BodyPartRects(bodyOrigin,scale);
+        for (int i=0;i<BodyPartCount;++i) {
+            const auto& rectangle=rectangles[static_cast<std::size_t>(i)];
+            ImGui::SetCursorScreenPos({rectangle.x,rectangle.y});
+            ImGui::PushID(700+i);
+            ImGui::InvisibleButton("HealDrop",{rectangle.z-rectangle.x,rectangle.w-rectangle.y});
+            if (ImGui::BeginDragDropTarget()) {
+                const auto* candidate=ImGui::GetDragDropPayload();
+                if (candidate&&candidate->IsDataType(GearPayload)&&candidate->DataSize==sizeof(GearDrag)) {
+                    const auto data=*static_cast<const GearDrag*>(candidate->Data);
+                    if (data.fromStash&&data.type==static_cast<int>(ItemType::Bandage)) {
+                        if (const auto* payload=ImGui::AcceptDragDropPayload(GearPayload);payload&&payload->IsDelivery()) {
+                            healPending=true;
+                            healTarget=static_cast<BodyPart>(i);
+                        }
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::Text("%s: %.0f / 100",BodyPartNames[i],hideout.vitals.BodyHealth(static_cast<BodyPart>(i)));
+                ImGui::TextUnformatted("붕대를 끌어 놓아 치료");
+                ImGui::EndTooltip();
+            }
+            ImGui::PopID();
+        }
+        const ImVec2 modelPosition(origin.x+panelWidth*.43f,origin.y+8.f);
+        const ImVec2 modelSize(panelWidth*.55f,panelHeight-24.f);
+        auto* draw=ImGui::GetWindowDrawList();
+        draw->AddRectFilled(modelPosition,{modelPosition.x+modelSize.x,modelPosition.y+modelSize.y},
+            IM_COL32(25,29,26,235),3.f);
+        preview.position=modelPosition;
+        preview.size=modelSize;
+        draw->AddCallback(DrawCharacterPreview,&preview);
+        draw->AddCallback(ImDrawCallback_ResetRenderState,nullptr);
+        ImGui::EndChild();
+    };
+
     auto drawLoadoutPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        ImGui::TextColored(accent,"캐릭터 인벤토리");
-        ImGui::TextDisabled("장착 아이템과 소모품을 함께 보관합니다");
         ImGui::Separator();
         ImGui::TextUnformatted("주무기");
         card(100,"소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,82);
@@ -493,27 +644,82 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
     auto drawStashPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        ImGui::TextColored(accent,"창고");
-        ImGui::TextDisabled("안전 보관  /  보관품은 레이드 손실과 관계없이 유지됩니다");
-        ImGui::Separator();
         const float stashWidth=ImGui::GetContentRegionAvail().x;
-        const int stashColumns=(std::max)(1,static_cast<int>(stashWidth/125));
-        const float gap=6.f;
+        constexpr int stashColumns=20, stashRows=4;
+        const float gap=2.f;
         const float cell=(stashWidth-(stashColumns-1)*gap)/stashColumns;
-        card(300,"소총",RifleGear,hideout.rifles,true,0,cell,82);
-        if (stashColumns>1) ImGui::SameLine(0,gap);
-        for (int i=0;i<ItemTypeCount;++i) {
-            if ((i+1)%stashColumns) ImGui::SameLine(0,gap);
-            card(301+i,GetItemDefinition(static_cast<ItemType>(i)).name,i,hideout.stash[i],true,0,cell,82);
+        const float gridHeight=stashRows*cell+(stashRows-1)*gap;
+        const ImVec2 gridOrigin=ImGui::GetCursorScreenPos();
+        auto* draw=ImGui::GetWindowDrawList();
+        for (int y=0;y<stashRows;++y) for (int x=0;x<stashColumns;++x) {
+            const ImVec2 low(gridOrigin.x+x*(cell+gap),gridOrigin.y+y*(cell+gap));
+            draw->AddRectFilled(low,{low.x+cell,low.y+cell},IM_COL32(20,23,20,255));
         }
-        ImGui::Dummy({0,8});
-        ImGui::Button("여기에 놓아 창고에 보관",{stashWidth,56});
+        ImGui::SetCursorScreenPos(gridOrigin);
+        ImGui::InvisibleButton("StashGridDropTarget",{stashWidth,gridHeight});
         target(true,-1);
+        const auto placements=hideout.StashLayout();
+        for (std::size_t i=0;i<placements.size();++i) {
+            const auto& item=placements[i];
+            const ImVec2 low(gridOrigin.x+item.x*(cell+gap),gridOrigin.y+item.y*(cell+gap));
+            const ImVec2 size(item.width*cell+(item.width-1)*gap,item.height*cell+(item.height-1)*gap);
+            const ImU32 colors[]{
+                IM_COL32(135,68,58,255), IM_COL32(63,112,137,255), IM_COL32(152,132,71,255),
+                IM_COL32(91,113,77,255), IM_COL32(84,95,70,255), IM_COL32(121,97,83,255),
+                IM_COL32(111,86,82,255), IM_COL32(91,104,80,255), IM_COL32(122,123,111,255),
+                IM_COL32(72,99,76,255), IM_COL32(96,111,86,255)
+            };
+            const ImU32 color=colors[item.type];
+            draw->AddRectFilled(low,{low.x+size.x,low.y+size.y},color,2);
+            const ImU32 iconColor=IM_COL32(225,220,197,215);
+            if (item.type==static_cast<int>(ItemType::Bandage)) {
+                draw->AddRectFilled({low.x+size.x*.42f,low.y+size.y*.2f},
+                    {low.x+size.x*.58f,low.y+size.y*.8f},iconColor,1);
+                draw->AddRectFilled({low.x+size.x*.2f,low.y+size.y*.42f},
+                    {low.x+size.x*.8f,low.y+size.y*.58f},iconColor,1);
+            } else if (item.type==static_cast<int>(ItemType::Water)) {
+                draw->AddCircleFilled({low.x+size.x*.5f,low.y+size.y*.55f},
+                    (std::min)(size.x,size.y)*.22f,iconColor,12);
+            } else if (item.type==RifleGear) {
+                draw->AddLine({low.x+size.x*.12f,low.y+size.y*.75f},
+                    {low.x+size.x*.88f,low.y+size.y*.25f},iconColor,(std::max)(1.f,cell*.12f));
+            } else {
+                draw->AddRectFilled({low.x+size.x*.27f,low.y+size.y*.27f},
+                    {low.x+size.x*.73f,low.y+size.y*.73f},iconColor,2);
+            }
+            ImGui::SetCursorScreenPos(low);
+            ImGui::PushID(static_cast<int>(i));
+            ImGui::InvisibleButton("StashItem",{size.x,size.y});
+            if (ImGui::BeginDragDropSource()) {
+                GearDrag data{item.type,1,true,0};
+                ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
+                const char* name=item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name;
+                ImGui::Text("%s",name);
+                ImGui::EndDragDropSource();
+            }
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::TextUnformatted(item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name);
+                ImGui::Text("창고 수량: %d",item.type==RifleGear?hideout.rifles:hideout.stash[item.type]);
+                ImGui::EndTooltip();
+            }
+            target(true,-1);
+            ImGui::PopID();
+        }
         ImGui::EndChild();
-        target(true,-1);
     };
 
-    if (ImGui::BeginTable(wide?"HideoutLayout":"HideoutLayoutNarrow",wide?3:2,
+    if (hideoutHealthTab) {
+        if (ImGui::BeginTable("HideoutHealthLayout",2,ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
+            ImGui::TableSetupColumn("건강 상태",ImGuiTableColumnFlags_WidthStretch,.9f);
+            ImGui::TableSetupColumn("보관품",ImGuiTableColumnFlags_WidthStretch,1.1f);
+            ImGui::TableNextColumn();
+            drawHealthPanel("HealthCharacterPanel");
+            ImGui::TableNextColumn();
+            drawStashPanel("HealthStashPanel");
+            ImGui::EndTable();
+        }
+    } else if (ImGui::BeginTable(wide?"HideoutLayout":"HideoutLayoutNarrow",wide?3:2,
         ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
         if (wide) {
             ImGui::TableSetupColumn("캐릭터",ImGuiTableColumnFlags_WidthStretch,.82f);
@@ -537,7 +743,9 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::EndTable();
     }
     // Mutate only after every source item has been drawn, never while iterating inventory.
-    if (equipPending) {
+    if (healPending) {
+        hideout.HealBodyPart(healTarget);
+    } else if (equipPending) {
         hideout.ToggleClothing(equipmentTarget,pending.fromStash);
     } else if (transfer) {
         if (pending.type==RifleGear) {
@@ -549,14 +757,11 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         }
     }
     ImGui::Separator();
-    ImGui::Text("출격 지점   ");
-    ImGui::SameLine();
-    ImGui::RadioButton("남서쪽  →  북동쪽",&hideout.spawn,0);
-    ImGui::SameLine();
-    ImGui::RadioButton("북서쪽  →  남동쪽",&hideout.spawn,1);
-    if (!hideout.rifle) ImGui::SameLine();
-    if (!hideout.rifle) ImGui::TextColored(accent,"비무장");
+    if (!hideout.rifle) ImGui::TextColored(accent,"비무장 출격");
+    if (!hideout.vitals.Alive()) ImGui::TextDisabled("건강 탭에서 피격 부위를 치료한 뒤 출격하세요.");
+    ImGui::BeginDisabled(!hideout.vitals.Alive());
     const bool deploy=ImGui::Button("레이드 출격",{220,44});
+    ImGui::EndDisabled();
     ImGui::SameLine();
     if (ImGui::Button("저장 / 재시도",{150,44})) hideout.Save();
     ImGui::EndDisabled();

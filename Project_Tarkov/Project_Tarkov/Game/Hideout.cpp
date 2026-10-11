@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <utility>
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -9,17 +10,82 @@
 
 namespace { constexpr int MaxStored = 1000000; }
 
+std::vector<StashPlacement> Hideout::StashLayout() const
+{
+    constexpr int columns = 20, rows = 4;
+    std::array<bool, columns * rows> occupied{};
+    std::vector<StashPlacement> placements;
+    auto place = [&](int type, int width, int height) {
+        for (int y = 0; y <= rows - height; ++y) {
+            for (int x = 0; x <= columns - width; ++x) {
+                bool fits = true;
+                for (int row = 0; row < height && fits; ++row)
+                    for (int column = 0; column < width; ++column)
+                        if (occupied[(y + row) * columns + x + column]) { fits = false; break; }
+                if (!fits) continue;
+                for (int row = 0; row < height; ++row)
+                    for (int column = 0; column < width; ++column)
+                        occupied[(y + row) * columns + x + column] = true;
+                placements.push_back({type, x, y, width, height});
+                return true;
+            }
+        }
+        return false;
+    };
+    auto dimensions = [](int type) {
+        int width = 1, height = 1;
+        if (type == ItemTypeCount) return std::pair{3, 1};
+        switch (static_cast<ItemType>(type)) {
+        case ItemType::Water: width = 1; height = 2; break;
+        case ItemType::Ammo: width = 2; height = 1; break;
+        case ItemType::Shirt: case ItemType::Trousers:
+        case ItemType::UnderShirt: case ItemType::Underpants:
+            width = 1; height = 2; break;
+        case ItemType::Vest: case ItemType::Helmet: width = 2; height = 2; break;
+        case ItemType::Backpack: width = 3; height = 3; break;
+        default: break;
+        }
+        return std::pair{width, height};
+    };
+    for (int unit = 0; unit < 10; ++unit) {
+        for (int type = 0; type <= ItemTypeCount; ++type) {
+            const int available = type == ItemTypeCount ? rifles : stash[static_cast<std::size_t>(type)];
+            if (unit >= available) continue;
+            const auto [width, height] = dimensions(type);
+            place(type, width, height);
+        }
+    }
+    return placements;
+}
+
+void Hideout::NormalizeStash()
+{
+    rifles = (std::clamp)(rifles, 0, 10);
+    for (auto& count : stash) count = (std::clamp)(count, 0, 10);
+    std::array<int, ItemTypeCount> kept{};
+    int keptRifles = 0;
+    for (const auto& placement : StashLayout()) {
+        if (placement.type == ItemTypeCount) ++keptRifles;
+        else ++kept[static_cast<std::size_t>(placement.type)];
+    }
+    rifles = keptRifles;
+    stash = kept;
+}
+
 bool Hideout::Save()
 {
     if (!ready) { message = "프로필을 사용할 수 없습니다. 저장 파일을 복구한 뒤 다시 실행하세요."; return false; }
+    NormalizeStash();
     std::error_code error;
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 6\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
+    out << "HIDEOUT 7\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
     for (int count : stash) out << count << ' ';
     out << '\n' << clothingMask << '\n' << loadout.Items().size() << '\n';
     for (const auto& item : loadout.Items()) out << static_cast<int>(item.type) << ' ' << item.quantity << '\n';
+    for (float value : vitals.BodyHealth()) out << value << ' ';
+    out << vitals.Hydration() << ' ' << vitals.Stamina() << '\n';
     out << "END\n";
     out.flush();
     const bool written = static_cast<bool>(out);
@@ -50,7 +116,7 @@ void Hideout::Load()
     std::string tag, end;
     int version = 0, equipped = 0, count = 0;
     bool valid = static_cast<bool>(in >> tag >> version >> next.rifles >> equipped >> next.magazine);
-    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 6) && next.rifles >= 0 && next.rifles <= MaxStored &&
+    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 7) && next.rifles >= 0 && next.rifles <= MaxStored &&
         (equipped == 0 || equipped == 1) && next.magazine >= 0 && next.magazine <= 30 && (equipped || next.magazine == 0);
     const int stockCount = version == 1 ? 3 : version < 4 ? 7 : version < 5 ? 9 : ItemTypeCount;
     for (int i = 0; i < stockCount; ++i) {
@@ -73,11 +139,6 @@ void Hideout::Load()
     if (version < 5) {
         next.clothingMask &= (1u << 6) - 1;
     }
-    // One-time test grant for existing profiles; preserve their saved inventory.
-    if (version < 6) {
-        next.rifles = (std::min)(MaxStored, next.rifles + 50);
-        for (auto& stock : next.stash) stock = (std::min)(MaxStored, stock + 50);
-    }
     if (valid) next.loadout.SetSlotCapacity(InventorySlotsForGear(next.clothingMask));
     valid = static_cast<bool>(in >> count) && valid;
     valid = valid && count >= 0 && count <= next.loadout.SlotCapacity();
@@ -90,15 +151,23 @@ void Hideout::Load()
                 valid = next.loadout.TryAdd({static_cast<ItemType>(type), quantity});
         }
     }
+    if (version >= 7) {
+        std::array<float, BodyPartCount> body{};
+        float hydration = 0, stamina = 0;
+        for (auto& value : body) valid = static_cast<bool>(in >> value) && valid;
+        valid = static_cast<bool>(in >> hydration >> stamina) && valid;
+        if (valid) valid = next.vitals.Restore(body, hydration, stamina);
+    }
     valid = static_cast<bool>(in >> end) && end == "END" && valid;
     std::string extra;
     if (in >> extra) valid = false;
     if (!valid) { ready = false; message = "은신처 저장 파일이 손상되었습니다. 원본은 보존했으며, 플레이 전에 복구해야 합니다."; return; }
     next.rifle = equipped != 0;
+    next.NormalizeStash();
     next.ready = true;
-    next.message = version < 6 ? "테스트 아이템 50개를 지급했습니다." : "은신처를 불러왔습니다.";
+    next.message = version < 7 ? "저장 데이터를 새 형식으로 변환했습니다." : "은신처를 불러왔습니다.";
     *this = std::move(next);
-    if (version < 6) Save();
+    if (version < 7) Save();
 }
 
 void Hideout::Transfer(ItemType type, int quantity, bool take)
@@ -153,6 +222,23 @@ void Hideout::LoadMagazine()
     const int rounds = (std::min)(30 - magazine, stash[2]);
     magazine += rounds; stash[2] -= rounds;
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
+}
+
+bool Hideout::HealBodyPart(BodyPart part)
+{
+    if (!ready || stash[static_cast<std::size_t>(ItemType::Bandage)] <= 0) {
+        message = "창고에 붕대가 없습니다.";
+        return false;
+    }
+    Hideout before = *this;
+    if (!vitals.Heal(part)) {
+        message = "해당 부위는 치료할 필요가 없습니다.";
+        return false;
+    }
+    --stash[static_cast<std::size_t>(ItemType::Bandage)];
+    if (!Save()) { auto failure = message; *this = std::move(before); message = failure; return false; }
+    message = std::string(BodyPartNames[static_cast<int>(part)]) + " 부위를 치료했습니다.";
+    return true;
 }
 
 void Hideout::ToggleClothing(ItemType type, bool fromStash)
