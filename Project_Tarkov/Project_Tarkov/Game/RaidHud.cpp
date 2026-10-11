@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include "RaidHud.h"
 #include "RaidStatus.h"
 #include "../RaidSummary.h"
@@ -21,7 +22,6 @@
 #include <stdexcept>
 #include <filesystem>
 #include <string_view>
-#include <Windows.h>
 
 RaidHud::~RaidHud() { Shutdown(); }
 
@@ -597,7 +597,7 @@ bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& charac
         {modelPosition.x + modelSize.x, modelPosition.y + modelSize.y},
         IM_COL32(25, 29, 26, 235), 3.0f);
 
-    CharacterPreview preview{&visual, &character, &shader, modelPosition, modelSize, io.DisplayFramebufferScale, summary.recoveredRifle};
+    CharacterPreview preview{&visual, &character, &shader, {}, modelPosition, modelSize, io.DisplayFramebufferScale, summary.recoveredRifle};
     preview.camera.position = {0, 1.0f, 3.4f};
     preview.camera.front = {0, 0, -1};
     preview.camera.up = {0, 1, 0};

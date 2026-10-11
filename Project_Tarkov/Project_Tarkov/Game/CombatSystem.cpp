@@ -105,6 +105,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             const auto delta = camera.position + camera.front * nearest - origin;
             const float length = glm::length(delta);
             int victim = -1;
+            glm::vec3 impactPosition(0.0f);
             if (length > 0.001f && glm::dot(delta, camera.front) > 0)
             {
                 const auto direction = delta / length;
@@ -114,7 +115,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                     if (RayBox(origin, direction, box.min, box.max, nearest, hit)) { nearest = hit; wall = true; }
                 for (std::size_t i = 0; i < enemies.size(); ++i)
                     if (enemies[i].health > 0 && HitBody(enemies[i].body, origin, direction, nearest, hit) && hit < nearest)
-                    { nearest = hit; victim = static_cast<int>(i); }
+                    { nearest = hit; victim = static_cast<int>(i); impactPosition = origin + direction * hit; }
                 message = victim >= 0 ? "명중" : wall ? "엄폐물에 명중" : "빗나감";
             }
             else message = "엄폐물이 사격을 가로막고 있습니다";
@@ -131,7 +132,6 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                     std::ostringstream timestamp;
                     timestamp << std::setfill('0') << std::setw(2) << killSeconds / 60
                         << ':' << std::setw(2) << killSeconds % 60;
-                    const glm::vec3 impact = origin + direction * nearest;
                     std::ostringstream location;
                     location << "X " << static_cast<int>(std::round(enemy.body.position.x))
                         << " / Z " << static_cast<int>(std::round(enemy.body.position.z));
@@ -139,7 +139,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                         "적 #" + std::to_string(victim + 1),
                         timestamp.str(),
                         location.str(),
-                        impact.y - enemy.body.position.y > enemy.body.GetBodyHeight() * 0.75f ? "머리" : "몸통"
+                        impactPosition.y - enemy.body.position.y > enemy.body.GetBodyHeight() * 0.75f ? "머리" : "몸통"
                     });
                 }
             }
