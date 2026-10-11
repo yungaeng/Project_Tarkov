@@ -30,7 +30,7 @@ public:
     bool IsMoving() const { return moving; }
     bool IsLooting() const { return looting; }
     void SetLooting(bool value) { looting = value; if (value) { StopMovement(); sprinting = false; } }
-    float GetBodyHeight() const { return looting ? .75f : crouching ? settings.crouchingBodyHeight : settings.bodyHeight; }
+    float GetBodyHeight() const { return looting ? 1.2f : crouching ? settings.crouchingBodyHeight : settings.bodyHeight; }
     // A standing request is rejected when the full standing body would overlap geometry.
     // Controllers may repeat the request each frame to stand as soon as space is available.
     void SetCrouching(bool value);
