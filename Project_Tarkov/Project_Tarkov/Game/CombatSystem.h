@@ -15,7 +15,10 @@ struct Enemy
     Character body;
     glm::vec3 home{0}, lastSeen{0};
     float health = 100, attackTimer = 1, searchTimer = 0;
-    bool returning = false, lootDropped = false;
+    bool returning = false;
+    Inventory inventory;
+    bool rifle = true;
+    float deadTime = 0;
     EnemyState state = EnemyState::Patrol;
     std::unique_ptr<CharacterVisual> visual;
     bool fired = false;
@@ -37,6 +40,11 @@ public:
     const std::string& Message() const { return message; }
     int LivingEnemies() const;
     const std::vector<KillRecord>& KillRecords() const { return kills; }
+    int FindCorpse(const Player& player, const CollisionWorld& world) const;
+    const Enemy* Corpse(int index) const;
+    bool TakeCorpseItem(int index, StackId id, Player& player);
+    bool TakeCorpseRifle(int index);
+    bool LootSpaceClear(const glm::vec3& center, int ignoredCorpse) const;
     void CancelInput() { reload = 0; aiming = false; }
     void Reset() { enemies.clear(); kills.clear(); elapsedSeconds = 0; CancelInput(); }
 private:

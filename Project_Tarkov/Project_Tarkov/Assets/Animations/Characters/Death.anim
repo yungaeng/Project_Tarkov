@@ -1,33 +1,25 @@
-# Non-looping death: frozen source pose + local joint offsets.
-# Root is visual space (meters), all bone positions use model centimeters.
+# Supine death with raised knees and spread thighs; bind-relative final pose.
+# Root rotates backwards so the front of the character faces the sky.
 Root 0 0 0 0 0 0 0
-Root 0.18 0 0 -0.03 -8 0 3
-Root 0.48 0 0 -0.14 -38 0 6
-Root 0.85 0 0 -0.30 -82 0 4
-Root 1.05 0 0 -0.34 -92 0 2
-Root 1.25 0 0 -0.34 -88 0 2
+Root 0.25 0 0 -0.08 -15 0 0
+Root 0.65 0 0 -0.22 -65 0 0
+Root 1.05 0 0 -0.34 -94 0 0
+Root 1.25 0 0 -0.34 -90 0 0
+Hips 0 0 0 0 0 0 0
 Spine 0 0 0 0 0 0 0
-Spine 0.28 0 0 0 12 0 0
-Spine 0.85 0 0 0 -4 0 0
-Spine 1.25 0 0 0 -2 0 0
-Head 0 0 0 0 0 0 0
-Head 0.18 0 0 0 -18 0 8
-Head 1.25 0 0 0 -8 0 12
+Spine1 0 0 0 0 0 0 0
+Spine2 0 0 0 0 0 0 0
+Neck 0 0 0 0 0 0 0
+Head 0 0 0 0 -5 0 8
 RightArm 0 0 0 0 0 0 0
-RightArm 0.45 0 0 0 0 12 -20
-RightArm 1.25 0 0 0 0 18 -35
+RightForeArm 0 0 0 0 0 -10 0
+RightHand 0 0 0 0 0 0 0
 LeftArm 0 0 0 0 0 0 0
-LeftArm 0.45 0 0 0 0 -15 25
-LeftArm 1.25 0 0 0 0 -20 40
-RightUpLeg 0 0 0 0 0 0 0
-RightUpLeg 0.48 0 0 0 -18 0 6
-RightUpLeg 1.25 0 0 0 -5 0 8
-RightLeg 0 0 0 0 0 0 0
-RightLeg 0.48 0 0 0 35 0 0
-RightLeg 1.25 0 0 0 12 0 0
-LeftUpLeg 0 0 0 0 0 0 0
-LeftUpLeg 0.48 0 0 0 -12 0 -5
-LeftUpLeg 1.25 0 0 0 -3 0 -6
-LeftLeg 0 0 0 0 0 0 0
-LeftLeg 0.48 0 0 0 22 0 0
-LeftLeg 1.25 0 0 0 6 0 0
+LeftForeArm 0 0 0 0 0 10 0
+LeftHand 0 0 0 0 0 0 0
+RightUpLeg 0 0 0 0 65 0 -45
+RightLeg 0 0 0 0 -115 0 0
+RightFoot 0 0 0 0 0 0 0
+LeftUpLeg 0 0 0 0 65 0 45
+LeftLeg 0 0 0 0 -115 0 0
+LeftFoot 0 0 0 0 0 0 0

@@ -57,6 +57,9 @@ def main():
         assert (area>1e-6).all()
     # The carrier must stop above the waist/abdomen, including its pouches.
     vest=v[v['garment']==6]
+    spine = list(j).index('Spine2')
+    assert np.all(vest['joints'][:, 0] == spine) and np.allclose(vest['weights'][:, 0], 1), \
+        'Carrier must be rigidly bound to Spine2; regenerate stale tactical assets'
     assert vest['position'][:,1].min()>127
     assert vest['position'][:,1].min()-117>10
     head=list(j).index('Head')

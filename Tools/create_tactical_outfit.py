@@ -220,10 +220,35 @@ class Outfit:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path)
+    parser.add_argument('--vest-only', action='store_true', help='Regenerate the carrier while preserving other assets')
     args = parser.parse_args()
     directory = args.directory
     base, triangles, joints = load(directory/'character.mesh')
     report = json.loads((directory/'import.json').read_text(encoding='utf-8'))
+    if args.vest_only:
+        builder = Outfit(base, joints)
+        builder.build(triangles)
+        parts = [part for part in builder.parts if part['garment'] == 6]
+        vv, tt, offset = [], [], 0
+        for part in parts:
+            vv.append(part['vertices']); tt.append(part['triangles'] + offset)
+            offset += len(part['vertices'])
+        vest, faces = np.concatenate(vv), np.concatenate(tt)
+        selected = np.flatnonzero(base['garment'] == 6)
+        old_faces = triangles[np.all(base['garment'][triangles] == 6, axis=1)]
+        assert len(selected) == len(vest) and np.array_equal(old_faces, selected[faces]), \
+            'Carrier topology changed; use a full regeneration'
+        base = base.copy()
+        base[selected] = vest
+        write_mesh(directory/'Tactical/vest.mesh', vest, faces, joints)
+        write_mesh(directory/'character.mesh', base, triangles, joints)
+        report.update(bounds_min=base['position'].min(0).tolist(), bounds_max=base['position'].max(0).tolist())
+        (directory/'import.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+        print('Regenerated carrier only; other geometry and underwear preserved.')
+        return
+    # Underwear is appended after the tactical meshes; its old offsets are stale
+    # after regeneration. Refit it once the new base has been written.
+    refit_underwear = report.pop('fitted_underwear', None) is not None
     previous = report.get('tactical_outfit')
     if previous:
         base = base[:previous['base_vertices']]
@@ -270,6 +295,11 @@ def main():
         note='Original procedural MultiCam-style approximation; no ballistic gameplay effect.')
     (directory/'import.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(f'Created tactical outfit: {len(combined)-len(base)} added vertices; {len(combined_triangles)-len(triangles)} added triangles.')
+    if refit_underwear:
+        import subprocess
+        import sys
+        subprocess.run([sys.executable, str(Path(__file__).with_name('fit_underwear.py')),
+                        str(directory)], check=True)
 
 
 if __name__ == '__main__': main()
