@@ -41,7 +41,7 @@ vec3 AcesToneMap(vec3 value)
 
 void main()
 {
-    if (firstPerson && BindPosition.y > 155.0) discard;
+    if (firstPerson && BindPosition.y > 165.0) discard;
     vec3 albedo = SrgbToLinear(objectColor);
     if (textured) {
         if (Garment >= 1 && Garment <= 4 && (clothingMask & (1 << (Garment - 1))) == 0) discard;

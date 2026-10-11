@@ -521,19 +521,19 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::PushID(id);
         const auto start = ImGui::GetCursorScreenPos();
         ImGui::Button("##gear", {width,height});
-        auto* draw = ImGui::GetWindowDrawList();
-        if (count > 0) GearIcon(draw,{start.x+8,start.y+5},type,
-            type==1 ? IM_COL32(122,155,168,255) : IM_COL32(182,171,130,255));
-        draw->AddText({start.x+8,start.y+height-35},IM_COL32(216,215,195,255),name);
-        const std::string amount = count ? "x"+std::to_string(count) : "비어 있음";
-        draw->AddText({start.x+8,start.y+height-17},IM_COL32(155,155,138,255),amount.c_str());
+        target(sourceStash,sourceStash || type != RifleGear ? -1 : RifleGear);
         if (count > 0 && ImGui::BeginDragDropSource()) {
             GearDrag data{type,sourceStash && type<RifleGear ? (std::min)(count,GetItemDefinition(static_cast<ItemType>(type)).maxStack) : count,sourceStash,stack};
             ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
             ImGui::Text("%s x%d",name,type==RifleGear?1:data.quantity);
             ImGui::EndDragDropSource();
         }
-        target(sourceStash,sourceStash || type != RifleGear ? -1 : RifleGear);
+        auto* draw = ImGui::GetWindowDrawList();
+        if (count > 0) GearIcon(draw,{start.x+8,start.y+5},type,
+            type==1 ? IM_COL32(122,155,168,255) : IM_COL32(182,171,130,255));
+        draw->AddText({start.x+8,start.y+height-35},IM_COL32(216,215,195,255),name);
+        const std::string amount = count ? "x"+std::to_string(count) : "비어 있음";
+        draw->AddText({start.x+8,start.y+height-17},IM_COL32(155,155,138,255),amount.c_str());
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
             ImGui::TextUnformatted(name);
@@ -560,9 +560,9 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::BeginChild(childId,{0,panelHeight},true);
         const ImVec2 origin=ImGui::GetCursorScreenPos();
         const float panelWidth=ImGui::GetContentRegionAvail().x;
-        const float slotWidth=(std::min)(208.f,panelWidth*.34f);
-        const float modelWidth=(std::max)(116.f,panelWidth-slotWidth*2-18.f);
-        const float modelHeight=(std::max)(245.f,(std::min)(340.f,panelHeight-210.f));
+        const float slotWidth=(std::min)(208.f,(std::max)(100.f,(panelWidth-140.f)*.5f));
+        const float modelWidth=(std::max)(1.f,panelWidth-slotWidth*2-18.f);
+        const float modelHeight=(std::max)(245.f,(std::min)(480.f,panelHeight-24.f));
         const ImVec2 modelPosition(origin.x+slotWidth+9.f,origin.y+8.f);
         const ImVec2 modelSize(modelWidth,modelHeight);
         auto* draw=ImGui::GetWindowDrawList();
@@ -589,7 +589,12 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             const bool worn=(hideout.clothingMask&ClothingBit(type))!=0;
             const bool available=hideout.loadout.Count(type)>0||hideout.stash[static_cast<int>(type)]>0;
             const float slotHeight=124.f;
+            ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.14f,.16f,.14f,.42f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(.28f,.29f,.23f,.55f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(.38f,.37f,.29f,.65f));
             ImGui::Button("##equipment-slot",{slotWidth,slotHeight});
+            ImGui::PopStyleColor(3);
+            equipmentDropTarget(type);
             if (ImGui::IsItemClicked() && (worn||available))
                 hideout.ToggleClothing(type);
             auto* slotDraw=ImGui::GetWindowDrawList();
@@ -598,7 +603,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             slotDraw->AddText({position.x+6,position.y+7},IM_COL32(208,207,188,255),name);
             const char* value=worn?GetItemDefinition(type).name:"비어 있음";
             slotDraw->AddText({position.x+6,position.y+70},worn?IM_COL32(219,205,146,255):IM_COL32(137,143,128,255),value);
-            equipmentDropTarget(type);
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
                 ImGui::Text("%s 슬롯",name);
@@ -664,14 +668,9 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
     auto drawLoadoutPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        const ImVec2 panelOrigin=ImGui::GetCursorScreenPos();
-        const ImVec2 panelAvailable=ImGui::GetContentRegionAvail();
-        ImGui::InvisibleButton("LoadoutDropTarget",panelAvailable);
-        target(false,-1);
-        ImGui::SetCursorScreenPos(panelOrigin);
         ImGui::Separator();
         ImGui::TextUnformatted("주무기");
-        card(100,"소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,164);
+        card(100,"소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,82);
         ImGui::Text("탄창   %d / 30",hideout.magazine);
         ImGui::SameLine();
         ImGui::BeginDisabled(!hideout.rifle||hideout.magazine>=30||hideout.stash[static_cast<int>(ItemType::Ammo)]==0);
@@ -688,8 +687,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             if (i%columns) ImGui::SameLine(0,gap);
             if (i<static_cast<int>(items.size())) {
                 const auto& stack=items[i];
-                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell,164);
-            } else card(200+i,"빈 슬롯",0,0,false,0,cell,164);
+                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell,82);
+            } else card(200+i,"빈 슬롯",0,0,false,0,cell,82);
         }
         ImGui::EndChild();
     };
@@ -699,15 +698,15 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const float stashWidth=ImGui::GetContentRegionAvail().x;
         constexpr int stashColumns=20, stashRows=4;
         const float gap=2.f;
-        const float cell=(std::max)(1.f,(stashWidth-9.f*gap)/10.f);
-        const float gridHeight=stashRows*cell+(stashRows-1)*gap;
-        const float gridWidth=stashColumns*cell+(stashColumns-1)*gap;
-        ImGui::BeginChild("StashGridScroll",{stashWidth,(std::min)(gridHeight+24.f,panelHeight-16.f)},
-            true,ImGuiWindowFlags_HorizontalScrollbar);
+        const float cell=(std::max)(1.f,(stashWidth-5.f*gap)/4.f);
+        const float gridHeight=stashColumns*cell+(stashColumns-1)*gap;
+        const float gridWidth=stashRows*cell+(stashRows-1)*gap;
+        ImGui::BeginChild("StashGridScroll",{stashWidth,panelHeight-16.f},
+            true,ImGuiWindowFlags_AlwaysVerticalScrollbar);
         const ImVec2 gridOrigin=ImGui::GetCursorScreenPos();
         auto* draw=ImGui::GetWindowDrawList();
-        for (int y=0;y<stashRows;++y) for (int x=0;x<stashColumns;++x) {
-            const ImVec2 low(gridOrigin.x+x*(cell+gap),gridOrigin.y+y*(cell+gap));
+        for (int x=0;x<stashColumns;++x) for (int y=0;y<stashRows;++y) {
+            const ImVec2 low(gridOrigin.x+y*(cell+gap),gridOrigin.y+x*(cell+gap));
             draw->AddRectFilled(low,{low.x+cell,low.y+cell},IM_COL32(20,23,20,255));
         }
         ImGui::SetCursorScreenPos(gridOrigin);
@@ -716,8 +715,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const auto placements=hideout.StashLayout();
         for (std::size_t i=0;i<placements.size();++i) {
             const auto& item=placements[i];
-            const ImVec2 low(gridOrigin.x+item.x*(cell+gap),gridOrigin.y+item.y*(cell+gap));
-            const ImVec2 size(item.width*cell+(item.width-1)*gap,item.height*cell+(item.height-1)*gap);
+            const ImVec2 low(gridOrigin.x+item.y*(cell+gap),gridOrigin.y+item.x*(cell+gap));
+            const ImVec2 size(item.height*cell+(item.height-1)*gap,item.width*cell+(item.width-1)*gap);
             const ImU32 colors[]{
                 IM_COL32(135,68,58,255), IM_COL32(63,112,137,255), IM_COL32(152,132,71,255),
                 IM_COL32(91,113,77,255), IM_COL32(84,95,70,255), IM_COL32(121,97,83,255),
@@ -745,6 +744,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             ImGui::SetCursorScreenPos(low);
             ImGui::PushID(static_cast<int>(i));
             ImGui::InvisibleButton("StashItem",{size.x,size.y});
+            target(true,-1);
             if (ImGui::BeginDragDropSource()) {
                 GearDrag data{item.type,1,true,0};
                 ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
@@ -752,7 +752,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 ImGui::Text("%s",name);
                 ImGui::EndDragDropSource();
             }
-            target(true,-1);
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
                 ImGui::TextUnformatted(item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name);

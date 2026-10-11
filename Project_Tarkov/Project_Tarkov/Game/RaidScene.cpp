@@ -135,24 +135,12 @@ void RaidScene::Render()
     }
     Camera& viewCamera = freeLook ? previewCamera : camera;
     Renderer::PrepareFrame(shader, viewCamera, static_cast<float>(width), static_cast<float>(height));
-    const bool showThroughGround = viewCamera.position.y < player->position.y + 0.1f ||
-        (!firstPerson && viewCamera.pitch <= -70.0f);
     for (auto& batch : mapBatches)
     {
         const glm::mat4 identity(1);
         if (!Renderer::IsVisible(batch.low, batch.high, identity)) continue;
-        if (batch.ground && showThroughGround) continue;
         Renderer::Draw(shader, batch.mesh, viewCamera, identity,
             static_cast<float>(width), static_cast<float>(height), batch.color);
-    }
-    if (showThroughGround) {
-        const glm::mat4 identity(1);
-        for (auto& batch : mapBatches) {
-            if (!batch.ground || !Renderer::IsVisible(batch.low, batch.high, identity)) continue;
-            Renderer::Draw(shader, batch.mesh, viewCamera, identity,
-                static_cast<float>(width), static_cast<float>(height), batch.color,
-                false, 0, 63, 0.38f);
-        }
     }
     loot.Render(shader, cubeMesh, viewCamera, static_cast<float>(width), static_cast<float>(height));
     playerVisual.Render(*player, shader, viewCamera,
@@ -256,10 +244,14 @@ void RaidScene::StartRaid()
 void RaidScene::FollowCamera(Camera& target) const
 {
     cameraController.Follow(target, *player);
-    if (!firstPerson) return;
-    const auto& body = player->GetSettings();
-    const float eyeHeight = player->IsCrouching() ? body.crouchingEyeHeight : body.standingEyeHeight;
-    target.position = player->position + glm::vec3(0, eyeHeight - 0.08f, 0);
+    if (firstPerson) {
+        const auto& body = player->GetSettings();
+        const float eyeHeight = player->IsCrouching() ? body.crouchingEyeHeight : body.standingEyeHeight;
+        const glm::vec3 forward(std::cos(glm::radians(target.yaw)), 0, std::sin(glm::radians(target.yaw)));
+        target.position = player->position + glm::vec3(0, eyeHeight - 0.2f, 0) + forward * 0.16f;
+    } else {
+        target.position.y = (std::max)(target.position.y, 0.25f);
+    }
 }
 
 void RaidScene::Shutdown()
