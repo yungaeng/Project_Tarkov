@@ -149,8 +149,9 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         }
     }
 
-    for (auto& enemy : enemies)
+    for (std::size_t enemyIndex = 0; enemyIndex < enemies.size(); ++enemyIndex)
     {
+        auto& enemy = enemies[enemyIndex];
         enemy.fired = false;
         enemy.body.StopMovement();
         if (enemy.health <= 0)
@@ -184,7 +185,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         {
             if (enemy.attackTimer == 0 && seesPlayer)
             {
-                const int hitPart = (static_cast<int>(i) + static_cast<int>(elapsedSeconds)) % BodyPartCount;
+                const int hitPart = (static_cast<int>(enemyIndex) + static_cast<int>(elapsedSeconds)) % BodyPartCount;
                 player.vitals.Damage(static_cast<BodyPart>(hitPart), 40);
                 enemy.fired = true;
                 enemy.attackTimer = 1.2f;
