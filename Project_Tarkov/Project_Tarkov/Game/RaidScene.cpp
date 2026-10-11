@@ -4,6 +4,7 @@
 #include "../Core/Input.h"
 #include "../Scene/SceneManager.h"
 #include "../Graphics/Renderer.h"
+#include <glm/trigonometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
 #include <algorithm>
@@ -169,10 +170,19 @@ void RaidScene::Update(float dt)
     combat.Update(dt, *player, camera, collisionWorld, loot, canLook);
     if (player->vitals.Alive() && combat.Equipped() && lootingCorpse < 0)
         player->rotation.y = glm::degrees(std::atan2(camera.front.x, camera.front.z));
-    playerVisual.Update(dt, *player, {!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
-        combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasRifle()});
     FollowCamera(camera);
     loot.Update(dt, *player, camera, collisionWorld, canLook && corpseTarget < 0 && !corpseInteraction, Input::GetKeyDown(GLFW_KEY_F));
+    CharacterVisualState visualState{!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
+        combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasRifle()};
+    if (const WorldItem* target = loot.Target())
+    {
+        const float yaw = glm::radians(player->rotation.y);
+        const glm::vec3 left(-std::cos(yaw), 0.0f, std::sin(yaw));
+        const glm::vec3 lootBase = target->position - glm::vec3(0.0f, WorldItem::HalfSize, 0.0f);
+        visualState.positionOffset = lootBase - player->position +
+            left * (player->GetSettings().bodyRadius * 2.0f);
+    }
+    playerVisual.Update(dt, *player, visualState);
     if (freeLook)
         FollowCamera(previewCamera);
     if (!player->vitals.Alive()) { FinishRaid(RaidPhase::Dead); return; }

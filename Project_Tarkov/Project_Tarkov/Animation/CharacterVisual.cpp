@@ -212,7 +212,8 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     const glm::vec3& color, bool firstPerson)
 {
     if (!assets) return;
-    glm::mat4 model = glm::translate(glm::mat4(1), character.position);
+    const glm::vec3 position = character.position + (firstPerson ? glm::vec3(0.0f) : state.positionOffset);
+    glm::mat4 model = glm::translate(glm::mat4(1), position);
     model = glm::rotate(model, glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
     if (dying) model *= deathRoot.Matrix();
     else if (character.IsLooting()) {
