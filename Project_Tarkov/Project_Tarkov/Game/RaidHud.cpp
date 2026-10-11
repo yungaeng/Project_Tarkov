@@ -68,7 +68,7 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
     ImGui::SetNextWindowPos(ImVec2(16, 16));
     ImGui::SetNextWindowBgAlpha(0.8f);
     ImGui::Begin("조작 안내", nullptr, overlay);
-    ImGui::TextUnformatted("WASD 이동 | I 인벤토리 | Q 종료");
+    ImGui::TextUnformatted("WASD 이동 | T 탈출 지점 이동 | I 인벤토리 | Q 종료");
     ImGui::Text("인벤토리: %d / %d칸 | %.2f kg", static_cast<int>(inventory.Items().size()),
         inventory.SlotCapacity(), inventory.TotalWeight());
     ImGui::Text("체력 %.0f/100 | 수분 %.0f/100 | 스태미나 %.0f/100", player.vitals.Health(), player.vitals.Hydration(), player.vitals.Stamina());

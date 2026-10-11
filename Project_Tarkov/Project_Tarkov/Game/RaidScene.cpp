@@ -90,6 +90,11 @@ void RaidScene::Update(float dt)
     if (canLook)
         cameraController.Rotate(freeLook ? previewCamera : camera, Input::GetMouseDelta());
     playerController.UpdateMovement(*player, camera);
+    if (playerController.IsGameplayInputEnabled() && player->vitals.Alive() &&
+        Input::GetKeyDown(GLFW_KEY_T)) {
+        player->position = IndustrialZone::Exits[raid.assignedExit].position;
+        player->StopMovement();
+    }
     player->Update(dt);
     player->vitals.Update(dt, player->IsSprinting() && player->IsMoving());
     if (player->position.y < -30) player->vitals.Damage(100);
