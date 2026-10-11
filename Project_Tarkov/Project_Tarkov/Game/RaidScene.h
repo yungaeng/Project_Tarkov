@@ -42,6 +42,7 @@ private:
     // Free look changes only the rendered view; gameplay keeps using camera.
     Camera previewCamera;
     bool freeLook = false;
+    bool firstPerson = false;
     LootSystem loot;
     RaidHud hud;
     InventoryActions actions;
@@ -59,4 +60,5 @@ private:
     RaidSummary summary;
     void StartRaid();
     void FinishRaid(RaidPhase result);
+    void FollowCamera(Camera& camera) const;
 };

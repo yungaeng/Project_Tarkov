@@ -26,7 +26,7 @@ public:
     void Init();
     void Update(float dt, const Character& character, const CharacterVisualState& state = {}, float poseInterval = 0.0f);
     void Render(const Character& character, Shader& shader, Camera& camera, float width, float height,
-        const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f));
+        const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool firstPerson = false);
     void Reset();
 
 private:

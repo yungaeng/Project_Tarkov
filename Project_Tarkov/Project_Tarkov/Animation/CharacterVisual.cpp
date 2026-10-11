@@ -279,7 +279,8 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     UploadPalette();
 }
 
-void CharacterVisual::Render(const Character& character, Shader& shader, Camera& camera, float width, float height, const glm::vec3& color)
+void CharacterVisual::Render(const Character& character, Shader& shader, Camera& camera, float width, float height,
+    const glm::vec3& color, bool firstPerson)
 {
     if (!assets) return;
     glm::mat4 model = glm::translate(glm::mat4(1), character.position);
@@ -294,7 +295,9 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_BUFFER, paletteTexture);
     glActiveTexture(GL_TEXTURE0);
-    Renderer::Draw(shader, assets->mesh, camera, model, width, height, glm::vec3(dying ? 0.65f : 1.f), true, assets->texture.id, static_cast<int>(character.clothingMask));
+    Renderer::Draw(shader, assets->mesh, camera, model, width, height,
+        glm::vec3(dying ? 0.65f : 1.f), true, assets->texture.id,
+        static_cast<int>(character.clothingMask), 1.0f, firstPerson);
     const auto equipped = character.clothingMask;
     const auto scale = character.scale * character.GetSettings().modelScale;
     const auto garmentModel = glm::scale(actor, scale);

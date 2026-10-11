@@ -9,6 +9,8 @@ in vec3 BindPosition;
 uniform bool textured;
 uniform sampler2D diffuseTexture;
 uniform int clothingMask;
+uniform bool firstPerson;
+uniform float opacity;
 flat in int Garment;
 
 uniform vec3 lightPos;
@@ -39,6 +41,7 @@ vec3 AcesToneMap(vec3 value)
 
 void main()
 {
+    if (firstPerson && BindPosition.y > 112.0) discard;
     vec3 albedo = SrgbToLinear(objectColor);
     if (textured) {
         if (Garment >= 1 && Garment <= 4 && (clothingMask & (1 << (Garment - 1))) == 0) discard;
@@ -68,5 +71,5 @@ void main()
     float fogAmount = smoothstep(85.0, 235.0, distanceToCamera);
     color = mix(color, SrgbToLinear(fogColor), fogAmount);
 
-    FragColor = vec4(LinearToSrgb(AcesToneMap(color)), 1.0);
+    FragColor = vec4(LinearToSrgb(AcesToneMap(color)), opacity);
 }

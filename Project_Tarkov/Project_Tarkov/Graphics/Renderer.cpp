@@ -73,7 +73,8 @@ bool Renderer::IsVisible(const glm::vec3& minimum, const glm::vec3& maximum,
 }
 
 void Renderer::Draw(Shader& shader, Mesh& mesh, Camera&, glm::mat4 model,
-    float, float, const glm::vec3& color, bool skinned, GLuint texture, int clothingMask)
+    float, float, const glm::vec3& color, bool skinned, GLuint texture, int clothingMask,
+    float opacity, bool firstPerson)
 {
     // PrepareFrame binds the scene shader and uploads frame constants once.
     shader.SetVec3("objectColor", color);
@@ -81,12 +82,26 @@ void Renderer::Draw(Shader& shader, Mesh& mesh, Camera&, glm::mat4 model,
     shader.SetInt("skinned", skinned ? 1 : 0);
     shader.SetInt("textured", texture ? 1 : 0);
     shader.SetInt("clothingMask", clothingMask);
+    shader.SetInt("firstPerson", firstPerson ? 1 : 0);
+    shader.SetFloat("opacity", opacity);
     if (texture) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         shader.SetInt("diffuseTexture", 0);
     }
+    const GLboolean wasBlending = glIsEnabled(GL_BLEND);
+    GLboolean wasDepthWrite = GL_TRUE;
+    glGetBooleanv(GL_DEPTH_WRITEMASK, &wasDepthWrite);
+    if (opacity < 1.0f) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
+    }
     mesh.Draw();
+    if (opacity < 1.0f) {
+        if (!wasBlending) glDisable(GL_BLEND);
+        glDepthMask(wasDepthWrite);
+    }
 }
 
 void Renderer::DrawCube(Shader& shader, Mesh& mesh, Camera& camera, glm::mat4 model,

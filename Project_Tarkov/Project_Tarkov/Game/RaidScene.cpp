@@ -39,7 +39,8 @@ void RaidScene::Init()
     playerController.Reset();
     camera = Camera{};
     freeLook = false;
-    cameraController.Follow(camera, *player);
+    firstPerson = false;
+    FollowCamera(camera);
     if (!shader.LoadFromFile("Assets/Shaders/cube.vs", "Assets/Shaders/cube.fs"))
         throw std::runtime_error("Shader load failed");
     cubeMesh.CreateCube();
@@ -83,6 +84,8 @@ void RaidScene::Update(float dt)
     playerController.UpdateInterface();
     actions.Update(*player, loot, camera, collisionWorld, playerController.IsInventoryOpen() && Input::IsFocused());
     const bool canLook = playerController.IsGameplayInputEnabled() && player->vitals.Alive();
+    if (canLook && Input::GetKeyDown(GLFW_KEY_V))
+        firstPerson = !firstPerson;
     const bool wantsFreeLook = canLook &&
         (Input::GetKey(GLFW_KEY_LEFT_ALT) || Input::GetKey(GLFW_KEY_RIGHT_ALT));
     if (wantsFreeLook && !freeLook)
@@ -99,16 +102,16 @@ void RaidScene::Update(float dt)
     player->Update(dt);
     player->vitals.Update(dt, player->IsSprinting() && player->IsMoving());
     if (player->position.y < -30) player->vitals.Damage(100);
-    cameraController.Follow(camera, *player);
+    FollowCamera(camera);
     combat.Update(dt, *player, camera, collisionWorld, loot, playerController.IsGameplayInputEnabled());
     if (player->vitals.Alive() && combat.Equipped())
         player->rotation.y = glm::degrees(std::atan2(camera.front.x, camera.front.z));
     playerVisual.Update(dt, *player, {!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
         combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasRifle()});
-    cameraController.Follow(camera, *player);
+    FollowCamera(camera);
     loot.Update(dt, *player, camera, collisionWorld, playerController.IsGameplayInputEnabled() && player->vitals.Alive(), Input::GetKeyDown(GLFW_KEY_F));
     if (freeLook)
-        cameraController.Follow(previewCamera, *player);
+        FollowCamera(previewCamera);
     if (!player->vitals.Alive()) { FinishRaid(RaidPhase::Dead); return; }
     const auto offset = player->position - IndustrialZone::Exits[raid.assignedExit].position;
     raid.exitDistance = glm::length(glm::vec2(offset.x, offset.z));
@@ -132,16 +135,28 @@ void RaidScene::Render()
     }
     Camera& viewCamera = freeLook ? previewCamera : camera;
     Renderer::PrepareFrame(shader, viewCamera, static_cast<float>(width), static_cast<float>(height));
+    const bool showThroughGround = viewCamera.position.y < player->position.y + 0.1f ||
+        (!firstPerson && viewCamera.pitch <= -70.0f);
     for (auto& batch : mapBatches)
     {
         const glm::mat4 identity(1);
         if (!Renderer::IsVisible(batch.low, batch.high, identity)) continue;
+        if (batch.ground && showThroughGround) continue;
         Renderer::Draw(shader, batch.mesh, viewCamera, identity,
             static_cast<float>(width), static_cast<float>(height), batch.color);
     }
+    if (showThroughGround) {
+        const glm::mat4 identity(1);
+        for (auto& batch : mapBatches) {
+            if (!batch.ground || !Renderer::IsVisible(batch.low, batch.high, identity)) continue;
+            Renderer::Draw(shader, batch.mesh, viewCamera, identity,
+                static_cast<float>(width), static_cast<float>(height), batch.color,
+                false, 0, 63, 0.38f);
+        }
+    }
     loot.Render(shader, cubeMesh, viewCamera, static_cast<float>(width), static_cast<float>(height));
     playerVisual.Render(*player, shader, viewCamera,
-        static_cast<float>(width), static_cast<float>(height));
+        static_cast<float>(width), static_cast<float>(height), glm::vec3(0.3f, 0.8f, 0.4f), firstPerson);
     combat.Render(shader, viewCamera, static_cast<float>(width), static_cast<float>(height));
     hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid);
 }
@@ -222,7 +237,7 @@ void RaidScene::StartRaid()
     startingClothingMask = player->clothingMask;
     playerController.Reset();
     camera = Camera{};
-    cameraController.Follow(camera, *player);
+    FollowCamera(camera);
     actions.Cancel();
     loot.Init();
     combat.Init(collisionWorld);
@@ -234,6 +249,15 @@ void RaidScene::StartRaid()
     playerVisual.Update(0, *player, {false, combat.Equipped(), false, false, 0, 0, combat.HasRifle()});
     raid.exitDistance = glm::length(IndustrialZone::Exits[raid.assignedExit].position - player->position);
     focusGeneration = Input::FocusGeneration();
+}
+
+void RaidScene::FollowCamera(Camera& target) const
+{
+    cameraController.Follow(target, *player);
+    if (!firstPerson) return;
+    const auto& body = player->GetSettings();
+    const float eyeHeight = player->IsCrouching() ? body.crouchingEyeHeight : body.standingEyeHeight;
+    target.position = player->position + glm::vec3(0, eyeHeight - 0.08f, 0);
 }
 
 void RaidScene::Shutdown()

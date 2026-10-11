@@ -249,6 +249,11 @@ public:
         glUniform1i(UniformLocation(name), value);
     }
 
+    void SetFloat(const char* name, float value)
+    {
+        glUniform1f(UniformLocation(name), value);
+    }
+
     void SetVec3(
         const char* name,
         const glm::vec3& v)

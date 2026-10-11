@@ -28,7 +28,8 @@ public:
         Camera& camera,
         glm::mat4 model,
         float width,
-        float height, const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool skinned = false, GLuint texture = 0, int clothingMask = 63);
+        float height, const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool skinned = false, GLuint texture = 0,
+        int clothingMask = 63, float opacity = 1.0f, bool firstPerson = false);
 
     static void DrawCube(
         Shader& shader,

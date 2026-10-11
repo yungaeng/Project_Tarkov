@@ -11,6 +11,7 @@ namespace IndustrialZone
     struct Batch {
         Mesh mesh;
         glm::vec3 color{1}, low{0}, high{0};
+        bool ground = false;
     };
 
     // Low-poly primitives have real surface normals, including faceted rocks.
@@ -70,14 +71,20 @@ namespace IndustrialZone
             std::vector<Vertex> vertices;
             glm::vec3 color{1};
             glm::vec3 low{(std::numeric_limits<float>::max)()}, high{-(std::numeric_limits<float>::max)()};
+            bool ground = false;
         };
-        using Key=std::tuple<int,int,int,int,int>;
+        using Key=std::tuple<int,int,int,int,int,bool>;
         std::map<Key,Pending> groups;
         const std::array<std::vector<Vertex>,4> primitives{{Primitive(Shape::Box),Primitive(Shape::Cylinder),Primitive(Shape::Cone),Primitive(Shape::Rock)}};
         for (const auto& block : blocks) {
+            const bool ground = block.shape == Shape::Box && block.center.y < -0.4f &&
+                block.size.y >= 1.0f && block.size.x >= RaidConfig::MapWidth &&
+                block.size.z >= RaidConfig::MapLength;
             const Key key{static_cast<int>(std::floor(block.center.x/50)),static_cast<int>(std::floor(block.center.z/50)),
-                static_cast<int>(block.color.r*255),static_cast<int>(block.color.g*255),static_cast<int>(block.color.b*255)};
+                static_cast<int>(block.color.r*255),static_cast<int>(block.color.g*255),
+                static_cast<int>(block.color.b*255),ground};
             auto& group=groups[key]; group.color=block.color;
+            group.ground=ground;
             glm::mat4 transform=glm::translate(glm::mat4(1),block.center);
             transform=glm::rotate(transform,glm::radians(block.rotation.x),{1,0,0});
             transform=glm::rotate(transform,glm::radians(block.rotation.y),{0,1,0});
@@ -95,7 +102,7 @@ namespace IndustrialZone
         for (auto& entry : groups) {
             auto& group=entry.second;
             batches.emplace_back(); auto& batch=batches.back();
-            batch.color=group.color; batch.low=group.low; batch.high=group.high;
+            batch.color=group.color; batch.low=group.low; batch.high=group.high; batch.ground=group.ground;
             batch.mesh.Create(group.vertices);
         }
     }

@@ -162,14 +162,14 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
 
     if (raid.phase == RaidPhase::Active) {
         auto* draw = ImGui::GetForegroundDrawList();
-        const float scale = (std::min)(0.78f, (std::max)(0.45f, io.DisplaySize.y / 900.0f));
+        const float scale = 0.5f * (std::min)(0.78f, (std::max)(0.45f, io.DisplaySize.y / 900.0f));
         float nextY = 16.0f;
         if (player.vitals.Health() < 100 || actions.healingMode) {
             const ImVec2 origin(16, nextY);
             DrawBodyMannequin(player.vitals, origin, scale, draw);
             if (actions.healingMode) {
                 ImGui::SetNextWindowPos(origin);
-                ImGui::SetNextWindowSize({150 * scale + 20, 310 * scale + 20});
+                ImGui::SetNextWindowSize({145 * scale + 20, 275 * scale + 20});
                 ImGui::Begin("치료 부위 선택", nullptr, ImGuiWindowFlags_NoDecoration |
                     ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove |
                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
@@ -195,9 +195,15 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
             const ImVec2 low(16, nextY);
             const ImVec2 high(74, nextY + 54);
             draw->AddRectFilled(low, high, IM_COL32(20, 25, 28, 100), 5);
-            draw->AddRect({35, nextY + 10}, {55, nextY + 45}, IM_COL32(220, 226, 220, 150), 2, 0, 2);
-            draw->AddTriangleFilled({20, nextY + 27}, {33, nextY + 18}, {33, nextY + 36},
-                IM_COL32(220, 226, 220, 170));
+            const ImU32 runner = IM_COL32(220, 226, 220, 190);
+            draw->AddCircleFilled({46, nextY + 12}, 5, runner, 16);
+            draw->AddLine({44, nextY + 19}, {39, nextY + 30}, runner, 4);
+            draw->AddLine({42, nextY + 21}, {31, nextY + 25}, runner, 3);
+            draw->AddLine({42, nextY + 21}, {53, nextY + 18}, runner, 3);
+            draw->AddLine({39, nextY + 30}, {28, nextY + 40}, runner, 4);
+            draw->AddLine({28, nextY + 40}, {19, nextY + 38}, runner, 4);
+            draw->AddLine({39, nextY + 30}, {49, nextY + 37}, runner, 4);
+            draw->AddLine({49, nextY + 37}, {59, nextY + 34}, runner, 4);
         }
     }
 
@@ -423,10 +429,21 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::BeginDisabled();
     for (const char* tab : {"기술","지도","임무"}) { ImGui::SmallButton(tab); ImGui::SameLine(); }
     ImGui::EndDisabled();
-    ImGui::SetCursorPosX(io.DisplaySize.x-115.f);
-    if (ImGui::Button("게임 종료",{95,27}))
-        glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
     ImGui::NewLine();
+    ImGui::Separator();
+    if (ImGui::Button("게임 종료",{110,34}))
+        glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
+    ImGui::SameLine();
+    ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
+    if (!hideout.rifle) ImGui::TextColored(accent,"비무장 출격");
+    ImGui::BeginDisabled(!hideout.vitals.Alive());
+    const bool deploy=ImGui::Button("레이드 출격",{150,34});
+    ImGui::EndDisabled();
+    ImGui::SameLine();
+    if (ImGui::Button("저장 / 재시도",{135,34})) hideout.Save();
+    ImGui::SameLine();
+    ImGui::TextUnformatted(hideout.message.c_str());
+    ImGui::EndDisabled();
     ImGui::Separator();
     ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
 
@@ -496,9 +513,9 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::PopID();
     };
 
-    const float available=ImGui::GetContentRegionAvail().y;
-    const float panelHeight=(std::max)(260.f,(std::min)(available-100.f,io.DisplaySize.y-300.f));
     const bool wide=ImGui::GetContentRegionAvail().x>=1050;
+    const float available=ImGui::GetContentRegionAvail().y;
+    const float panelHeight=(std::max)(180.f,wide||hideoutHealthTab?available:(available-8.f)*.5f);
     Player previewCharacter=character;
     previewCharacter.position={0,0,0};
     previewCharacter.rotation.y=hideoutPreviewRotation;
@@ -616,6 +633,11 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
     auto drawLoadoutPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
+        const ImVec2 panelOrigin=ImGui::GetCursorScreenPos();
+        const ImVec2 panelAvailable=ImGui::GetContentRegionAvail();
+        ImGui::InvisibleButton("LoadoutDropTarget",panelAvailable);
+        target(false,-1);
+        ImGui::SetCursorScreenPos(panelOrigin);
         ImGui::Separator();
         ImGui::TextUnformatted("주무기");
         card(100,"소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,82);
@@ -639,7 +661,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             } else card(200+i,"빈 슬롯",0,0,false,0,cell,82);
         }
         ImGui::EndChild();
-        target(false,-1);
     };
 
     auto drawStashPanel=[&](const char* childId) {
@@ -756,17 +777,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             else hideout.StoreStack(pending.stack);
         }
     }
-    ImGui::Separator();
-    if (!hideout.rifle) ImGui::TextColored(accent,"비무장 출격");
-    if (!hideout.vitals.Alive()) ImGui::TextDisabled("건강 탭에서 피격 부위를 치료한 뒤 출격하세요.");
-    ImGui::BeginDisabled(!hideout.vitals.Alive());
-    const bool deploy=ImGui::Button("레이드 출격",{220,44});
     ImGui::EndDisabled();
-    ImGui::SameLine();
-    if (ImGui::Button("저장 / 재시도",{150,44})) hideout.Save();
-    ImGui::EndDisabled();
-    ImGui::SameLine();
-    ImGui::TextWrapped("%s",hideout.message.c_str());
     ImGui::End();
     ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(8);
