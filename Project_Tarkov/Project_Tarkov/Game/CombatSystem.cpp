@@ -18,7 +18,7 @@ namespace
     {
         if (body.IsLooting()) {
             const float yaw = glm::radians(body.rotation.y);
-            return body.position + glm::vec3(std::sin(yaw)*1.9f, .55f, std::cos(yaw)*1.9f);
+            return body.position + glm::vec3(std::sin(yaw)*0.7f, 1.0f, std::cos(yaw)*0.7f);
         }
         return body.position + glm::vec3(0, body.IsLooting() ? 0.55f : body.IsCrouching() ? body.GetSettings().crouchingEyeHeight : body.GetSettings().standingEyeHeight, 0);
     }
@@ -37,8 +37,8 @@ namespace
         if (body.IsLooting()) {
             const float yaw = glm::radians(body.rotation.y);
             const glm::vec3 forward(std::sin(yaw), 0, std::cos(yaw));
-            const auto center = body.position + forward * 1.f + glm::vec3(0, .375f, 0);
-            const auto extent = glm::abs(forward) * 1.15f + glm::vec3(.35f, .375f, .35f);
+            const auto center = body.position + forward * .55f + glm::vec3(0, .6f, 0);
+            const auto extent = glm::abs(forward) * .65f + glm::vec3(.35f, .6f, .35f);
             return RayBox(origin, direction, center - extent, center + extent, limit, hit);
         }
         const float radius = body.GetSettings().bodyRadius;
