@@ -336,10 +336,10 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     // Integer cell offsets keep the conservative triangle coverage exact.
     int bestDistance = 1000000;
     glm::vec3 offset(0);
-    for (int x = -30; x <= 30; ++x)
-        for (int z = -30; z <= 30; ++z) {
+    for (int x = -50; x <= 50; ++x)
+        for (int z = -50; z <= 50; ++z) {
             const int distance = x * x + z * z;
-            if (distance >= bestDistance || distance > 900) continue;
+            if (distance >= bestDistance || distance > 2500) continue;
             bool clear = true;
             for (const auto& entry : underside) {
                 const auto found = surface.find({entry.first.first + x, entry.first.second + z});

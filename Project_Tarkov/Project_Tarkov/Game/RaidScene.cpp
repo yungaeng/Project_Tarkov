@@ -101,22 +101,14 @@ void RaidScene::Update(float dt)
     if (!corpseInteraction && corpseTarget >= 0 && Input::GetKeyDown(GLFW_KEY_F)) {
         corpseInteraction = true;
         const auto* corpse = combat.Corpse(corpseTarget);
-        const float yaw = glm::radians(corpse->body.rotation.y);
-        const glm::vec3 forward(std::sin(yaw), 0, std::cos(yaw));
-        // Keep hands and knees planted; find the closest non-overlapping placement.
+        // Keep hands and knees planted; search for the closest clear spot around the corpse.
         const auto placementClear = [&](const glm::vec3& candidate, float height,
             const std::array<glm::vec3, 4>& supports) {
             for (const auto& support : supports)
                 if (!collisionWorld.IsSupported(support, .04f, .1f) ||
                     !collisionWorld.CanOccupy(support + glm::vec3(0, .002f, 0), .06f, .15f)) return false;
-            for (int step = 1; step <= 10; ++step)
-                if (!collisionWorld.CanOccupy(glm::mix(player->position, candidate, step / 10.f) +
-                    glm::vec3(0, .002f, 0), .35f, height)) return false;
-            for (float distance : {0.f, .5f, 1.f, 1.5f})
-                if (!collisionWorld.CanOccupy(candidate - forward * distance +
-                    glm::vec3(0, .002f, 0), .45f, height)) return false;
-            // Ground is required at the four real contacts, not the whole centreline.
-            return combat.LootSpaceClear(candidate - forward * .9f, corpseTarget);
+            if (!collisionWorld.CanOccupy(candidate + glm::vec3(0, .002f, 0), .35f, height)) return false;
+            return combat.LootSpaceClear(candidate, corpseTarget);
         };
         const auto anchor = playerVisual.FitLootPose(*player, corpse->body, *corpse->visual, placementClear);
         const bool clear = player->IsGrounded() && playerVisual.LootPoseValid();
@@ -132,7 +124,7 @@ void RaidScene::Update(float dt)
             actions.Cancel();
             combat.CancelInput();
             Input::SetCursorCaptured(false);
-        } else loot.Notify("시체의 오금 쪽에 몸을 낮출 안전한 공간이 없습니다.");
+        } else loot.Notify("시체 주변에 파밍 자세를 잡을 안전한 공간이 없습니다.");
     }
     if (lootingCorpse >= 0) {
         if (takeCorpseStack) {
