@@ -20,6 +20,7 @@ public:
     RaidHud& operator=(const RaidHud&) = delete;
     void Init(GLFWwindow* window);
     void Render(const Player& player, const LootSystem& loot, const CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid);
+    void ResetAmmoIndicator();
     bool RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader);
     bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader);
     void Shutdown();
@@ -29,4 +30,8 @@ private:
     bool rendererReady = false;
     bool hideoutHealthTab = false;
     float hideoutPreviewRotation = 0.f;
+    float reloadHoldSeconds = 0.f;
+    float ammoDisplaySeconds = 0.f;
+    bool reloadHoldTriggered = false;
+    bool reloadingPreviousFrame = false;
 };

@@ -164,6 +164,21 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
         auto* draw = ImGui::GetForegroundDrawList();
         const float scale = 0.5f * (std::min)(0.78f, (std::max)(0.45f, io.DisplaySize.y / 900.0f));
         float nextY = 16.0f;
+        const float hudDelta = std::clamp(io.DeltaTime, 0.0f, 0.1f);
+        ammoDisplaySeconds = (std::max)(0.0f, ammoDisplaySeconds - hudDelta);
+        const bool reloading = combat.ReloadTime() > 0.0f;
+        if (reloading && !reloadingPreviousFrame) ammoDisplaySeconds = 3.0f;
+        reloadingPreviousFrame = reloading;
+        if (!inventoryOpen && Input::IsFocused() && Input::GetKey(GLFW_KEY_R)) {
+            reloadHoldSeconds += hudDelta;
+            if (reloadHoldSeconds >= 1.0f && !reloadHoldTriggered) {
+                ammoDisplaySeconds = 3.0f;
+                reloadHoldTriggered = true;
+            }
+        } else {
+            reloadHoldSeconds = 0.0f;
+            reloadHoldTriggered = false;
+        }
         if (player.vitals.Health() < 100 || actions.healingMode) {
             const ImVec2 origin(16, nextY);
             DrawBodyMannequin(player.vitals, origin, scale, draw);
@@ -204,6 +219,13 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
             draw->AddLine({28, nextY + 40}, {19, nextY + 38}, runner, 4);
             draw->AddLine({39, nextY + 30}, {49, nextY + 37}, runner, 4);
             draw->AddLine({49, nextY + 37}, {59, nextY + 34}, runner, 4);
+            nextY += 62;
+        }
+        if (ammoDisplaySeconds > 0.0f) {
+            draw->AddRectFilled({16, nextY}, {235, nextY + 30}, IM_COL32(20, 25, 28, 170), 4);
+            const std::string ammunition = "잔탄 " + std::to_string(combat.Magazine()) +
+                " / 30   예비 " + std::to_string(inventory.Count(ItemType::Ammo));
+            draw->AddText({23, nextY + 7}, IM_COL32(232, 227, 204, 235), ammunition.c_str());
         }
     }
 
@@ -313,6 +335,14 @@ void RaidHud::Shutdown()
     if (windowReady) ImGui_ImplGlfw_Shutdown();
     if (contextReady) ImGui::DestroyContext();
     rendererReady = windowReady = contextReady = false;
+}
+
+void RaidHud::ResetAmmoIndicator()
+{
+    reloadHoldSeconds = 0.f;
+    ammoDisplaySeconds = 0.f;
+    reloadHoldTriggered = false;
+    reloadingPreviousFrame = false;
 }
 
 namespace
@@ -530,7 +560,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::BeginChild(childId,{0,panelHeight},true);
         const ImVec2 origin=ImGui::GetCursorScreenPos();
         const float panelWidth=ImGui::GetContentRegionAvail().x;
-        const float slotWidth=(std::min)(104.f,(panelWidth-126.f)*.5f);
+        const float slotWidth=(std::min)(208.f,panelWidth*.34f);
         const float modelWidth=(std::max)(116.f,panelWidth-slotWidth*2-18.f);
         const float modelHeight=(std::max)(245.f,(std::min)(340.f,panelHeight-210.f));
         const ImVec2 modelPosition(origin.x+slotWidth+9.f,origin.y+8.f);
@@ -558,15 +588,16 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             ImGui::SetCursorScreenPos(position);
             const bool worn=(hideout.clothingMask&ClothingBit(type))!=0;
             const bool available=hideout.loadout.Count(type)>0||hideout.stash[static_cast<int>(type)]>0;
-            ImGui::Button("##equipment-slot",{slotWidth,62.f});
+            const float slotHeight=124.f;
+            ImGui::Button("##equipment-slot",{slotWidth,slotHeight});
             if (ImGui::IsItemClicked() && (worn||available))
                 hideout.ToggleClothing(type);
             auto* slotDraw=ImGui::GetWindowDrawList();
-            const ImVec2 low(position.x+1,position.y+1), high(position.x+slotWidth-1,position.y+61);
+            const ImVec2 low(position.x+1,position.y+1), high(position.x+slotWidth-1,position.y+slotHeight-1);
             slotDraw->AddRect(low,high,worn?IM_COL32(188,170,108,230):IM_COL32(116,121,103,210),2.f,0,1.5f);
             slotDraw->AddText({position.x+6,position.y+7},IM_COL32(208,207,188,255),name);
             const char* value=worn?GetItemDefinition(type).name:"비어 있음";
-            slotDraw->AddText({position.x+6,position.y+34},worn?IM_COL32(219,205,146,255):IM_COL32(137,143,128,255),value);
+            slotDraw->AddText({position.x+6,position.y+70},worn?IM_COL32(219,205,146,255):IM_COL32(137,143,128,255),value);
             equipmentDropTarget(type);
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
@@ -577,7 +608,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             }
             ImGui::PopID();
         };
-        const float step=70.f;
+        const float step=132.f;
         for (int i=0;i<4;++i)
             slot(600+i,leftTypes[i],leftNames[i],{origin.x,modelPosition.y+8+i*step});
         for (int i=0;i<3;++i)
@@ -640,7 +671,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::SetCursorScreenPos(panelOrigin);
         ImGui::Separator();
         ImGui::TextUnformatted("주무기");
-        card(100,"소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,82);
+        card(100,"소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,164);
         ImGui::Text("탄창   %d / 30",hideout.magazine);
         ImGui::SameLine();
         ImGui::BeginDisabled(!hideout.rifle||hideout.magazine>=30||hideout.stash[static_cast<int>(ItemType::Ammo)]==0);
@@ -650,15 +681,15 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::Text("휴대 슬롯   %d / %d   |   무게 %.1f kg",
             static_cast<int>(hideout.loadout.Items().size()),hideout.loadout.SlotCapacity(),hideout.loadout.TotalWeight());
         const auto& items=hideout.loadout.Items();
-        const int columns=(std::max)(1,static_cast<int>(ImGui::GetContentRegionAvail().x/105));
+        const int columns=(std::max)(1,static_cast<int>(ImGui::GetContentRegionAvail().x/210));
         const float gap=6.f;
         const float cell=(ImGui::GetContentRegionAvail().x-(columns-1)*gap)/columns;
         for (int i=0;i<hideout.loadout.SlotCapacity();++i) {
             if (i%columns) ImGui::SameLine(0,gap);
             if (i<static_cast<int>(items.size())) {
                 const auto& stack=items[i];
-                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell,82);
-            } else card(200+i,"빈 슬롯",0,0,false,0,cell,82);
+                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell,164);
+            } else card(200+i,"빈 슬롯",0,0,false,0,cell,164);
         }
         ImGui::EndChild();
     };
@@ -668,8 +699,11 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const float stashWidth=ImGui::GetContentRegionAvail().x;
         constexpr int stashColumns=20, stashRows=4;
         const float gap=2.f;
-        const float cell=(stashWidth-(stashColumns-1)*gap)/stashColumns;
+        const float cell=(std::max)(1.f,(stashWidth-9.f*gap)/10.f);
         const float gridHeight=stashRows*cell+(stashRows-1)*gap;
+        const float gridWidth=stashColumns*cell+(stashColumns-1)*gap;
+        ImGui::BeginChild("StashGridScroll",{stashWidth,(std::min)(gridHeight+24.f,panelHeight-16.f)},
+            true,ImGuiWindowFlags_HorizontalScrollbar);
         const ImVec2 gridOrigin=ImGui::GetCursorScreenPos();
         auto* draw=ImGui::GetWindowDrawList();
         for (int y=0;y<stashRows;++y) for (int x=0;x<stashColumns;++x) {
@@ -677,7 +711,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             draw->AddRectFilled(low,{low.x+cell,low.y+cell},IM_COL32(20,23,20,255));
         }
         ImGui::SetCursorScreenPos(gridOrigin);
-        ImGui::InvisibleButton("StashGridDropTarget",{stashWidth,gridHeight});
+        ImGui::InvisibleButton("StashGridDropTarget",{gridWidth,gridHeight});
         target(true,-1);
         const auto placements=hideout.StashLayout();
         for (std::size_t i=0;i<placements.size();++i) {
@@ -718,15 +752,16 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 ImGui::Text("%s",name);
                 ImGui::EndDragDropSource();
             }
+            target(true,-1);
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
                 ImGui::TextUnformatted(item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name);
                 ImGui::Text("창고 수량: %d",item.type==RifleGear?hideout.rifles:hideout.stash[item.type]);
                 ImGui::EndTooltip();
             }
-            target(true,-1);
             ImGui::PopID();
         }
+        ImGui::EndChild();
         ImGui::EndChild();
     };
 
@@ -743,9 +778,9 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     } else if (ImGui::BeginTable(wide?"HideoutLayout":"HideoutLayoutNarrow",wide?3:2,
         ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
         if (wide) {
-            ImGui::TableSetupColumn("캐릭터",ImGuiTableColumnFlags_WidthStretch,.82f);
+            ImGui::TableSetupColumn("캐릭터",ImGuiTableColumnFlags_WidthStretch,1.3f);
             ImGui::TableSetupColumn("인벤토리",ImGuiTableColumnFlags_WidthStretch,1.0f);
-            ImGui::TableSetupColumn("창고",ImGuiTableColumnFlags_WidthStretch,1.45f);
+            ImGui::TableSetupColumn("창고",ImGuiTableColumnFlags_WidthStretch,1.2f);
             ImGui::TableNextColumn();
             drawCharacterPanel("CharacterPanel");
             ImGui::TableNextColumn();

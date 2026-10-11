@@ -163,6 +163,7 @@ void RaidScene::Render()
 
 void RaidScene::FinishRaid(RaidPhase result)
 {
+    hud.ResetAmmoIndicator();
     hideout.vitals = player->vitals;
     freeLook = false;
     raid.phase = result;
@@ -222,6 +223,7 @@ void RaidScene::StartRaid()
     }
     if (!hideout.Depart()) return;
     freeLook = false;
+    hud.ResetAmmoIndicator();
     raid = RaidStatus{};
     raid.phase = RaidPhase::Active;
     static std::mt19937 randomEngine(std::random_device{}());
