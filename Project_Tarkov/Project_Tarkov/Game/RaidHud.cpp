@@ -347,7 +347,14 @@ void RaidHud::ResetAmmoIndicator()
 
 namespace
 {
-    struct GearDrag { int type; int quantity; bool fromStash; StackId stack; };
+    struct GearDrag {
+        int type;
+        int quantity;
+        bool fromStash;
+        StackId stack;
+        int stashX = -1;
+        int stashY = -1;
+    };
     constexpr const char* GearPayload = "HIDEOUT_GEAR";
     constexpr int RifleGear = ItemTypeCount;
     struct CharacterPreview
@@ -484,13 +491,18 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     bool equipRifleByClick = false;
     BodyPart healTarget = BodyPart::Head;
     ItemType equipmentTarget = ItemType::Shirt;
-    auto target = [&](bool stashTarget, int accepts) {
+    auto target = [&](bool stashTarget, int accepts, int stashX = -1, int stashY = -1) {
         if (!hideout.ready || !Input::IsFocused()) return;
         if (!ImGui::BeginDragDropTarget()) return;
         const auto* candidate = ImGui::GetDragDropPayload();
         if (candidate && candidate->IsDataType(GearPayload) && candidate->DataSize == sizeof(GearDrag)) {
             const auto data = *static_cast<const GearDrag*>(candidate->Data);
-            if (data.fromStash != stashTarget && data.type >= 0 && data.type <= RifleGear &&
+            if (data.fromStash && stashTarget && data.stashX >= 0 && data.stashY >= 0 &&
+                stashX >= 0 && stashY >= 0) {
+                if (const auto* payload = ImGui::AcceptDragDropPayload(GearPayload);
+                    payload && payload->IsDelivery())
+                    hideout.MoveStashItem(data.stashX, data.stashY, stashX, stashY);
+            } else if (data.fromStash != stashTarget && data.type >= 0 && data.type <= RifleGear &&
                 data.quantity > 0 && (accepts < 0 || data.type == accepts) &&
                 (stashTarget || data.type != RifleGear || accepts == RifleGear)) {
                 if (const auto* payload = ImGui::AcceptDragDropPayload(GearPayload)) {
@@ -725,7 +737,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 ImGui::SetCursorScreenPos(low);
                 ImGui::PushID(x*stashRows+y);
                 ImGui::InvisibleButton("EmptyStashSlot",{cell,cell});
-                target(true,-1);
+                target(true,-1,x,y);
                 ImGui::PopID();
             }
         }
@@ -763,7 +775,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             const bool clicked=ImGui::IsItemClicked(ImGuiMouseButton_Left);
             target(true,-1);
             if (ImGui::BeginDragDropSource()) {
-                GearDrag data{item.type,1,true,0};
+                GearDrag data{item.type,1,true,0,item.x,item.y};
                 ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
                 const char* name=item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name;
                 ImGui::Text("%s",name);
@@ -788,6 +800,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 ImGui::BeginTooltip();
                 ImGui::TextUnformatted(item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name);
                 ImGui::Text("창고 수량: %d",item.type==RifleGear?hideout.rifles:hideout.stash[item.type]);
+                ImGui::TextUnformatted("빈 슬롯으로 끌어 위치를 옮길 수 있습니다.");
                 ImGui::EndTooltip();
             }
             ImGui::PopID();

@@ -10,66 +10,123 @@
 
 namespace { constexpr int MaxStored = 1000000; }
 
-std::vector<StashPlacement> Hideout::StashLayout() const
+namespace
 {
-    constexpr int columns = 20, rows = 4;
-    std::array<bool, columns * rows> occupied{};
-    std::vector<StashPlacement> placements;
-    auto place = [&](int type, int width, int height) {
-        for (int y = 0; y <= rows - height; ++y) {
-            for (int x = 0; x <= columns - width; ++x) {
-                bool fits = true;
-                for (int row = 0; row < height && fits; ++row)
-                    for (int column = 0; column < width; ++column)
-                        if (occupied[(y + row) * columns + x + column]) { fits = false; break; }
-                if (!fits) continue;
-                for (int row = 0; row < height; ++row)
-                    for (int column = 0; column < width; ++column)
-                        occupied[(y + row) * columns + x + column] = true;
-                placements.push_back({type, x, y, width, height});
-                return true;
-            }
-        }
-        return false;
-    };
-    auto dimensions = [](int type) {
-        int width = 1, height = 1;
-        if (type == ItemTypeCount) return std::pair{3, 1};
+    constexpr int StashColumns = 20;
+    constexpr int StashRows = 4;
+
+    std::pair<int, int> StashItemSize(int type)
+    {
+        if (type == ItemTypeCount) return {3, 1};
         switch (static_cast<ItemType>(type)) {
-        case ItemType::Water: width = 1; height = 2; break;
-        case ItemType::Ammo: width = 2; height = 1; break;
+        case ItemType::Water: return {1, 2};
+        case ItemType::Ammo: return {2, 1};
         case ItemType::Shirt: case ItemType::Trousers:
-        case ItemType::UnderShirt: case ItemType::Underpants:
-            width = 1; height = 2; break;
-        case ItemType::Vest: case ItemType::Helmet: width = 2; height = 2; break;
-        case ItemType::Backpack: width = 3; height = 3; break;
-        default: break;
-        }
-        return std::pair{width, height};
-    };
-    for (int unit = 0; unit < 10; ++unit) {
-        for (int type = 0; type <= ItemTypeCount; ++type) {
-            const int available = type == ItemTypeCount ? rifles : stash[static_cast<std::size_t>(type)];
-            if (unit >= available) continue;
-            const auto [width, height] = dimensions(type);
-            place(type, width, height);
+        case ItemType::UnderShirt: case ItemType::Underpants: return {1, 2};
+        case ItemType::Vest: case ItemType::Helmet: return {2, 2};
+        case ItemType::Backpack: return {3, 3};
+        default: return {1, 1};
         }
     }
-    return placements;
+
+    bool FitsStash(const std::array<bool, StashColumns * StashRows>& occupied,
+        int x, int y, int width, int height)
+    {
+        if (x < 0 || y < 0 || x + width > StashColumns || y + height > StashRows)
+            return false;
+        for (int row = 0; row < height; ++row)
+            for (int column = 0; column < width; ++column)
+                if (occupied[static_cast<std::size_t>((y + row) * StashColumns + x + column)])
+                    return false;
+        return true;
+    }
+
+    void OccupyStash(std::array<bool, StashColumns * StashRows>& occupied,
+        int x, int y, int width, int height)
+    {
+        for (int row = 0; row < height; ++row)
+            for (int column = 0; column < width; ++column)
+                occupied[static_cast<std::size_t>((y + row) * StashColumns + x + column)] = true;
+    }
+}
+
+std::vector<StashPlacement> Hideout::StashLayout() const
+{
+    return stashLayout;
 }
 
 void Hideout::NormalizeStash()
 {
     rifles = (std::clamp)(rifles, 0, 10);
     for (auto& count : stash) count = (std::clamp)(count, 0, 10);
+    std::array<int, ItemTypeCount + 1> remaining{};
+    for (int type = 0; type <= ItemTypeCount; ++type)
+        remaining[static_cast<std::size_t>(type)] =
+            type == ItemTypeCount ? rifles : stash[static_cast<std::size_t>(type)];
     std::array<int, ItemTypeCount> kept{};
     int keptRifles = 0;
-    for (const auto& placement : StashLayout()) {
+    std::array<bool, StashColumns * StashRows> occupied{};
+    std::vector<StashPlacement> normalized;
+    auto add = [&](int type, int x, int y) {
+        const auto [width, height] = StashItemSize(type);
+        if (remaining[static_cast<std::size_t>(type)] <= 0 ||
+            !FitsStash(occupied, x, y, width, height)) return false;
+        OccupyStash(occupied, x, y, width, height);
+        normalized.push_back({type, x, y, width, height});
+        --remaining[static_cast<std::size_t>(type)];
+        return true;
+    };
+    for (const auto& item : stashLayout)
+        if (item.type >= 0 && item.type <= ItemTypeCount)
+            add(item.type, item.x, item.y);
+    for (int type = 0; type <= ItemTypeCount; ++type) {
+        const auto [width, height] = StashItemSize(type);
+        for (int unit = 0; unit < remaining[static_cast<std::size_t>(type)]; ++unit) {
+            bool placed = false;
+            for (int y = 0; y <= StashRows - height && !placed; ++y)
+                for (int x = 0; x <= StashColumns - width; ++x)
+                    if (add(type, x, y)) { placed = true; break; }
+            if (!placed) break;
+        }
+    }
+    stashLayout = std::move(normalized);
+    for (const auto& placement : stashLayout)
         if (placement.type == ItemTypeCount) ++keptRifles;
         else ++kept[static_cast<std::size_t>(placement.type)];
-    }
     rifles = keptRifles;
     stash = kept;
+}
+
+bool Hideout::MoveStashItem(int sourceX, int sourceY, int destinationX, int destinationY)
+{
+    if (!ready) return false;
+    const auto item = std::find_if(stashLayout.begin(), stashLayout.end(),
+        [&](const StashPlacement& placement) {
+            return placement.x == sourceX && placement.y == sourceY;
+        });
+    if (item == stashLayout.end()) return false;
+    const auto [width, height] = StashItemSize(item->type);
+    std::array<bool, StashColumns * StashRows> occupied{};
+    for (const auto& other : stashLayout) {
+        if (&other == &*item) continue;
+        OccupyStash(occupied, other.x, other.y, other.width, other.height);
+    }
+    if (!FitsStash(occupied, destinationX, destinationY, width, height)) {
+        message = "이 아이템은 해당 슬롯에 놓을 수 없습니다.";
+        return false;
+    }
+    Hideout before = *this;
+    item->x = destinationX;
+    item->y = destinationY;
+    item->width = width;
+    item->height = height;
+    if (!Save()) {
+        const auto failure = message;
+        *this = std::move(before);
+        message = failure;
+        return false;
+    }
+    return true;
 }
 
 bool Hideout::Save()
@@ -80,9 +137,12 @@ bool Hideout::Save()
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 7\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
+    out << "HIDEOUT 8\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
     for (int count : stash) out << count << ' ';
-    out << '\n' << clothingMask << '\n' << loadout.Items().size() << '\n';
+    out << '\n' << stashLayout.size() << '\n';
+    for (const auto& item : stashLayout)
+        out << item.type << ' ' << item.x << ' ' << item.y << '\n';
+    out << clothingMask << '\n' << loadout.Items().size() << '\n';
     for (const auto& item : loadout.Items()) out << static_cast<int>(item.type) << ' ' << item.quantity << '\n';
     for (float value : vitals.BodyHealth()) out << value << ' ';
     out << vitals.Hydration() << ' ' << vitals.Stamina() << '\n';
@@ -116,13 +176,29 @@ void Hideout::Load()
     std::string tag, end;
     int version = 0, equipped = 0, count = 0;
     bool valid = static_cast<bool>(in >> tag >> version >> next.rifles >> equipped >> next.magazine);
-    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 7) && next.rifles >= 0 && next.rifles <= MaxStored &&
+    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 8) && next.rifles >= 0 && next.rifles <= MaxStored &&
         (equipped == 0 || equipped == 1) && next.magazine >= 0 && next.magazine <= 30 && (equipped || next.magazine == 0);
     const int stockCount = version == 1 ? 3 : version < 4 ? 7 : version < 5 ? 9 : ItemTypeCount;
     for (int i = 0; i < stockCount; ++i) {
         auto& stock = next.stash[i];
         valid = static_cast<bool>(in >> stock) && valid;
         valid = valid && stock >= 0 && stock <= MaxStored;
+    }
+    if (version >= 8) {
+        int placementCount = 0;
+        valid = static_cast<bool>(in >> placementCount) && valid;
+        valid = valid && placementCount >= 0 && placementCount <= StashColumns * StashRows;
+        for (int i = 0; valid && i < placementCount; ++i) {
+            StashPlacement placement{};
+            valid = static_cast<bool>(in >> placement.type >> placement.x >> placement.y) &&
+                placement.type >= 0 && placement.type <= ItemTypeCount;
+            if (valid) {
+                const auto [width, height] = StashItemSize(placement.type);
+                placement.width = width;
+                placement.height = height;
+                next.stashLayout.push_back(placement);
+            }
+        }
     }
     if (version >= 2) {
         int clothing = -1;
@@ -165,9 +241,9 @@ void Hideout::Load()
     next.rifle = equipped != 0;
     next.NormalizeStash();
     next.ready = true;
-    next.message = version < 7 ? "저장 데이터를 새 형식으로 변환했습니다." : "은신처를 불러왔습니다.";
+    next.message = version < 8 ? "저장 데이터를 새 형식으로 변환했습니다." : "은신처를 불러왔습니다.";
     *this = std::move(next);
-    if (version < 7) Save();
+    if (version < 8) Save();
 }
 
 void Hideout::Transfer(ItemType type, int quantity, bool take)

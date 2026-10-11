@@ -15,6 +15,7 @@ public:
     PlayerVitals vitals;
     std::uint32_t clothingMask = DefaultClothingMask;
     int rifles = 10;
+    std::vector<StashPlacement> stashLayout;
     Inventory loadout;
     bool rifle = false;
     int magazine = 0;
@@ -30,6 +31,7 @@ public:
     void LoadMagazine();
     bool HealBodyPart(BodyPart part);
     std::vector<StashPlacement> StashLayout() const;
+    bool MoveStashItem(int sourceX, int sourceY, int destinationX, int destinationY);
     bool Depart();
     void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
 private:
