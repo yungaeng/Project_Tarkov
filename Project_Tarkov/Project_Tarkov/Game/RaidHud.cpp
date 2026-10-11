@@ -243,7 +243,9 @@ namespace
         glDepthMask(GL_TRUE);
         glClear(GL_DEPTH_BUFFER_BIT);
         Renderer::PrepareFrame(*preview.shader,preview.camera,preview.size.x,preview.size.y);
-        preview.visual->Update(0,*preview.character,{false,preview.rifle,false,false,0,0,preview.rifle});
+        const float dt=std::clamp(std::isfinite(ImGui::GetIO().DeltaTime)?
+            ImGui::GetIO().DeltaTime:0.0f,0.0f,0.1f);
+        preview.visual->Update(dt,*preview.character,{false,preview.rifle,false,false,0,0,preview.rifle});
         preview.visual->Render(*preview.character,*preview.shader,preview.camera,preview.size.x,preview.size.y);
         glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);
     }
@@ -587,7 +589,6 @@ bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& charac
     ImGui::Separator();
 
     ImGui::BeginChild("결과 캐릭터", {0, io.DisplaySize.y * 0.43f}, true);
-    ImGui::TextColored(accent, "플레이한 캐릭터");
     const ImVec2 modelPosition = ImGui::GetCursorScreenPos();
     const float modelWidth = ImGui::GetContentRegionAvail().x;
     const float modelHeight = (std::max)(180.0f, ImGui::GetContentRegionAvail().y - 8.0f);

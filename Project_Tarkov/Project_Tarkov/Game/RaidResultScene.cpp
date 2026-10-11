@@ -16,6 +16,7 @@ void RaidResultScene::Init()
 {
     character.clothingMask = summary.recoveredClothing;
     character.position = {0, 0, 0};
+    character.rotation.y = 0.0f;
     if (!shader.LoadFromFile("Assets/Shaders/cube.vs", "Assets/Shaders/cube.fs"))
         throw std::runtime_error("Result scene shader load failed");
     visual.Init();
