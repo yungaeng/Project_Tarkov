@@ -1,4 +1,4 @@
-# Supine death with raised knees and spread thighs; bind-relative final pose.
+# Supine death with the arms relaxed outward and legs extended along the ground.
 # Root rotates backwards so the front of the character faces the sky.
 Root 0 0 0 0 0 0 0
 Root 0.25 0 0 -0.08 -15 0 0
@@ -11,15 +11,15 @@ Spine1 0 0 0 0 0 0 0
 Spine2 0 0 0 0 0 0 0
 Neck 0 0 0 0 0 0 0
 Head 0 0 0 0 -5 0 8
-RightArm 0 0 0 0 0 0 0
-RightForeArm 0 0 0 0 0 -10 0
+RightArm 0 0 0 0 0 0 -24
+RightForeArm 0 0 0 0 0 -10 -12
 RightHand 0 0 0 0 0 0 0
-LeftArm 0 0 0 0 0 0 0
-LeftForeArm 0 0 0 0 0 10 0
+LeftArm 0 0 0 0 0 0 24
+LeftForeArm 0 0 0 0 0 10 12
 LeftHand 0 0 0 0 0 0 0
-RightUpLeg 0 0 0 0 65 0 -45
-RightLeg 0 0 0 0 -115 0 0
+RightUpLeg 0 0 0 0 15 0 -12
+RightLeg 0 0 0 0 -24 0 0
 RightFoot 0 0 0 0 0 0 0
-LeftUpLeg 0 0 0 0 65 0 45
+LeftUpLeg 0 0 0 0 65 0 40
 LeftLeg 0 0 0 0 -115 0 0
 LeftFoot 0 0 0 0 0 0 0
