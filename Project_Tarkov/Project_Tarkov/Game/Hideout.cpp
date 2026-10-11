@@ -55,16 +55,12 @@ std::vector<StashPlacement> Hideout::StashLayout() const
     return stashLayout;
 }
 
-void Hideout::NormalizeStash()
+bool Hideout::NormalizeStash()
 {
-    rifles = (std::clamp)(rifles, 0, 10);
-    for (auto& count : stash) count = (std::clamp)(count, 0, 10);
     std::array<int, ItemTypeCount + 1> remaining{};
     for (int type = 0; type <= ItemTypeCount; ++type)
         remaining[static_cast<std::size_t>(type)] =
             type == ItemTypeCount ? rifles : stash[static_cast<std::size_t>(type)];
-    std::array<int, ItemTypeCount> kept{};
-    int keptRifles = 0;
     std::array<bool, StashColumns * StashRows> occupied{};
     std::vector<StashPlacement> normalized;
     auto add = [&](int type, int x, int y) {
@@ -81,7 +77,7 @@ void Hideout::NormalizeStash()
             add(item.type, item.x, item.y);
     for (int type = 0; type <= ItemTypeCount; ++type) {
         const auto [width, height] = StashItemSize(type);
-        for (int unit = 0; unit < remaining[static_cast<std::size_t>(type)]; ++unit) {
+        while (remaining[static_cast<std::size_t>(type)] > 0) {
             bool placed = false;
             for (int y = 0; y <= StashRows - height && !placed; ++y)
                 for (int x = 0; x <= StashColumns - width; ++x)
@@ -90,11 +86,10 @@ void Hideout::NormalizeStash()
         }
     }
     stashLayout = std::move(normalized);
-    for (const auto& placement : stashLayout)
-        if (placement.type == ItemTypeCount) ++keptRifles;
-        else ++kept[static_cast<std::size_t>(placement.type)];
-    rifles = keptRifles;
-    stash = kept;
+    // Old profiles (and starter stock) can exceed the grid capacity. Keep their
+    // quantities; unplaced items become visible as space is freed. New deposits
+    // must fit in full and are rolled back by the caller if they cannot.
+    return std::all_of(remaining.begin(), remaining.end(), [](int count) { return count == 0; });
 }
 
 bool Hideout::MoveStashItem(int sourceX, int sourceY, int destinationX, int destinationY)
@@ -177,10 +172,14 @@ bool Hideout::AutoArrangeStash()
     return true;
 }
 
-bool Hideout::Save()
+bool Hideout::Save(bool requireStashSpace)
 {
     if (!ready) { message = "프로필을 사용할 수 없습니다. 저장 파일을 복구한 뒤 다시 실행하세요."; return false; }
-    NormalizeStash();
+    const bool fits = NormalizeStash();
+    if (requireStashSpace && !fits) {
+        message = "창고 공간이 부족합니다. 아이템 이동을 취소했습니다.";
+        return false;
+    }
     std::error_code error;
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
@@ -203,7 +202,8 @@ bool Hideout::Save()
         message = "저장 실패. 여유 공간과 파일 권한을 확인하고 종료 전에 다시 시도하세요.";
         return false;
     }
-    message = "은신처를 저장했습니다.";
+    message = fits ? "은신처를 저장했습니다." :
+        "저장 완료. 기존 초과 재고는 보존되며 빈 공간이 생기면 표시됩니다.";
     return true;
 }
 
@@ -287,9 +287,10 @@ void Hideout::Load()
     if (in >> extra) valid = false;
     if (!valid) { ready = false; message = "은신처 저장 파일이 손상되었습니다. 원본은 보존했으며, 플레이 전에 복구해야 합니다."; return; }
     next.rifle = equipped != 0;
-    next.NormalizeStash();
+    const bool fits = next.NormalizeStash();
     next.ready = true;
     next.message = version < 8 ? "저장 데이터를 새 형식으로 변환했습니다." : "은신처를 불러왔습니다.";
+    if (!fits) next.message += " 기존 초과 재고는 보존되며 빈 공간이 생기면 표시됩니다.";
     *this = std::move(next);
     if (version < 8) Save();
 }
@@ -308,7 +309,7 @@ void Hideout::Transfer(ItemType type, int quantity, bool take)
         if (stock > MaxStored - quantity) { message = "창고가 가득 찼습니다."; return; }
         stock += loadout.Take(type, quantity);
     }
-    if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
+    if (!Save(!take)) { auto failure = message; *this = std::move(before); message = failure; }
 }
 
 void Hideout::StoreStack(StackId id)
@@ -322,7 +323,7 @@ void Hideout::StoreStack(StackId id)
     Hideout before = *this;
     if (!loadout.Remove(id, quantity)) return;
     stash[type] += quantity;
-    if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
+    if (!Save(true)) { auto failure = message; *this = std::move(before); message = failure; }
 }
 
 void Hideout::ToggleRifle()
@@ -336,7 +337,7 @@ void Hideout::ToggleRifle()
         if (rifles <= 0) { message = "창고에 소총이 없습니다. 비무장 상태로 출전할 수 있습니다."; return; }
         --rifles; rifle = true;
     }
-    if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
+    if (!Save(before.rifle)) { auto failure = message; *this = std::move(before); message = failure; }
 }
 
 void Hideout::LoadMagazine()
@@ -391,7 +392,7 @@ void Hideout::ToggleClothing(ItemType type, bool fromStash)
         clothingMask |= bit;
         loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
     }
-    if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
+    if (!Save((before.clothingMask & bit) != 0)) { auto failure = message; *this = std::move(before); message = failure; }
 }
 
 bool Hideout::Depart()

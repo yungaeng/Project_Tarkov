@@ -23,7 +23,7 @@ public:
     bool ready = false;
     std::string message;
     void Load();
-    bool Save();
+    bool Save(bool requireStashSpace = false);
     void Transfer(ItemType type, int quantity, bool take);
     void StoreStack(StackId id);
     void ToggleRifle();
@@ -36,5 +36,5 @@ public:
     bool Depart();
     void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
 private:
-    void NormalizeStash();
+    bool NormalizeStash();
 };

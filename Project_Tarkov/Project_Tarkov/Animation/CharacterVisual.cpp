@@ -8,6 +8,7 @@
 #include <cmath>
 #include <array>
 #include <vector>
+#include <map>
 
 namespace
 {
@@ -28,80 +29,6 @@ namespace
     {
         AddTriangle(vertices, a, b, c);
         AddTriangle(vertices, a, c, d);
-    }
-
-    float BraSurface(float x, float y)
-    {
-        float z = 7.2f + (y - 126.f) * (1.7f / 6.f);
-        if (y > 132.f && y <= 136.f) z = 8.9f + (y - 132.f) * .525f;
-        else if (y > 136.f && y <= 140.f) z = 11.f;
-        else if (y > 140.f) z = 11.f - (y - 140.f) * 1.95f;
-        return z - 2.4f * (x / 12.f) * (x / 12.f) + .25f;
-    }
-
-    float ThongFrontSurface(float x)
-    {
-        return 4.8f - 1.6f * (x / 13.f) * (x / 13.f) + .25f;
-    }
-
-    float ThongBackSurface(float x, float y)
-    {
-        const float drop = std::clamp((y - 82.f) / 14.f, 0.f, 1.f);
-        return -10.f - 4.f * drop + 8.f * (x / 13.f) * (x / 13.f) - .25f;
-    }
-
-    void CreateSportsBra(Mesh& mesh)
-    {
-        std::vector<Vertex> vertices;
-        auto point = [](float x, float y) { return glm::vec3(x, y, BraSurface(x, y)); };
-        AddQuad(vertices, point(-11.5f, 126.f), point(11.5f, 126.f),
-            point(11.5f, 131.f), point(-11.5f, 131.f));
-        AddQuad(vertices, point(-11.5f, 131.f), point(-.5f, 131.f),
-            point(-1.5f, 142.f), point(-9.5f, 140.5f));
-        AddQuad(vertices, point(.5f, 131.f), point(11.5f, 131.f),
-            point(9.5f, 140.5f), point(1.5f, 142.f));
-        AddQuad(vertices, point(-9.5f, 139.f), point(-7.2f, 138.f),
-            point(-9.4f, 144.f), point(-11.2f, 143.f));
-        AddQuad(vertices, point(7.2f, 138.f), point(9.5f, 139.f),
-            point(11.2f, 143.f), point(9.4f, 144.f));
-        mesh.Create(vertices);
-    }
-
-    void CreateSportsBraTrim(Mesh& mesh)
-    {
-        std::vector<Vertex> vertices;
-        auto point = [](float x, float y) { return glm::vec3(x, y, BraSurface(x, y) + .12f); };
-        AddQuad(vertices, point(-11.5f, 126.f), point(11.5f, 126.f),
-            point(11.5f, 128.5f), point(-11.5f, 128.5f));
-        mesh.Create(vertices);
-    }
-
-    void CreateThong(Mesh& mesh)
-    {
-        std::vector<Vertex> vertices;
-        auto front = [](float x, float y) { return glm::vec3(x, y, ThongFrontSurface(x)); };
-        auto back = [](float x, float y) { return glm::vec3(x, y, ThongBackSurface(x, y)); };
-        AddQuad(vertices, front(-5.f, 80.f), front(5.f, 80.f),
-            front(13.f, 94.f), front(-13.f, 94.f));
-        AddQuad(vertices, back(-13.f, 94.f), back(13.f, 94.f),
-            back(5.f, 80.f), back(-5.f, 80.f));
-        AddQuad(vertices, front(-13.f, 96.f), front(13.f, 96.f),
-            front(13.f, 99.f), front(-13.f, 99.f));
-        AddQuad(vertices, back(-13.f, 96.f), back(-13.f, 99.f),
-            back(13.f, 99.f), back(13.f, 96.f));
-        mesh.Create(vertices);
-    }
-
-    void CreateThongTrim(Mesh& mesh)
-    {
-        std::vector<Vertex> vertices;
-        auto front = [](float x, float y) { return glm::vec3(x, y, ThongFrontSurface(x) + .12f); };
-        auto back = [](float x, float y) { return glm::vec3(x, y, ThongBackSurface(x, y) - .12f); };
-        AddQuad(vertices, front(-13.f, 96.5f), front(13.f, 96.5f),
-            front(13.f, 99.f), front(-13.f, 99.f));
-        AddQuad(vertices, back(-13.f, 96.5f), back(-13.f, 99.f),
-            back(13.f, 99.f), back(13.f, 96.5f));
-        mesh.Create(vertices);
     }
 
     void CreateBackpackCamouflage(std::array<Mesh, 4>& meshes)
@@ -134,10 +61,10 @@ namespace
 
 struct CharacterVisual::Assets
 {
-    Mesh mesh, backpack, sportsBra, sportsBraTrim, thong, thongTrim;
+    Mesh mesh, backpack;
     std::array<Mesh, 4> backpackCamouflage;
     Texture texture;
-    MotionClip deathClip, holdClip, reloadClip, aimClip, recoilClip;
+    MotionClip deathClip, lootClip, holdClip, reloadClip, aimClip, recoilClip;
     std::array<MotionClip, 5> stances;
 };
 
@@ -161,12 +88,9 @@ void CharacterVisual::Init()
         if (!shared->texture.Load("Assets/Models/Player/KimGawon/character.png"))
             throw std::runtime_error("Character texture load failed");
         shared->backpack.CreateCube();
-        CreateSportsBra(shared->sportsBra);
-        CreateSportsBraTrim(shared->sportsBraTrim);
-        CreateThong(shared->thong);
-        CreateThongTrim(shared->thongTrim);
         CreateBackpackCamouflage(shared->backpackCamouflage);
         shared->deathClip.Load("Assets/Animations/Characters/Death.anim");
+        shared->lootClip.Load("Assets/Animations/Characters/CorpseLoot.anim");
         shared->holdClip.Load("Assets/Animations/Characters/RifleHold.anim");
         shared->reloadClip.Load("Assets/Animations/Characters/RifleReload.anim");
         const char* names[] = {"RifleIdle", "RifleWalk", "RifleRun", "RifleCrouchIdle", "RifleCrouchWalk"};
@@ -217,7 +141,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         else if (deathTime >= assets->deathClip.Duration()) return; // Preserve the corpse, no loop or idle breathing.
         deathTime = (std::min)(assets->deathClip.Duration(), deathTime + dt);
         const auto previousHand = animation.NodePosition("RightHand");
-        animation.ApplyMotion(assets->deathClip, deathTime, 1, false, true);
+        animation.ApplyMotion(assets->deathClip, deathTime, std::clamp(deathTime / .65f, 0.f, 1.f), true, true);
         weaponModel[3] += glm::vec4((animation.NodePosition("RightHand") - previousHand) *
             character.scale * character.GetSettings().modelScale, 0);
         deathRoot = assets->deathClip.Sample("Root", deathTime);
@@ -230,6 +154,11 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
             minimum = (std::min)(minimum, (rotation * glm::vec4(position * character.scale * character.GetSettings().modelScale, 1)).y);
         }
         deathRoot.position.y = (std::max)(deathRoot.position.y, -minimum + 0.01f);
+        UploadPalette();
+        return;
+    }
+    if (character.IsLooting()) {
+        // Preserve the grounded pose fitted once when entering the interaction.
         UploadPalette();
         return;
     }
@@ -287,6 +216,10 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     glm::mat4 model = glm::translate(glm::mat4(1), position);
     model = glm::rotate(model, glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
     if (dying) model *= deathRoot.Matrix();
+    else if (character.IsLooting()) {
+        auto root = assets->lootClip.Sample("Root", 0);
+        model *= root.Matrix();
+    }
     const glm::mat4 actor = model;
     model = glm::scale(model, character.scale * character.GetSettings().modelScale);
     // Bone envelopes conservatively enclose the current skinned pose.
@@ -299,19 +232,7 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     Renderer::Draw(shader, assets->mesh, camera, model, width, height,
         glm::vec3(dying ? 0.65f : 1.f), true, assets->texture.id,
         static_cast<int>(character.clothingMask), 1.f, firstPerson);
-    const auto equipped = character.clothingMask;
-    const auto scale = character.scale * character.GetSettings().modelScale;
-    const auto garmentModel = glm::scale(actor, scale);
-    if ((equipped & ClothingBit(ItemType::UnderShirt)) &&
-        !(equipped & ClothingBit(ItemType::Shirt))) {
-        Renderer::Draw(shader, assets->sportsBra, camera, garmentModel, width, height, glm::vec3(.035f,.035f,.04f));
-        Renderer::Draw(shader, assets->sportsBraTrim, camera, garmentModel, width, height, glm::vec3(.42f,.42f,.39f));
-    }
-    if ((equipped & ClothingBit(ItemType::Underpants)) &&
-        !(equipped & ClothingBit(ItemType::Trousers))) {
-        Renderer::Draw(shader, assets->thong, camera, garmentModel, width, height, glm::vec3(.025f,.025f,.03f));
-        Renderer::Draw(shader, assets->thongTrim, camera, garmentModel, width, height, glm::vec3(.48f,.48f,.45f));
-    }
+    // Fitted underwear is part of the skinned appearance and uses its clothing mask.
     if (character.clothingMask & ClothingBit(ItemType::Backpack)) {
         auto backpackModel = glm::translate(actor, glm::vec3(0, .17f, 0));
         backpackModel = glm::scale(backpackModel, glm::vec3(.55f, .85f, .85f));
@@ -341,7 +262,107 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
                 cubePart({side,row,-.433f},{.035f,.027f,.016f},{.36f,.35f,.29f});
         }
     }
-    if (state.hasWeapon) weapon.Render(actor * weaponModel, shader, camera, width, height);
+    if (state.hasWeapon && !character.IsLooting()) weapon.Render(actor * weaponModel, shader, camera, width, height);
+}
+
+glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Character& corpse,
+    const CharacterVisual& corpseVisual,
+    const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear)
+{
+    animation.Update(0, "idle", false, false);
+    animation.ApplyMotion(assets->lootClip, 0, 1, true, false, true);
+    lootPoseValid = false;
+    auto corpseModel = glm::translate(glm::mat4(1), corpse.position);
+    corpseModel = glm::rotate(corpseModel, glm::radians(corpse.rotation.y), glm::vec3(0, 1, 0));
+    corpseModel *= corpseVisual.deathRoot.Matrix();
+    corpseModel = glm::scale(corpseModel, corpse.scale * corpse.GetSettings().modelScale);
+    auto lootModel = glm::rotate(glm::mat4(1), glm::radians(corpse.rotation.y + 180.f), glm::vec3(0, 1, 0));
+    lootModel *= assets->lootClip.Sample("Root", 0).Matrix();
+    lootModel = glm::scale(lootModel, character.scale * character.GetSettings().modelScale);
+    const auto pelvis = glm::vec3(corpseModel * glm::vec4(corpseVisual.animation.NodePosition("Hips"), 1));
+    const auto localPelvis = glm::vec3(lootModel * glm::vec4(animation.NodePosition("Hips"), 1));
+    const glm::vec3 anchor(pelvis.x - localPelvis.x, corpse.position.y, pelvis.z - localPelvis.z);
+    lootModel = glm::translate(glm::mat4(1), anchor) * lootModel;
+    if (!animation.GroundLootSupports(lootModel, corpse.position.y)) return anchor;
+
+    // Build a padded surface envelope once on entry. Include clothing so that
+    // fitting the pelvis also preserves room for the torso and raised thighs.
+    constexpr float cell = .04f;
+    constexpr float clearance = .02f;
+    using Interval = std::pair<float, float>;
+    std::map<std::pair<int, int>, Interval> surface;
+    // Cover triangle interiors as well as vertices, including large clothing
+    // triangles. Each cell stores a conservative vertical surface bound.
+    auto visitSurface = [&](const SkeletalAnimation& mesh, const glm::mat4& model, auto visit) {
+        const auto& vertices = mesh.Vertices();
+        const auto& indices = mesh.Indices();
+        for (size_t i = 0; i + 2 < indices.size(); i += 3) {
+            const auto point = [&](unsigned int index) {
+                const auto& v = vertices[index].position;
+                return glm::vec3(model * glm::vec4(v.x, v.y, v.z, 1));
+            };
+            const auto a = point(indices[i]);
+            const auto b = point(indices[i + 1]);
+            const auto c = point(indices[i + 2]);
+            const auto low = (glm::min)(a, (glm::min)(b, c));
+            const auto high = (glm::max)(a, (glm::max)(b, c));
+            for (int x = static_cast<int>(std::floor(low.x / cell));
+                x <= static_cast<int>(std::floor(high.x / cell)); ++x)
+                for (int z = static_cast<int>(std::floor(low.z / cell));
+                    z <= static_cast<int>(std::floor(high.z / cell)); ++z)
+                    visit(std::make_pair(x, z), low.y, high.y);
+        }
+    };
+    visitSurface(corpseVisual.animation, corpseModel, [&](const auto& key, float bottom, float top) {
+        auto inserted = surface.emplace(key, Interval{bottom, top});
+        inserted.first->second.first = (std::min)(inserted.first->second.first, bottom);
+        inserted.first->second.second = (std::max)(inserted.first->second.second, top);
+    });
+    std::map<std::pair<int, int>, Interval> underside;
+    lootPoseHeight = .75f;
+    visitSurface(animation, lootModel, [&](const auto& key, float bottom, float top) {
+        lootPoseHeight = (std::max)(lootPoseHeight, top - corpse.position.y + clearance);
+        auto inserted = underside.emplace(key, Interval{bottom, top});
+        inserted.first->second.first = (std::min)(inserted.first->second.first, bottom);
+        inserted.first->second.second = (std::max)(inserted.first->second.second, top);
+    });
+    const char* supports[] = {"RightHand", "LeftHand", "RightLeg", "LeftLeg"};
+    std::array<glm::vec3, 4> baseSupports{};
+    for (size_t i = 0; i < baseSupports.size(); ++i) {
+        baseSupports[i] = glm::vec3(lootModel * glm::vec4(animation.NodePosition(supports[i]), 1));
+        baseSupports[i].y = corpse.position.y;
+    }
+    // Search in the ground plane: moving upward would unplant all four supports.
+    // Integer cell offsets keep the conservative triangle coverage exact.
+    int bestDistance = 1000000;
+    glm::vec3 offset(0);
+    for (int x = -30; x <= 30; ++x)
+        for (int z = -30; z <= 30; ++z) {
+            const int distance = x * x + z * z;
+            if (distance >= bestDistance || distance > 900) continue;
+            bool clear = true;
+            for (const auto& entry : underside) {
+                const auto found = surface.find({entry.first.first + x, entry.first.second + z});
+                // Raised enemy limbs do not occupy the empty space below them.
+                if (found != surface.end() &&
+                    entry.second.first < found->second.second + clearance &&
+                    entry.second.second > found->second.first - clearance) {
+                    clear = false;
+                    break;
+                }
+            }
+            if (clear) {
+                const glm::vec3 candidateOffset(x * cell, 0, z * cell);
+                auto candidateSupports = baseSupports;
+                for (auto& support : candidateSupports) support += candidateOffset;
+                if (!placementClear(anchor + candidateOffset, lootPoseHeight, candidateSupports)) continue;
+                bestDistance = distance;
+                offset = candidateOffset;
+                lootSupports = candidateSupports;
+                lootPoseValid = true;
+            }
+        }
+    return anchor + offset;
 }
 
 void CharacterVisual::Reset()
@@ -351,6 +372,9 @@ void CharacterVisual::Reset()
     paletteTexture = paletteBuffer = 0;
     assets.reset();
     poseElapsed = 0;
+    lootPoseValid = false;
+    lootPoseHeight = .75f;
+    lootSupports = {};
     animation.Reset();
     weapon.Reset();
     weaponModel = glm::mat4(1);

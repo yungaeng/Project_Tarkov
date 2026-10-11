@@ -121,7 +121,8 @@ void RaidHud::Init(GLFWwindow* window)
     if (!rendererReady) throw std::runtime_error("HUD renderer initialization failed");
 }
 
-void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid)
+void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid,
+    const Enemy* corpse, int corpseTarget, StackId* takeStack, bool* takeWeapon, bool* closeLoot)
 {
     if (!rendererReady) return;
     const auto& inventory = player.GetInventory();
@@ -229,7 +230,7 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
         }
     }
 
-    if (raid.phase == RaidPhase::Active && !inventoryOpen)
+    if (raid.phase == RaidPhase::Active && !inventoryOpen && !corpse)
     {
         const ImVec2 center(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
         if (combat.Aiming() && player.vitals.Alive() && Input::IsFocused()) {
@@ -237,6 +238,12 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
             const ImU32 color = loot.Target() ? IM_COL32(255, 220, 60, 255) : IM_COL32(255, 255, 255, 220);
             draw->AddLine(ImVec2(center.x - 5, center.y), ImVec2(center.x + 5, center.y), color);
             draw->AddLine(ImVec2(center.x, center.y - 5), ImVec2(center.x, center.y + 5), color);
+        }
+        if (corpseTarget >= 0 && player.vitals.Alive() && Input::IsFocused()) {
+            ImGui::SetNextWindowPos(ImVec2(center.x, center.y + 28), ImGuiCond_Always, ImVec2(.5f, 0));
+            ImGui::Begin("시체 상호작용", nullptr, overlay);
+            ImGui::TextUnformatted("[F] 시체 수색 · 몸을 낮추고 파밍");
+            ImGui::End();
         }
         // Target() already requires a center-screen ray hit, reach and clear line of sight.
         if (const auto* item = loot.Target(); item && player.vitals.Alive() && Input::IsFocused()) {
@@ -252,7 +259,7 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
             ImGui::End();
         }
     }
-    else if (raid.phase == RaidPhase::Active && inventoryOpen)
+    else if (raid.phase == RaidPhase::Active && inventoryOpen && !corpse)
     {
         const float inventoryWidth=actions.healingMode?
             (std::max)(160.f,(std::min)(560.f,io.DisplaySize.x-190.f)):
@@ -324,6 +331,79 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
         }
         if (!loot.Message().empty()) ImGui::TextUnformatted(loot.Message().c_str());
         ImGui::End();
+    }
+    if (corpse && raid.phase == RaidPhase::Active) {
+        const float width = LootPanelWidth(io.DisplaySize.x);
+        const float height = (std::min)(420.f, (std::max)(220.f, io.DisplaySize.y - 64.f));
+        // Open on the right; allow dragging for the duration of this search.
+        ImGui::SetNextWindowPos({io.DisplaySize.x - 12.f, io.DisplaySize.y*.5f}, ImGuiCond_Appearing, {1.f,.5f});
+        ImGui::SetNextWindowSize({width,height}, ImGuiCond_Always);
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(.08f,.10f,.08f,.95f));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.22f,.27f,.19f,1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.35f,.40f,.27f,1));
+        ImGui::Begin("시체 수색", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
+        ImGui::TextWrapped("시체를 수색하는 중 · 수색 중에도 공격받을 수 있습니다.");
+        ImGui::TextWrapped("제목을 드래그해 창 이동 · 아이템 클릭/드래그로 획득 · F / I / ESC로 닫기");
+        ImGui::BeginDisabled(!Input::IsFocused() || !player.vitals.Alive());
+        if (ImGui::Button("수색 종료") && closeLoot) *closeLoot = true;
+        ImGui::Separator();
+        const float paneWidth = (ImGui::GetContentRegionAvail().x - 12.f)*.5f;
+        const float paneHeight = (std::max)(80.f, ImGui::GetContentRegionAvail().y - 32.f);
+        ImGui::BeginChild("내 휴대품", {paneWidth,paneHeight}, true);
+        ImGui::Text("내 휴대품 %d/%d", static_cast<int>(inventory.Items().size()), inventory.SlotCapacity());
+        ImGui::Text("무게 %.2f kg", inventory.TotalWeight());
+        ImGui::Separator();
+        if (ImGui::BeginTable("휴대품 슬롯", 2, ImGuiTableFlags_SizingStretchSame)) {
+            for (int i=0; i<inventory.SlotCapacity(); ++i) {
+                ImGui::TableNextColumn();
+                ImGui::PushID(i);
+                std::string label = "빈 칸";
+                if (i < static_cast<int>(inventory.Items().size())) {
+                    const auto& stack = inventory.Items()[static_cast<std::size_t>(i)];
+                    label = std::string(GetItemDefinition(stack.type).name) + "\nx" + std::to_string(stack.quantity);
+                }
+                ImGui::Button(label.c_str(), {ImGui::GetContentRegionAvail().x,48});
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const auto* payload=ImGui::AcceptDragDropPayload("CORPSE_ITEM"))
+                        if (takeStack && payload->DataSize==sizeof(StackId)) *takeStack=*static_cast<const StackId*>(payload->Data);
+                    ImGui::EndDragDropTarget();
+                }
+                ImGui::PopID();
+            }
+            ImGui::EndTable();
+        }
+        ImGui::EndChild();
+        ImGui::SameLine();
+        ImGui::BeginChild("적의 장비와 휴대품", {0,paneHeight}, true);
+        ImGui::TextUnformatted("적의 장비 / 휴대품");
+        ImGui::Separator();
+        if (corpse->rifle) {
+            ImGui::BeginDisabled(combat.HasRifle());
+            if (ImGui::Button("소총 획득 · 탄창 30발", {-1,40}) && takeWeapon) *takeWeapon=true;
+            ImGui::EndDisabled();
+            if (combat.HasRifle()) ImGui::TextUnformatted("소총은 한 자루만 휴대할 수 있습니다.");
+        }
+        if (ImGui::BeginTable("시체 슬롯", 2, ImGuiTableFlags_SizingStretchSame)) {
+            for (const auto& stack : corpse->inventory.Items()) {
+                ImGui::TableNextColumn();
+                ImGui::PushID(static_cast<int>(stack.id));
+                const auto label=std::string(GetItemDefinition(stack.type).name)+"\nx"+std::to_string(stack.quantity);
+                if (ImGui::Button(label.c_str(), {ImGui::GetContentRegionAvail().x,48}) && takeStack) *takeStack=stack.id;
+                if (ImGui::BeginDragDropSource()) {
+                    ImGui::SetDragDropPayload("CORPSE_ITEM", &stack.id, sizeof(stack.id));
+                    ImGui::TextUnformatted(GetItemDefinition(stack.type).name);
+                    ImGui::EndDragDropSource();
+                }
+                ImGui::PopID();
+            }
+            ImGui::EndTable();
+        }
+        if (corpse->inventory.Items().empty() && !corpse->rifle) ImGui::TextUnformatted("수색 완료 · 남은 아이템이 없습니다.");
+        ImGui::EndChild();
+        ImGui::TextUnformatted(loot.Message().c_str());
+        ImGui::EndDisabled();
+        ImGui::End();
+        ImGui::PopStyleColor(3);
     }
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

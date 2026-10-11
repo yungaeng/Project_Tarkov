@@ -16,7 +16,11 @@ namespace
 {
     glm::vec3 Eye(const Character& body)
     {
-        return body.position + glm::vec3(0, body.IsCrouching() ? body.GetSettings().crouchingEyeHeight : body.GetSettings().standingEyeHeight, 0);
+        if (body.IsLooting()) {
+            const float yaw = glm::radians(body.rotation.y);
+            return body.position + glm::vec3(std::sin(yaw)*1.9f, .55f, std::cos(yaw)*1.9f);
+        }
+        return body.position + glm::vec3(0, body.IsLooting() ? 0.55f : body.IsCrouching() ? body.GetSettings().crouchingEyeHeight : body.GetSettings().standingEyeHeight, 0);
     }
     bool Visible(const CollisionWorld& world, glm::vec3 from, glm::vec3 to)
     {
@@ -30,6 +34,13 @@ namespace
     }
     bool HitBody(const Character& body, glm::vec3 origin, glm::vec3 direction, float limit, float& hit)
     {
+        if (body.IsLooting()) {
+            const float yaw = glm::radians(body.rotation.y);
+            const glm::vec3 forward(std::sin(yaw), 0, std::cos(yaw));
+            const auto center = body.position + forward * 1.f + glm::vec3(0, .375f, 0);
+            const auto extent = glm::abs(forward) * 1.15f + glm::vec3(.35f, .375f, .35f);
+            return RayBox(origin, direction, center - extent, center + extent, limit, hit);
+        }
         const float radius = body.GetSettings().bodyRadius;
         return RayBox(origin, direction, body.position - glm::vec3(radius, 0, radius),
             body.position + glm::vec3(radius, body.GetBodyHeight(), radius), limit, hit);
@@ -45,6 +56,9 @@ void CombatSystem::Init(const CollisionWorld& world)
         Enemy enemy;
         enemy.body.SetCollisionWorld(&world);
         enemy.body.position = enemy.home = enemy.lastSeen = position;
+        enemy.inventory.TryAdd({ItemType::Ammo, 20});
+        enemy.inventory.TryAdd({ItemType::Bandage, 1});
+        enemy.inventory.TryAdd({ItemType::Water, 1});
         enemy.visual = std::make_unique<CharacterVisual>();
         enemy.visual->Init();
         enemies.push_back(std::move(enemy));
@@ -127,6 +141,10 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 enemy.state = enemy.health == 0 ? EnemyState::Dead : EnemyState::Chase;
                 enemy.searchTimer = 5;
                 if (enemy.health == 0) {
+                    for (int slot = 0; slot < ClothingSlotCount; ++slot) {
+                        const auto type = ClothingType(slot);
+                        if (enemy.body.clothingMask & ClothingBit(type)) enemy.inventory.TryAdd({type, 1});
+                    }
                     message = "적 처치";
                     const int killSeconds = static_cast<int>(elapsedSeconds);
                     std::ostringstream timestamp;
@@ -158,12 +176,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         {
             enemy.state = EnemyState::Dead;
             enemy.body.Update(dt);
-            if (!enemy.lootDropped && enemy.body.IsGrounded())
-            {
-                // Mark each corpse only after a successful allocation/spawn.
-                loot.Spawn(enemy.body.position + glm::vec3(0, WorldItem::HalfSize, 0), {ItemType::Ammo, 20});
-                enemy.lootDropped = true;
-            }
+            enemy.deadTime += dt;
             continue;
         }
         const float distance = glm::length(player.position - enemy.body.position);
@@ -224,6 +237,39 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             enemy.aimPitch = glm::degrees(std::atan2(direction.y, glm::length(glm::vec2(direction.x, direction.z))));
         }
     }
+    // Conservative horizontal body volumes prevent living actors from walking
+    // through one another or through settled corpses. Static geometry still wins.
+    auto centerOf = [](const Character& body, bool dead) {
+        const float yaw = glm::radians(body.rotation.y);
+        return body.position + glm::vec3(std::sin(yaw), 0, std::cos(yaw)) *
+            (dead ? -1.1f : body.IsLooting() ? .9f : 0.f);
+    };
+    auto separate = [&](Character& moving, const Character& obstacle, bool corpse) {
+        if (std::abs(moving.position.y - obstacle.position.y) > 1.f) return;
+        const auto delta = centerOf(moving, false) - centerOf(obstacle, corpse);
+        const glm::vec2 horizontal(delta.x, delta.z);
+        const float distance = glm::length(horizontal);
+        const float gap = .36f + (corpse ? 1.12f : obstacle.IsLooting() ? 1.05f : .36f);
+        if (distance >= gap) return;
+        const glm::vec2 normal = distance > .001f ? horizontal / distance : glm::vec2(1, 0);
+        const auto next = moving.position + glm::vec3(normal.x, 0, normal.y) * (gap - distance + .01f);
+        if (world.CanOccupy(next, moving.GetSettings().bodyRadius, moving.GetBodyHeight())) {
+            moving.position = next;
+            moving.StopMovement();
+        }
+    };
+    for (int pass = 0; pass < 3; ++pass) {
+        for (std::size_t i = 0; i < enemies.size(); ++i) {
+            auto& enemy = enemies[i];
+            if (enemy.health > 0) {
+                separate(enemy.body, player, false);
+                for (std::size_t j = 0; j < enemies.size(); ++j)
+                    if (i != j) separate(enemy.body, enemies[j].body, enemies[j].health <= 0);
+            }
+            if (!player.IsLooting() && player.vitals.Alive())
+                separate(player, enemy.body, enemy.health <= 0);
+        }
+    }
     for (auto& enemy : enemies)
     {
         const auto delta = enemy.body.position - camera.position;
@@ -232,7 +278,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         const float interval = distanceSquared > 60 * 60 ? 1.0f / 15.0f :
             distanceSquared > 25 * 25 ? 1.0f / 30.0f : 0.0f;
         enemy.visual->Update(dt, enemy.body, {enemy.health <= 0, true, enemy.state == EnemyState::Attack,
-            enemy.fired, 0, enemy.aimPitch}, interval);
+            enemy.fired, 0, enemy.aimPitch, enemy.rifle}, interval);
     }
     if (!player.vitals.Alive()) { reload = 0; aiming = false; camera.fieldOfView = 75; }
 }
@@ -243,4 +289,66 @@ void CombatSystem::Render(Shader& shader, Camera& camera, float width, float hei
     {
         enemy.visual->Render(enemy.body, shader, camera, width, height, glm::vec3(0.72f, 0.43f, 0.28f));
     }
+}
+
+const Enemy* CombatSystem::Corpse(int index) const
+{
+    if (index < 0 || index >= static_cast<int>(enemies.size())) return nullptr;
+    const auto& enemy = enemies[static_cast<std::size_t>(index)];
+    return enemy.health <= 0 && enemy.deadTime >= 1.25f && enemy.body.IsGrounded() ? &enemy : nullptr;
+}
+
+int CombatSystem::FindCorpse(const Player& player, const CollisionWorld& world) const
+{
+    float nearest = 2.5f;
+    int selected = -1;
+    for (int i = 0; i < static_cast<int>(enemies.size()); ++i) {
+        const auto* corpse = Corpse(i);
+        if (!corpse) continue;
+        const float yaw = glm::radians(corpse->body.rotation.y);
+        const auto center = corpse->body.position - glm::vec3(std::sin(yaw), 0, std::cos(yaw)) * 1.1f;
+        const float distance = glm::length(center - player.position);
+        if (distance < nearest && Visible(world, Eye(player), center + glm::vec3(0, .3f, 0))) {
+            nearest = distance;
+            selected = i;
+        }
+    }
+    return selected;
+}
+
+bool CombatSystem::TakeCorpseItem(int index, StackId id, Player& player)
+{
+    if (!Corpse(index) || !player.IsLooting() || !player.vitals.Alive()) return false;
+    auto& enemy = enemies[static_cast<std::size_t>(index)];
+    const auto* entry = enemy.inventory.Find(id);
+    if (!entry) return false;
+    const ItemStack stack = *entry;
+    if (!player.GetInventory().TryAdd(stack)) return false;
+    enemy.inventory.Remove(id, stack.quantity);
+    if (IsClothing(stack.type)) enemy.body.clothingMask &= ~ClothingBit(stack.type);
+    return true;
+}
+
+bool CombatSystem::TakeCorpseRifle(int index)
+{
+    if (!Corpse(index) || hasRifle) return false;
+    auto& enemy = enemies[static_cast<std::size_t>(index)];
+    if (!enemy.rifle) return false;
+    enemy.rifle = false;
+    SetLoadout(true, 30);
+    return true;
+}
+
+bool CombatSystem::LootSpaceClear(const glm::vec3& center, int ignoredCorpse) const
+{
+    for (int i = 0; i < static_cast<int>(enemies.size()); ++i) {
+        if (i == ignoredCorpse) continue;
+        const auto& enemy = enemies[static_cast<std::size_t>(i)];
+        const float yaw = glm::radians(enemy.body.rotation.y);
+        const auto other = enemy.body.position - (enemy.health <= 0 ? 1.1f : 0.f) *
+            glm::vec3(std::sin(yaw), 0, std::cos(yaw));
+        if (std::abs(center.y - other.y) < 1.f &&
+            glm::length(glm::vec2(center.x-other.x, center.z-other.z)) < (enemy.health <= 0 ? 2.2f : 1.4f)) return false;
+    }
+    return true;
 }

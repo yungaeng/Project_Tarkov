@@ -58,6 +58,14 @@ private:
     std::uint32_t startingClothingMask = 0;
     bool startedWithRifle = false;
     RaidSummary summary;
+    int lootingCorpse = -1, corpseTarget = -1;
+    bool closeLootRequested = false;
+    StackId takeCorpseStack = 0;
+    bool takeCorpseWeapon = false;
+    glm::vec3 beforeLootPosition{0};
+    float beforeLootRotation = 0;
+    Camera beforeLootCamera;
+    void CloseCorpseLoot();
     void StartRaid();
     void FinishRaid(RaidPhase result);
     void FollowCamera(Camera& camera) const;

@@ -1,8 +1,8 @@
 {
   "source": "F:\\Koikatsu\\Export_PMX\\20261010085443_김가원\\model.pmx",
   "height_m": 1.8,
-  "vertices": 74078,
-  "triangles": 63018,
+  "vertices": 94652,
+  "triangles": 69876,
   "joints": 52,
   "materials": [
     {
@@ -103,7 +103,7 @@
   "bounds_max": [
     72.82669830322266,
     181.8000030517578,
-    18.174999237060547
+    18.774999618530273
   ],
   "tactical_outfit": {
     "generator": "Tools/create_tactical_outfit.py",
@@ -510,5 +510,87 @@
       }
     ],
     "note": "Original procedural MultiCam-style approximation; no ballistic gameplay effect."
+  },
+  "fitted_underwear": {
+    "generator": "Tools/fit_underwear.py",
+    "base_vertices": 74078,
+    "base_triangles": 63018,
+    "allowance_cm": {
+      "3": 0.3,
+      "4": 0.08
+    },
+    "parts": [
+      {
+        "name": "bra_underband",
+        "garment": 3,
+        "first_vertex": 74078,
+        "vertex_count": 834,
+        "triangles": 278
+      },
+      {
+        "name": "bra_front",
+        "garment": 3,
+        "first_vertex": 74912,
+        "vertex_count": 10110,
+        "triangles": 3370
+      },
+      {
+        "name": "bra_back",
+        "garment": 3,
+        "first_vertex": 85022,
+        "vertex_count": 828,
+        "triangles": 276
+      },
+      {
+        "name": "bra_front_strap_-1",
+        "garment": 3,
+        "first_vertex": 85850,
+        "vertex_count": 399,
+        "triangles": 133
+      },
+      {
+        "name": "bra_back_strap_-1",
+        "garment": 3,
+        "first_vertex": 86249,
+        "vertex_count": 315,
+        "triangles": 105
+      },
+      {
+        "name": "bra_front_strap_1",
+        "garment": 3,
+        "first_vertex": 86564,
+        "vertex_count": 399,
+        "triangles": 133
+      },
+      {
+        "name": "bra_back_strap_1",
+        "garment": 3,
+        "first_vertex": 86963,
+        "vertex_count": 309,
+        "triangles": 103
+      },
+      {
+        "name": "thong_waistband",
+        "garment": 4,
+        "first_vertex": 87272,
+        "vertex_count": 1146,
+        "triangles": 382
+      },
+      {
+        "name": "thong_front",
+        "garment": 4,
+        "first_vertex": 88418,
+        "vertex_count": 4698,
+        "triangles": 1566
+      },
+      {
+        "name": "thong_back",
+        "garment": 4,
+        "first_vertex": 93116,
+        "vertex_count": 1536,
+        "triangles": 512
+      }
+    ],
+    "note": "Clipped body surface with interpolated body skin weights; shared character palette."
   }
 }

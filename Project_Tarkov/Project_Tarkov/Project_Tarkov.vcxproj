@@ -248,6 +248,7 @@
     <None Include="Assets\Models\Weapons\MuzzleFlash.obj" />
     <None Include="Assets\Models\Weapons\Rifle.obj" />
     <None Include="Assets\Animations\Characters\Death.anim" />
+    <None Include="Assets\Animations\Characters\CorpseLoot.anim" />
     <None Include="Assets\Animations\Characters\RifleHold.anim" />
     <None Include="Assets\Animations\Characters\RifleReload.anim" />
     <None Include="Assets\Animations\Weapons\Aim.anim" />

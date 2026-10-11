@@ -26,6 +26,7 @@ public:
     bool LoadClip(const std::string& name, const std::string& path);
     void Update(float dt, const std::string& clip, bool playing, bool skin = true);
     const std::vector<AnimatedVertex>& Vertices() const;
+    const std::vector<unsigned int>& Indices() const;
     const std::string& Error() const;
     size_t BoneCount() const;
     void Reset();
@@ -40,6 +41,7 @@ public:
     glm::vec3 NodePosition(const std::string& name) const;
     void SolveArm(const std::string& side, const glm::vec3& target, const glm::vec3& pole,
         const glm::vec3& palmDirection, float weight);
+    bool GroundLootSupports(const glm::mat4& model, float ground);
 private:
     struct Data;
     std::unique_ptr<Data> data;

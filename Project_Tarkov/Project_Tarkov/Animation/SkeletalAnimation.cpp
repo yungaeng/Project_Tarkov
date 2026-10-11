@@ -195,6 +195,7 @@ void SkeletalAnimation::Reset() { data = std::make_unique<Data>(); }
 const std::string& SkeletalAnimation::Error() const { return data->error; }
 size_t SkeletalAnimation::BoneCount() const { return data->asset->bones.size(); }
 const std::vector<AnimatedVertex>& SkeletalAnimation::Vertices() const { return data->output; }
+const std::vector<unsigned int>& SkeletalAnimation::Indices() const { return data->asset->indices; }
 
 void SkeletalAnimation::CapturePose() { data->captured = data->pose; }
 
@@ -300,6 +301,80 @@ void SkeletalAnimation::SolveArm(const std::string& side, const glm::vec3& targe
             if (glm::length(blended) > 0.001f) align(hand->second, finger->second, position(hand->second) + blended);
         }
     }
+}
+
+bool SkeletalAnimation::GroundLootSupports(const glm::mat4& model, float ground)
+{
+    const auto inverse = glm::inverse(model);
+    auto world = [&](const std::string& name) {
+        return glm::vec3(model * glm::vec4(NodePosition(name), 1));
+    };
+    auto local = [&](const glm::vec3& p) { return glm::vec3(inverse * glm::vec4(p, 1)); };
+    for (const std::string side : {"Right", "Left"}) {
+        const auto upper = data->asset->nodeIds.find(side + "UpLeg");
+        const auto lower = data->asset->nodeIds.find(side + "Leg");
+        if (upper == data->asset->nodeIds.end() || lower == data->asset->nodeIds.end()) return false;
+        const auto hip = world(side + "UpLeg");
+        const auto knee = world(side + "Leg");
+        const float length = glm::length(knee - hip);
+        const float dy = ground + .055f - hip.y; // Knee surface below the joint.
+        if (std::abs(dy) >= length) return false;
+        glm::vec3 horizontal(knee.x - hip.x, 0, knee.z - hip.z);
+        if (glm::length(horizontal) < .001f) return false;
+        const auto target = hip + glm::normalize(horizontal) * std::sqrt(length * length - dy * dy)
+            + glm::vec3(0, dy, 0);
+        auto scene = data->asset->inverseRoot;
+        scene.Inverse();
+        const auto fromLocal = local(knee) - local(hip);
+        const auto toLocal = local(target) - local(hip);
+        const aiMatrix3x3 basis(scene);
+        auto from = basis * aiVector3D(fromLocal.x, fromLocal.y, fromLocal.z);
+        auto to = basis * aiVector3D(toLocal.x, toLocal.y, toLocal.z);
+        from.Normalize(); to.Normalize();
+        auto axis = from ^ to;
+        const float cosine = std::clamp(from * to, -1.f, 1.f);
+        if (axis.Length() > .00001f) {
+            axis.Normalize();
+            const aiQuaternion delta(axis, std::acos(cosine));
+            aiVector3D scale, translation;
+            aiQuaternion parentRotation, shinRotation;
+            data->globals[lower->second].Decompose(scale, shinRotation, translation);
+            const int parent = data->asset->nodes[upper->second].parent;
+            if (parent >= 0) data->globals[parent].Decompose(scale, parentRotation, translation);
+            auto inverseParent = parentRotation; inverseParent.Conjugate();
+            data->pose[upper->second].rotation = inverseParent * delta * parentRotation * data->pose[upper->second].rotation;
+            data->pose[upper->second].rotation.Normalize();
+            data->RefreshGlobals();
+            data->globals[upper->second].Decompose(scale, parentRotation, translation);
+            parentRotation.Conjugate();
+            data->pose[lower->second].rotation = parentRotation * shinRotation;
+            data->pose[lower->second].rotation.Normalize();
+            data->RefreshGlobals();
+        }
+        auto hand = world(side + "Hand");
+        hand.y = ground + .025f;
+        const auto elbow = world(side + "ForeArm");
+        const auto shoulder = world(side + "Arm");
+        const float reach = glm::length(elbow - shoulder) +
+            glm::length(world(side + "Hand") - elbow) - .002f;
+        const float drop = shoulder.y - hand.y;
+        if (std::abs(drop) >= reach) return false;
+        glm::vec3 handOffset(hand.x - shoulder.x, 0, hand.z - shoulder.z);
+        const float horizontalReach = std::sqrt(reach * reach - drop * drop);
+        if (glm::length(handOffset) > horizontalReach) {
+            handOffset = glm::normalize(handOffset) * horizontalReach;
+            hand.x = shoulder.x + handOffset.x;
+            hand.z = shoulder.z + handOffset.z;
+        }
+        auto palm = world(side + "HandMiddle1") - world(side + "Hand");
+        palm.y = 0;
+        if (glm::length(palm) < .001f) return false;
+        const auto direction = glm::vec3(inverse * glm::vec4(glm::normalize(palm), 0));
+        SolveArm(side, local(hand), local(elbow), direction, 1);
+        if (glm::length(world(side + "Hand") - hand) > .008f) return false;
+    }
+    RefreshVertices();
+    return true;
 }
 
 bool SkeletalAnimation::LoadModel(const std::string& path)

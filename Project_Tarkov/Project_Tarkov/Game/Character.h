@@ -18,6 +18,7 @@ private:
     bool crouching = false;
     bool sprinting = false;
     bool moving = false;
+    bool looting = false;
     CharacterSettings settings;
 
 public:
@@ -27,7 +28,9 @@ public:
     bool IsCrouching() const { return crouching; }
     bool IsSprinting() const { return sprinting; }
     bool IsMoving() const { return moving; }
-    float GetBodyHeight() const { return crouching ? settings.crouchingBodyHeight : settings.bodyHeight; }
+    bool IsLooting() const { return looting; }
+    void SetLooting(bool value) { looting = value; if (value) { StopMovement(); sprinting = false; } }
+    float GetBodyHeight() const { return looting ? .75f : crouching ? settings.crouchingBodyHeight : settings.bodyHeight; }
     // A standing request is rejected when the full standing body would overlap geometry.
     // Controllers may repeat the request each frame to stand as soon as space is available.
     void SetCrouching(bool value);
