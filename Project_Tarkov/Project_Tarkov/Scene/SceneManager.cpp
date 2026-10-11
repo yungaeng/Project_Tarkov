@@ -41,11 +41,7 @@ void SceneManager::Render()
 
 void SceneManager::Shutdown()
 {
-    if (pendingScene)
-    {
-        pendingScene->Shutdown();
-        pendingScene.reset();
-    }
+    pendingScene.reset();
     if (currentScene)
     {
         currentScene->Shutdown();

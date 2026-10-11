@@ -38,7 +38,7 @@ public:
     int LivingEnemies() const;
     const std::vector<KillRecord>& KillRecords() const { return kills; }
     void CancelInput() { reload = 0; aiming = false; }
-    void Reset() { enemies.clear(); CancelInput(); }
+    void Reset() { enemies.clear(); kills.clear(); elapsedSeconds = 0; CancelInput(); }
 private:
     std::vector<Enemy> enemies;
     std::vector<KillRecord> kills;

@@ -5,6 +5,7 @@
 #include "../Graphics/Renderer.h"
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 RaidResultScene::RaidResultScene(SceneManager& manager, Hideout recoveredHideout, RaidSummary raidSummary)
     : sceneManager(manager), hideout(std::move(recoveredHideout)), summary(std::move(raidSummary))
