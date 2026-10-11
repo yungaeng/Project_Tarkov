@@ -5,6 +5,7 @@ class CombatSystem;
 class InventoryActions;
 class LootSystem;
 struct RaidStatus;
+struct RaidSummary;
 class Hideout;
 class CharacterVisual;
 class Shader;
@@ -20,6 +21,7 @@ public:
     void Init(GLFWwindow* window);
     void Render(const Player& player, const LootSystem& loot, const CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid);
     bool RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader);
+    bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader);
     void Shutdown();
 private:
     bool contextReady = false;

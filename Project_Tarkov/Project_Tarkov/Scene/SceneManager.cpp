@@ -13,6 +13,20 @@ void SceneManager::Load(std::unique_ptr<Scene> newScene)
     if (currentScene) currentScene->Init();
 }
 
+void SceneManager::RequestLoad(std::unique_ptr<Scene> newScene)
+{
+    pendingScene = std::move(newScene);
+}
+
+void SceneManager::ApplyPending()
+{
+    if (!pendingScene)
+        return;
+
+    auto nextScene = std::move(pendingScene);
+    Load(std::move(nextScene));
+}
+
 void SceneManager::Update(float deltaTime)
 {
     if (currentScene)
@@ -27,6 +41,11 @@ void SceneManager::Render()
 
 void SceneManager::Shutdown()
 {
+    if (pendingScene)
+    {
+        pendingScene->Shutdown();
+        pendingScene.reset();
+    }
     if (currentScene)
     {
         currentScene->Shutdown();

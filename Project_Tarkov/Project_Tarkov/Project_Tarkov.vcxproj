@@ -158,6 +158,7 @@
     <ClCompile Include="Game\Player.cpp" />
     <ClCompile Include="Project_Tarkov.cpp" />
     <ClCompile Include="Game\RaidScene.cpp" />
+    <ClCompile Include="Game\RaidResultScene.cpp" />
     <ClCompile Include="Graphics\Renderer.cpp" />
     <ClCompile Include="Scene\Scene.cpp" />
     <ClCompile Include="Scene\SceneManager.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="Core\pch.h" />
     <ClInclude Include="Game\Player.h" />
     <ClInclude Include="Game\RaidScene.h" />
+    <ClInclude Include="Game\RaidResultScene.h" />
     <ClInclude Include="Graphics\Renderer.h" />
     <ClInclude Include="Scene\Scene.h" />
     <ClInclude Include="Scene\SceneManager.h" />
@@ -259,6 +261,9 @@
     <ClInclude Include="Game\Config\RaidConfig.h" />
     <ClInclude Include="Game\IndustrialZone.h" />
     <ClInclude Include="Game\RaidStatus.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RaidSummary.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game\IndustrialDetails.h" />

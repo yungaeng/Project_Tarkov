@@ -16,10 +16,14 @@
 #include "IndustrialGeometry.h"
 #include "RaidStatus.h"
 #include "Hideout.h"
+#include "../RaidSummary.h"
 
+class SceneManager;
 class RaidScene : public Scene
 {
 public:
+    explicit RaidScene(SceneManager& manager);
+    RaidScene(SceneManager& manager, Hideout carriedHideout);
     void Init() override;
     void Update(float dt) override;
     void Render() override;
@@ -47,6 +51,12 @@ private:
     RaidStatus raid;
     Hideout hideout;
     bool deployRequested = false;
+    SceneManager& sceneManager;
+    bool hasProvidedHideout = false;
+    Inventory startingInventory;
+    std::uint32_t startingClothingMask = 0;
+    bool startedWithRifle = false;
+    RaidSummary summary;
     void StartRaid();
     void FinishRaid(RaidPhase result);
 };

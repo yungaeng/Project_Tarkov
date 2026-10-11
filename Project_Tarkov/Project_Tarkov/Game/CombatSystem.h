@@ -1,6 +1,7 @@
 #pragma once
 #include "Character.h"
 #include "../Animation/CharacterVisual.h"
+#include "../RaidSummary.h"
 #include <memory>
 #include <vector>
 #include <string>
@@ -35,13 +36,15 @@ public:
     float ReloadTime() const { return reload; }
     const std::string& Message() const { return message; }
     int LivingEnemies() const;
+    const std::vector<KillRecord>& KillRecords() const { return kills; }
     void CancelInput() { reload = 0; aiming = false; }
     void Reset() { enemies.clear(); CancelInput(); }
 private:
     std::vector<Enemy> enemies;
+    std::vector<KillRecord> kills;
     int magazine = 30;
     bool equipped = true, hasRifle = true, aiming = false;
     bool fired = false;
-    float cooldown = 0, reload = 0, messageTime = 0;
+    float cooldown = 0, reload = 0, messageTime = 0, elapsedSeconds = 0;
     std::string message;
 };

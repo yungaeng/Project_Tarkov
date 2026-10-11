@@ -1,5 +1,6 @@
 #include "RaidHud.h"
 #include "RaidStatus.h"
+#include "../RaidSummary.h"
 #include "Hideout.h"
 #include "IndustrialZone.h"
 #include <cmath>
@@ -565,4 +566,80 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     return deploy;
+}
+
+bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader)
+{
+    if (!rendererReady) return false;
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    const auto& io = ImGui::GetIO();
+    const ImVec4 accent(.78f, .68f, .42f, 1);
+    ImGui::SetNextWindowPos({0, 0});
+    ImGui::SetNextWindowSize(io.DisplaySize);
+    ImGui::Begin("탈출 결과", nullptr,
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
+    ImGui::TextColored(accent, "탈출 성공");
+    ImGui::SameLine();
+    ImGui::TextDisabled("/ 산업지대 레이드 결과");
+    ImGui::Separator();
+
+    ImGui::BeginChild("결과 캐릭터", {0, io.DisplaySize.y * 0.43f}, true);
+    ImGui::TextColored(accent, "플레이한 캐릭터");
+    const ImVec2 modelPosition = ImGui::GetCursorScreenPos();
+    const float modelWidth = ImGui::GetContentRegionAvail().x;
+    const float modelHeight = (std::max)(180.0f, ImGui::GetContentRegionAvail().y - 8.0f);
+    const ImVec2 modelSize(modelWidth, modelHeight);
+    auto* draw = ImGui::GetWindowDrawList();
+    draw->AddRectFilled(modelPosition,
+        {modelPosition.x + modelSize.x, modelPosition.y + modelSize.y},
+        IM_COL32(25, 29, 26, 235), 3.0f);
+
+    CharacterPreview preview{&visual, &character, &shader, modelPosition, modelSize, io.DisplayFramebufferScale, summary.recoveredRifle};
+    preview.camera.position = {0, 1.0f, 3.4f};
+    preview.camera.front = {0, 0, -1};
+    preview.camera.up = {0, 1, 0};
+    preview.camera.fieldOfView = 38.0f;
+    draw->AddCallback(DrawCharacterPreview, &preview);
+    draw->AddCallback(ImDrawCallback_ResetRenderState, nullptr);
+    ImGui::Dummy(modelSize);
+    ImGui::EndChild();
+
+    ImGui::TextColored(accent, "소요 시간");
+    ImGui::SameLine();
+    ImGui::Text("%02d분 %02d초", summary.durationSeconds / 60, summary.durationSeconds % 60);
+
+    const float detailsHeight = (std::max)(120.0f, io.DisplaySize.y - 590.0f);
+    const float columnWidth = (io.DisplaySize.x - 60.0f) * 0.5f;
+    ImGui::BeginChild("처치 기록", {columnWidth, detailsHeight}, true);
+    ImGui::TextColored(accent, "처치 기록");
+    if (summary.kills.empty()) {
+        ImGui::TextUnformatted("처치한 적이 없습니다.");
+    } else {
+        for (const auto& kill : summary.kills)
+            ImGui::Text("%s | %s | %s | 피격 부위: %s",
+                kill.time.c_str(), kill.target.c_str(), kill.location.c_str(), kill.hitLocation.c_str());
+    }
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+    ImGui::BeginChild("획득 장비", {0, detailsHeight}, true);
+    ImGui::TextColored(accent, "획득 장비 (기존 장비 제외)");
+    if (summary.acquiredEquipment.empty()) {
+        ImGui::TextUnformatted("새로 획득한 장비가 없습니다.");
+    } else {
+        for (const auto& equipment : summary.acquiredEquipment)
+            ImGui::BulletText("%s", equipment.c_str());
+    }
+    ImGui::EndChild();
+
+    ImGui::Spacing();
+    ImGui::SetCursorPosX((std::max)(0.0f, (io.DisplaySize.x - 250.0f) * 0.5f));
+    const bool returnToHideout = ImGui::Button("은신처로 돌아가기", {250, 48});
+    ImGui::End();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    return returnToHideout;
 }

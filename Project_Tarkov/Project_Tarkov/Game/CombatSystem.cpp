@@ -9,6 +9,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 
 namespace
 {
@@ -37,6 +39,7 @@ namespace
 void CombatSystem::Init(const CollisionWorld& world)
 {
     enemies.clear();
+    kills.clear();
     for (const glm::vec3 position : IndustrialZone::Enemies)
     {
         Enemy enemy;
@@ -50,7 +53,7 @@ void CombatSystem::Init(const CollisionWorld& world)
     hasRifle = equipped = true;
     aiming = false;
     fired = false;
-    cooldown = reload = messageTime = 0;
+    cooldown = reload = messageTime = elapsedSeconds = 0;
     message.clear();
 }
 
@@ -63,6 +66,7 @@ int CombatSystem::LivingEnemies() const
 
 void CombatSystem::Update(float dt, Player& player, Camera& camera, const CollisionWorld& world, LootSystem& loot, bool enabled)
 {
+    elapsedSeconds += dt;
     fired = false;
     cooldown = (std::max)(0.0f, cooldown - dt);
     messageTime = (std::max)(0.0f, messageTime - dt);
@@ -121,7 +125,23 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 enemy.lastSeen = player.position;
                 enemy.state = enemy.health == 0 ? EnemyState::Dead : EnemyState::Chase;
                 enemy.searchTimer = 5;
-                if (enemy.health == 0) message = "적 처치";
+                if (enemy.health == 0) {
+                    message = "적 처치";
+                    const int killSeconds = static_cast<int>(elapsedSeconds);
+                    std::ostringstream timestamp;
+                    timestamp << std::setfill('0') << std::setw(2) << killSeconds / 60
+                        << ':' << std::setw(2) << killSeconds % 60;
+                    const glm::vec3 impact = origin + direction * nearest;
+                    std::ostringstream location;
+                    location << "X " << static_cast<int>(std::round(enemy.body.position.x))
+                        << " / Z " << static_cast<int>(std::round(enemy.body.position.z));
+                    kills.push_back({
+                        "적 #" + std::to_string(victim + 1),
+                        timestamp.str(),
+                        location.str(),
+                        impact.y - enemy.body.position.y > enemy.body.GetBodyHeight() * 0.75f ? "머리" : "몸통"
+                    });
+                }
             }
             messageTime = 1;
             camera.pitch = std::clamp(camera.pitch + (aiming ? 0.7f : 1.6f), -89.0f, 89.0f);

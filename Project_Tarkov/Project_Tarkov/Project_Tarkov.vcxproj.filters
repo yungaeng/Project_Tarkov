@@ -27,6 +27,7 @@
     <ClCompile Include="Game\Player.cpp"><Filter>Game</Filter></ClCompile>
     <ClCompile Include="Project_Tarkov.cpp" />
     <ClCompile Include="Game\RaidScene.cpp"><Filter>Game</Filter></ClCompile>
+    <ClCompile Include="Game\RaidResultScene.cpp"><Filter>Game</Filter></ClCompile>
     <ClCompile Include="Graphics\Renderer.cpp"><Filter>Graphics</Filter></ClCompile>
     <ClCompile Include="Scene\Scene.cpp"><Filter>Scene</Filter></ClCompile>
     <ClCompile Include="Scene\SceneManager.cpp"><Filter>Scene</Filter></ClCompile>
@@ -48,6 +49,7 @@
     <ClInclude Include="Core\pch.h"><Filter>Core</Filter></ClInclude>
     <ClInclude Include="Game\Player.h"><Filter>Game</Filter></ClInclude>
     <ClInclude Include="Game\RaidScene.h"><Filter>Game</Filter></ClInclude>
+    <ClInclude Include="Game\RaidResultScene.h"><Filter>Game</Filter></ClInclude>
     <ClInclude Include="Graphics\Renderer.h"><Filter>Graphics</Filter></ClInclude>
     <ClInclude Include="Scene\Scene.h"><Filter>Scene</Filter></ClInclude>
     <ClInclude Include="Scene\SceneManager.h"><Filter>Scene</Filter></ClInclude>
@@ -70,6 +72,9 @@
     <ClInclude Include="Game\PlayerController.h"><Filter>Game</Filter></ClInclude>
     <ClCompile Include="Graphics\ThirdPersonCameraController.cpp"><Filter>Graphics</Filter></ClCompile>
     <ClInclude Include="Graphics\ThirdPersonCameraController.h"><Filter>Graphics</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RaidSummary.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game\Inventory.h"><Filter>Game</Filter></ClInclude>

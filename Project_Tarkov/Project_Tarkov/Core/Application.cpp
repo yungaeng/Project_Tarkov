@@ -16,7 +16,7 @@ bool Application::Init()
     Input::Init(window.GetNative());
     Time::Init();
 
-    sceneManager.Load(std::make_unique<RaidScene>());
+    sceneManager.Load(std::make_unique<RaidScene>(sceneManager));
 
     Logger::Info("Application Init Complete");
     return true;
@@ -44,6 +44,8 @@ void Application::Run()
 
         sceneManager.Update(
             Time::deltaTime);
+
+        sceneManager.ApplyPending();
 
         sceneManager.Render();
 

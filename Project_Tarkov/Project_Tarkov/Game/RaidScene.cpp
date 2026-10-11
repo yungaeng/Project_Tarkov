@@ -1,6 +1,8 @@
 #include "RaidScene.h"
+#include "RaidResultScene.h"
 #include "IndustrialDetails.h"
 #include "../Core/Input.h"
+#include "../Scene/SceneManager.h"
 #include "../Graphics/Renderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdexcept>
@@ -8,6 +10,18 @@
 #include <cmath>
 #include <fstream>
 #include <filesystem>
+#include <memory>
+#include <utility>
+
+RaidScene::RaidScene(SceneManager& manager)
+    : sceneManager(manager)
+{
+}
+
+RaidScene::RaidScene(SceneManager& manager, Hideout carriedHideout)
+    : hideout(std::move(carriedHideout)), sceneManager(manager), hasProvidedHideout(true)
+{
+}
 
 void RaidScene::Init()
 {
@@ -16,7 +30,8 @@ void RaidScene::Init()
     IndustrialZone::AddDetails(collisionWorld, mapBlocks);
     IndustrialZone::Bake(mapBlocks, mapBatches);
     raid = RaidStatus{};
-    hideout.Load();
+    if (!hasProvidedHideout)
+        hideout.Load();
     player = std::make_unique<Player>();
     player->SetCollisionWorld(&collisionWorld);
     player->position = IndustrialZone::Spawns[0];
@@ -139,6 +154,27 @@ void RaidScene::FinishRaid(RaidPhase result)
         raid.recoveredClothing = player->clothingMask;
         hideout.Recover(raid.recovered, combat.HasRifle(), combat.Magazine(), player->clothingMask);
         raid.saveMessage = "탈출 성공: 보급품을 은신처로 반입했습니다.";
+
+        summary = RaidSummary{};
+        summary.durationSeconds = static_cast<int>(std::round(RaidConfig::RaidDuration - raid.remaining));
+        summary.kills = combat.KillRecords();
+        summary.recoveredClothing = player->clothingMask;
+        summary.recoveredRifle = combat.HasRifle();
+        for (int type = 0; type < ItemTypeCount; ++type) {
+            const auto itemType = static_cast<ItemType>(type);
+            const auto bit = ClothingBit(itemType);
+            const int startingWorn = (startingClothingMask & bit) ? 1 : 0;
+            const int recoveredWorn = (player->clothingMask & bit) ? 1 : 0;
+            const int gained = raid.recovered.Count(itemType) + recoveredWorn
+                - startingInventory.Count(itemType) - startingWorn;
+            if (gained > 0)
+                summary.acquiredEquipment.push_back(std::string(GetItemDefinition(itemType).name) + " x" + std::to_string(gained));
+        }
+        if (combat.HasRifle() && !startedWithRifle)
+            summary.acquiredEquipment.push_back("소총 x1");
+
+        sceneManager.RequestLoad(std::make_unique<RaidResultScene>(sceneManager, std::move(hideout), summary));
+        return;
     }
     else if (result == RaidPhase::Dead) {
         player->GetInventory() = Inventory{};
@@ -167,6 +203,8 @@ void RaidScene::StartRaid()
     player->position = IndustrialZone::Spawns[hideout.spawn];
     player->GetInventory() = hideout.loadout;
     player->clothingMask = hideout.clothingMask;
+    startingInventory = player->GetInventory();
+    startingClothingMask = player->clothingMask;
     playerController.Reset();
     camera = Camera{};
     cameraController.Follow(camera, *player);
@@ -174,6 +212,8 @@ void RaidScene::StartRaid()
     loot.Init();
     combat.Init(collisionWorld);
     combat.SetLoadout(hideout.rifle, hideout.magazine);
+    startedWithRifle = combat.HasRifle();
+    summary = RaidSummary{};
     playerVisual.Reset();
     playerVisual.Init();
     playerVisual.Update(0, *player, {false, combat.Equipped(), false, false, 0, 0, combat.HasRifle()});
