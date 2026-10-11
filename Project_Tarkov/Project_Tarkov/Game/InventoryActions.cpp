@@ -7,8 +7,8 @@ void InventoryActions::Update(Player& player, LootSystem& loot, const Camera& ca
 {
     if (!enabled || !player.vitals.Alive()) { Cancel(); return; }
     if (healingMode) {
-        const auto* bandage = player.GetInventory().Find(healingStack);
-        if (!bandage || bandage->type != ItemType::Bandage) {
+        const auto* medicine = player.GetInventory().Find(healingStack);
+        if (!medicine || !IsHealingItem(medicine->type)) {
             healingMode = false;
             healingStack = 0;
         }
@@ -17,11 +17,13 @@ void InventoryActions::Update(Player& player, LootSystem& loot, const Camera& ca
     auto& inventory = player.GetInventory();
     if (action == InventoryAction::HealPart) {
         const auto* stack = inventory.Find(healingStack);
+        const ItemType medicine = stack ? stack->type : ItemType::Count;
         auto next = player.vitals;
-        if (stack && stack->type == ItemType::Bandage && next.Heal(bodyTarget) &&
+        if (stack && IsHealingItem(medicine) && next.Heal(bodyTarget, HealingAmount(medicine)) &&
             inventory.Remove(healingStack, 1)) {
             player.vitals = next;
-            loot.Notify(std::string(BodyPartNames[static_cast<int>(bodyTarget)]) + " 부위를 치료했습니다");
+            loot.Notify(std::string(BodyPartNames[static_cast<int>(bodyTarget)]) + " 부위를 " +
+                GetItemDefinition(medicine).name + "로 치료했습니다");
             healingMode = false;
             healingStack = 0;
             if (!inventory.Find(selected)) selected = 0;
@@ -43,7 +45,7 @@ void InventoryActions::Update(Player& player, LootSystem& loot, const Camera& ca
                 if (!inventory.Find(selected)) selected = 0;
                 return;
             }
-            if (stack->type == ItemType::Bandage) {
+            if (IsHealingItem(stack->type)) {
                 if (player.vitals.Health() >= 100) {
                     loot.Notify("치료할 부위가 없습니다");
                     return;

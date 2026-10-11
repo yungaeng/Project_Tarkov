@@ -28,7 +28,7 @@ public:
     void ToggleRifle();
     void ToggleClothing(ItemType type, bool fromStash = false);
     void LoadMagazine();
-    bool HealBodyPart(BodyPart part);
+    bool HealBodyPart(BodyPart part, ItemType medicine = ItemType::Bandage);
     std::vector<StashPlacement> StashLayout() const;
     bool Depart();
     void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);

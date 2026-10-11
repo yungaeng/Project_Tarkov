@@ -39,11 +39,13 @@ public:
         auto& value = bodyHealth[static_cast<std::size_t>(part)];
         value = (std::max)(0.0f, value - (std::max)(0.0f, amount));
     }
-    bool Heal(BodyPart part)
+    bool Heal(BodyPart part, float amount = 20)
     {
-        auto& value = bodyHealth[static_cast<std::size_t>(part)];
+        const auto index = static_cast<std::size_t>(part);
+        if (index >= bodyHealth.size() || !std::isfinite(amount) || amount <= 0) return false;
+        auto& value = bodyHealth[index];
         if (value >= 100) return false;
-        value = (std::min)(100.0f, value + 20);
+        value = (std::min)(100.0f, value + amount);
         return true;
     }
     bool Drink() { if (!Alive() || hydration >= 100) return false; hydration = (std::min)(100.0f, hydration + 30); return true; }

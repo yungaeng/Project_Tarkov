@@ -80,7 +80,7 @@ bool Hideout::Save()
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 7\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
+    out << "HIDEOUT 8\n" << rifles << ' ' << rifle << ' ' << magazine << '\n';
     for (int count : stash) out << count << ' ';
     out << '\n' << clothingMask << '\n' << loadout.Items().size() << '\n';
     for (const auto& item : loadout.Items()) out << static_cast<int>(item.type) << ' ' << item.quantity << '\n';
@@ -116,9 +116,9 @@ void Hideout::Load()
     std::string tag, end;
     int version = 0, equipped = 0, count = 0;
     bool valid = static_cast<bool>(in >> tag >> version >> next.rifles >> equipped >> next.magazine);
-    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 7) && next.rifles >= 0 && next.rifles <= MaxStored &&
+    valid = valid && tag == "HIDEOUT" && (version >= 1 && version <= 8) && next.rifles >= 0 && next.rifles <= MaxStored &&
         (equipped == 0 || equipped == 1) && next.magazine >= 0 && next.magazine <= 30 && (equipped || next.magazine == 0);
-    const int stockCount = version == 1 ? 3 : version < 4 ? 7 : version < 5 ? 9 : ItemTypeCount;
+    const int stockCount = version == 1 ? 3 : version < 4 ? 7 : version < 5 ? 9 : version < 8 ? 10 : ItemTypeCount;
     for (int i = 0; i < stockCount; ++i) {
         auto& stock = next.stash[i];
         valid = static_cast<bool>(in >> stock) && valid;
@@ -165,9 +165,9 @@ void Hideout::Load()
     next.rifle = equipped != 0;
     next.NormalizeStash();
     next.ready = true;
-    next.message = version < 7 ? "저장 데이터를 새 형식으로 변환했습니다." : "은신처를 불러왔습니다.";
+    next.message = version < 8 ? "저장 데이터를 새 형식으로 변환했습니다." : "은신처를 불러왔습니다.";
     *this = std::move(next);
-    if (version < 7) Save();
+    if (version < 8) Save();
 }
 
 void Hideout::Transfer(ItemType type, int quantity, bool take)
@@ -224,18 +224,18 @@ void Hideout::LoadMagazine()
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; }
 }
 
-bool Hideout::HealBodyPart(BodyPart part)
+bool Hideout::HealBodyPart(BodyPart part, ItemType medicine)
 {
-    if (!ready || stash[static_cast<std::size_t>(ItemType::Bandage)] <= 0) {
-        message = "창고에 붕대가 없습니다.";
+    if (!ready || !IsHealingItem(medicine) || stash[static_cast<std::size_t>(medicine)] <= 0) {
+        message = "창고에 해당 치료 아이템이 없습니다.";
         return false;
     }
     Hideout before = *this;
-    if (!vitals.Heal(part)) {
+    if (!vitals.Heal(part, HealingAmount(medicine))) {
         message = "해당 부위는 치료할 필요가 없습니다.";
         return false;
     }
-    --stash[static_cast<std::size_t>(ItemType::Bandage)];
+    --stash[static_cast<std::size_t>(medicine)];
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; return false; }
     message = std::string(BodyPartNames[static_cast<int>(part)]) + " 부위를 치료했습니다.";
     return true;
