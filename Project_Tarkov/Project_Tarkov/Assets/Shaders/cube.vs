@@ -7,7 +7,6 @@ layout(location = 3) in vec2 aUV;
 layout(location = 4) in int aGarment;
 flat out int Garment;
 out vec2 UV;
-out vec3 BindPosition;
 out vec3 FragPos;
 out vec3 Normal;
 uniform mat4 model;
@@ -26,7 +25,6 @@ mat4 paletteMatrix(int offset)
 void main()
 {
     UV = aUV;
-    BindPosition = aPos;
     Garment = skinned ? aGarment : 0;
     vec3 position = aPos;
     vec3 normal = aNormal;
