@@ -708,20 +708,27 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const float widthCell=(gridViewport.x-(stashRows-1)*gap)/stashRows;
         const float heightCell=(scrollHeight-8.f*gap)/7.f;
         const float cell=(std::max)(1.f,(std::min)((std::min)(widthCell,heightCell),96.f));
-        const float gridHeight=stashColumns*cell+(stashColumns-1)*gap;
-        const float gridWidth=stashRows*cell+(stashRows-1)*gap;
         const ImVec2 gridOrigin=ImGui::GetCursorScreenPos();
+        const auto placements=hideout.StashLayout();
+        std::array<std::array<bool,stashRows>,stashColumns> occupied{};
+        for (const auto& item : placements)
+            for (int x=0;x<item.width;++x)
+                for (int y=0;y<item.height;++y)
+                    occupied[static_cast<std::size_t>(item.x+x)][static_cast<std::size_t>(item.y+y)]=true;
         auto* draw=ImGui::GetWindowDrawList();
         for (int x=0;x<stashColumns;++x) for (int y=0;y<stashRows;++y) {
             const ImVec2 low(gridOrigin.x+y*(cell+gap),gridOrigin.y+x*(cell+gap));
             const ImU32 tileColor=((x+y)&1) ? IM_COL32(38,43,37,255) : IM_COL32(29,34,30,255);
             draw->AddRectFilled(low,{low.x+cell,low.y+cell},tileColor);
             draw->AddRect(low,{low.x+cell,low.y+cell},IM_COL32(102,111,91,210),0.f,0,1.f);
+            if (!occupied[static_cast<std::size_t>(x)][static_cast<std::size_t>(y)]) {
+                ImGui::SetCursorScreenPos(low);
+                ImGui::PushID(x*stashRows+y);
+                ImGui::InvisibleButton("EmptyStashSlot",{cell,cell});
+                target(true,-1);
+                ImGui::PopID();
+            }
         }
-        ImGui::SetCursorScreenPos(gridOrigin);
-        ImGui::InvisibleButton("StashGridDropTarget",{gridWidth,gridHeight});
-        target(true,-1);
-        const auto placements=hideout.StashLayout();
         for (std::size_t i=0;i<placements.size();++i) {
             const auto& item=placements[i];
             const ImVec2 low(gridOrigin.x+item.y*(cell+gap),gridOrigin.y+item.x*(cell+gap));
