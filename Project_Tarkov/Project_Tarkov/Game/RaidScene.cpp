@@ -248,7 +248,7 @@ void RaidScene::FollowCamera(Camera& target) const
         const auto& body = player->GetSettings();
         const float eyeHeight = player->IsCrouching() ? body.crouchingEyeHeight : body.standingEyeHeight;
         const glm::vec3 forward(std::cos(glm::radians(target.yaw)), 0, std::sin(glm::radians(target.yaw)));
-        target.position = player->position + glm::vec3(0, eyeHeight - 0.2f, 0) + forward * 0.16f;
+        target.position = player->position + glm::vec3(0, eyeHeight - 0.2f, 0) + forward * 0.22f;
     } else {
         target.position.y = (std::max)(target.position.y, 0.25f);
     }

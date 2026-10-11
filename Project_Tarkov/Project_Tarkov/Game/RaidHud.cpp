@@ -480,6 +480,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     GearDrag pending{};
     bool transfer = false, toStash = false, equipPending = false;
     bool healPending = false;
+    bool healDialogRequested = false;
     BodyPart healTarget = BodyPart::Head;
     ItemType equipmentTarget = ItemType::Shirt;
     auto target = [&](bool stashTarget, int accepts) {
@@ -744,6 +745,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             ImGui::SetCursorScreenPos(low);
             ImGui::PushID(static_cast<int>(i));
             ImGui::InvisibleButton("StashItem",{size.x,size.y});
+            const bool clicked=ImGui::IsItemClicked(ImGuiMouseButton_Left);
             target(true,-1);
             if (ImGui::BeginDragDropSource()) {
                 GearDrag data{item.type,1,true,0};
@@ -751,6 +753,23 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 const char* name=item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name;
                 ImGui::Text("%s",name);
                 ImGui::EndDragDropSource();
+            }
+            if (clicked) {
+                if (hideoutHealthTab && item.type==static_cast<int>(ItemType::Bandage)) {
+                    healDialogRequested=true;
+                } else if (item.type==RifleGear) {
+                    pending={RifleGear,1,true,0};
+                    transfer=true;
+                    toStash=false;
+                } else if (IsClothing(static_cast<ItemType>(item.type))) {
+                    pending={item.type,1,true,0};
+                    equipmentTarget=static_cast<ItemType>(item.type);
+                    equipPending=true;
+                } else {
+                    pending={item.type,1,true,0};
+                    transfer=true;
+                    toStash=false;
+                }
             }
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
@@ -797,6 +816,28 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         }
         ImGui::EndTable();
     }
+    ImGui::EndDisabled();
+    if (healDialogRequested) ImGui::OpenPopup("치료 부위 선택##Hideout");
+    if (ImGui::BeginPopupModal("치료 부위 선택##Hideout",nullptr,ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("치료할 부위를 선택하세요. (창고 붕대 %d개)",
+            hideout.stash[static_cast<std::size_t>(ItemType::Bandage)]);
+        for (int i=0;i<BodyPartCount;++i) {
+            const auto part=static_cast<BodyPart>(i);
+            ImGui::PushID(800+i);
+            ImGui::BeginDisabled(hideout.vitals.BodyHealth(part)>=100.f);
+            if (ImGui::Button(BodyPartNames[i],{145,32})) {
+                healPending=true;
+                healTarget=part;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            ImGui::Text("%.0f / 100",hideout.vitals.BodyHealth(part));
+            ImGui::PopID();
+        }
+        if (ImGui::Button("취소",{145,32})) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
     // Mutate only after every source item has been drawn, never while iterating inventory.
     if (healPending) {
         hideout.HealBodyPart(healTarget);
@@ -811,7 +852,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             else hideout.StoreStack(pending.stack);
         }
     }
-    ImGui::EndDisabled();
     ImGui::End();
     ImGui::PopStyleVar(2);
     ImGui::PopStyleColor(8);
