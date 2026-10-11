@@ -144,7 +144,7 @@ void RaidScene::Render()
     }
     loot.Render(shader, cubeMesh, viewCamera, static_cast<float>(width), static_cast<float>(height));
     playerVisual.Render(*player, shader, viewCamera,
-        static_cast<float>(width), static_cast<float>(height));
+        static_cast<float>(width), static_cast<float>(height), glm::vec3(0.3f, 0.8f, 0.4f), firstPerson);
     combat.Render(shader, viewCamera, static_cast<float>(width), static_cast<float>(height));
     hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid);
 }

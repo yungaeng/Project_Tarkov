@@ -9,6 +9,7 @@ uniform bool textured;
 uniform sampler2D diffuseTexture;
 uniform int clothingMask;
 uniform float opacity;
+uniform bool firstPersonCharacter;
 flat in int Garment;
 
 uniform vec3 lightPos;
@@ -39,6 +40,9 @@ vec3 AcesToneMap(vec3 value)
 
 void main()
 {
+    if (firstPersonCharacter && FragPos.y > viewPos.y - 0.25 &&
+        length(viewPos - FragPos) < 0.65) discard;
+
     vec3 albedo = SrgbToLinear(objectColor);
     if (textured) {
         if (Garment >= 1 && Garment <= 4 && (clothingMask & (1 << (Garment - 1))) == 0) discard;
