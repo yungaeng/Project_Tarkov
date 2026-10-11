@@ -14,6 +14,7 @@ struct CharacterVisualState
     bool dead = false, equipped = false, aiming = false, fired = false;
     float reloadRemaining = 0, aimPitch = 0;
     bool hasWeapon = true;
+    glm::vec3 positionOffset{0.0f};
 };
 
 class CharacterVisual
