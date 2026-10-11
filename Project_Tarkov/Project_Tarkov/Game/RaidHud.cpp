@@ -697,19 +697,26 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
     auto drawStashPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        const float stashWidth=ImGui::GetContentRegionAvail().x;
         constexpr int stashColumns=20, stashRows=4;
         const float gap=2.f;
-        const float cell=(std::max)(1.f,(stashWidth-5.f*gap)/4.f);
+        const ImVec2 panelAvailable=ImGui::GetContentRegionAvail();
+        const float stashWidth=panelAvailable.x;
+        const float scrollHeight=(std::max)(64.f,panelAvailable.y);
+        ImGui::BeginChild("StashGridScroll",{stashWidth,scrollHeight},
+            true,ImGuiWindowFlags_AlwaysVerticalScrollbar);
+        const ImVec2 gridViewport=ImGui::GetContentRegionAvail();
+        const float widthCell=(gridViewport.x-(stashRows-1)*gap)/stashRows;
+        const float heightCell=(scrollHeight-8.f*gap)/7.f;
+        const float cell=(std::max)(1.f,(std::min)((std::min)(widthCell,heightCell),96.f));
         const float gridHeight=stashColumns*cell+(stashColumns-1)*gap;
         const float gridWidth=stashRows*cell+(stashRows-1)*gap;
-        ImGui::BeginChild("StashGridScroll",{stashWidth,panelHeight-16.f},
-            true,ImGuiWindowFlags_AlwaysVerticalScrollbar);
         const ImVec2 gridOrigin=ImGui::GetCursorScreenPos();
         auto* draw=ImGui::GetWindowDrawList();
         for (int x=0;x<stashColumns;++x) for (int y=0;y<stashRows;++y) {
             const ImVec2 low(gridOrigin.x+y*(cell+gap),gridOrigin.y+x*(cell+gap));
-            draw->AddRectFilled(low,{low.x+cell,low.y+cell},IM_COL32(20,23,20,255));
+            const ImU32 tileColor=((x+y)&1) ? IM_COL32(38,43,37,255) : IM_COL32(29,34,30,255);
+            draw->AddRectFilled(low,{low.x+cell,low.y+cell},tileColor);
+            draw->AddRect(low,{low.x+cell,low.y+cell},IM_COL32(102,111,91,210),0.f,0,1.f);
         }
         ImGui::SetCursorScreenPos(gridOrigin);
         ImGui::InvisibleButton("StashGridDropTarget",{gridWidth,gridHeight});
