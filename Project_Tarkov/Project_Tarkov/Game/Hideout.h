@@ -32,6 +32,7 @@ public:
     bool HealBodyPart(BodyPart part);
     std::vector<StashPlacement> StashLayout() const;
     bool MoveStashItem(int sourceX, int sourceY, int destinationX, int destinationY);
+    bool AutoArrangeStash();
     bool Depart();
     void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
 private:

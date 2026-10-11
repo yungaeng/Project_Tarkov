@@ -709,6 +709,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
     auto drawStashPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
+        if (ImGui::SmallButton("창고 자동정리"))
+            hideout.AutoArrangeStash();
         constexpr int stashColumns=20, stashRows=4;
         const float gap=2.f;
         const ImVec2 panelAvailable=ImGui::GetContentRegionAvail();

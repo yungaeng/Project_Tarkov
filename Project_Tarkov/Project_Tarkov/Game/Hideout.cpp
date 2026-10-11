@@ -129,6 +129,54 @@ bool Hideout::MoveStashItem(int sourceX, int sourceY, int destinationX, int dest
     return true;
 }
 
+bool Hideout::AutoArrangeStash()
+{
+    if (!ready) return false;
+    Hideout before = *this;
+    auto arranged = stashLayout;
+    std::stable_sort(arranged.begin(), arranged.end(), [](const StashPlacement& left, const StashPlacement& right) {
+        const int leftArea = left.width * left.height;
+        const int rightArea = right.width * right.height;
+        if (leftArea != rightArea) return leftArea > rightArea;
+        const int leftSide = (std::max)(left.width, left.height);
+        const int rightSide = (std::max)(right.width, right.height);
+        if (leftSide != rightSide) return leftSide > rightSide;
+        return left.type < right.type;
+    });
+
+    std::array<bool, StashColumns * StashRows> occupied{};
+    for (auto& item : arranged) {
+        const auto [width, height] = StashItemSize(item.type);
+        bool placed = false;
+        for (int y = 0; y <= StashRows - height && !placed; ++y) {
+            for (int x = 0; x <= StashColumns - width; ++x) {
+                if (!FitsStash(occupied, x, y, width, height)) continue;
+                item.x = x;
+                item.y = y;
+                item.width = width;
+                item.height = height;
+                OccupyStash(occupied, x, y, width, height);
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) {
+            message = "창고 빈 공간이 부족해 자동정리를 완료하지 못했습니다.";
+            return false;
+        }
+    }
+
+    stashLayout = std::move(arranged);
+    if (!Save()) {
+        const auto failure = message;
+        *this = std::move(before);
+        message = failure;
+        return false;
+    }
+    message = "창고 아이템을 공간 효율에 맞춰 정리했습니다.";
+    return true;
+}
+
 bool Hideout::Save()
 {
     if (!ready) { message = "프로필을 사용할 수 없습니다. 저장 파일을 복구한 뒤 다시 실행하세요."; return false; }
