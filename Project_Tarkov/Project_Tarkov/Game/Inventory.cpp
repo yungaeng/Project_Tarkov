@@ -15,14 +15,6 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     static const ItemDefinition backpack{ "전술 배낭", 1, 1.5f };
     static const ItemDefinition underShirt{ "검은 스포츠 브라", 1, 0.15f };
     static const ItemDefinition underpants{ "검은 티팬티", 1, 0.1f };
-    static const ItemDefinition fieldGauze{ "야전 거즈", 10, 0.05f };
-    static const ItemDefinition hemostaticDressing{ "지혈 드레싱", 5, 0.1f };
-    static const ItemDefinition firstAidPouch{ "응급 처치 파우치", 3, 0.2f };
-    static const ItemDefinition compactMedkit{ "소형 구급함", 2, 0.35f };
-    static const ItemDefinition traumaDressing{ "외상 치료 키트", 2, 0.25f };
-    static const ItemDefinition emergencyMedkit{ "응급 구급함", 2, 0.5f };
-    static const ItemDefinition surgicalMedkit{ "수술 치료 키트", 1, 0.4f };
-    static const ItemDefinition advancedMedkit{ "종합 의료 키트", 1, 0.75f };
     switch (type)
     {
     case ItemType::Bandage: return bandage;
@@ -35,32 +27,8 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     case ItemType::Backpack: return backpack;
     case ItemType::UnderShirt: return underShirt;
     case ItemType::Underpants: return underpants;
-    case ItemType::FieldGauze: return fieldGauze;
-    case ItemType::HemostaticDressing: return hemostaticDressing;
-    case ItemType::FirstAidPouch: return firstAidPouch;
-    case ItemType::CompactMedkit: return compactMedkit;
-    case ItemType::TraumaDressing: return traumaDressing;
-    case ItemType::EmergencyMedkit: return emergencyMedkit;
-    case ItemType::SurgicalMedkit: return surgicalMedkit;
-    case ItemType::AdvancedMedkit: return advancedMedkit;
     }
     throw std::invalid_argument("Unknown item type");
-}
-
-float HealingAmount(ItemType type)
-{
-    switch (type) {
-    case ItemType::Bandage: return 20;
-    case ItemType::FieldGauze: return 10;
-    case ItemType::HemostaticDressing: return 25;
-    case ItemType::FirstAidPouch: return 35;
-    case ItemType::CompactMedkit: return 45;
-    case ItemType::TraumaDressing: return 55;
-    case ItemType::EmergencyMedkit: return 65;
-    case ItemType::SurgicalMedkit: return 80;
-    case ItemType::AdvancedMedkit: return 100;
-    default: return 0;
-    }
 }
 
 bool Inventory::TryAdd(ItemStack stack)

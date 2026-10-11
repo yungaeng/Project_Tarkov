@@ -307,17 +307,11 @@ void RaidHud::Render(const Player& player, const LootSystem& loot, const CombatS
             const auto& definition = GetItemDefinition(stack->type);
             ImGui::Separator();
             ImGui::Text("%s | %d/%d | 개당 %.2f kg | 묶음 %.2f kg", definition.name, stack->quantity, definition.maxStack, definition.weight, definition.weight * stack->quantity);
-            if (IsClothing(stack->type))
-                ImGui::TextUnformatted("착용하면 캐릭터 외형에 반영됩니다. 해제 후 버릴 수 있습니다.");
-            else if (IsHealingItem(stack->type))
-                ImGui::Text("효과: 선택한 부위 체력 +%.0f", HealingAmount(stack->type));
-            else if (stack->type == ItemType::Water)
-                ImGui::TextUnformatted("효과: 수분 +30");
-            else
-                ImGui::TextUnformatted("탄약: 인벤토리를 닫고 R키로 재장전하세요");
+            ImGui::TextUnformatted(IsClothing(stack->type) ? "착용하면 캐릭터 외형에 반영됩니다. 해제 후 버릴 수 있습니다." :
+                stack->type == ItemType::Bandage ? "효과: 선택한 부위 체력 +20" : stack->type == ItemType::Water ? "효과: 수분 +30" : "탄약: 인벤토리를 닫고 R키로 재장전하세요");
             ImGui::BeginDisabled(!Input::IsFocused() || !player.vitals.Alive());
             const bool usable = IsClothing(stack->type) ? !(player.clothingMask & ClothingBit(stack->type)) :
-                IsHealingItem(stack->type) ? player.vitals.Health() < 100 : stack->type == ItemType::Water && player.vitals.Hydration() < 100;
+                stack->type == ItemType::Bandage ? player.vitals.Health() < 100 : stack->type == ItemType::Water && player.vitals.Hydration() < 100;
             ImGui::BeginDisabled(!usable);
             if (ImGui::Button(IsClothing(stack->type) ? "착용" : "사용")) actions.Request(InventoryAction::Use);
             ImGui::EndDisabled();
@@ -403,7 +397,7 @@ namespace
             draw->AddRectFilled({p.x+18,p.y+8},{p.x+49,p.y+41},color,3);
             draw->AddLine({p.x+19,p.y+10},{p.x+7,p.y+25},color,9);
             draw->AddLine({p.x+48,p.y+10},{p.x+60,p.y+25},color,9);
-        } else if (IsHealingItem(static_cast<ItemType>(type))) {
+        } else if (type == static_cast<int>(ItemType::Bandage)) {
             draw->AddRectFilled({p.x+12,p.y+6},{p.x+49,p.y+40},color,4);
             draw->AddRectFilled({p.x+27,p.y+12},{p.x+34,p.y+34},IM_COL32(80,33,29,255));
             draw->AddRectFilled({p.x+20,p.y+19},{p.x+41,p.y+26},IM_COL32(80,33,29,255));
@@ -489,7 +483,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     bool healDialogRequested = false;
     bool equipRifleByClick = false;
     BodyPart healTarget = BodyPart::Head;
-    ItemType healMedicine = ItemType::Bandage;
     ItemType equipmentTarget = ItemType::Shirt;
     auto target = [&](bool stashTarget, int accepts) {
         if (!hideout.ready || !Input::IsFocused()) return;
@@ -646,11 +639,10 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 const auto* candidate=ImGui::GetDragDropPayload();
                 if (candidate&&candidate->IsDataType(GearPayload)&&candidate->DataSize==sizeof(GearDrag)) {
                     const auto data=*static_cast<const GearDrag*>(candidate->Data);
-                    if (data.fromStash&&IsHealingItem(static_cast<ItemType>(data.type))) {
+                    if (data.fromStash&&data.type==static_cast<int>(ItemType::Bandage)) {
                         if (const auto* payload=ImGui::AcceptDragDropPayload(GearPayload);payload&&payload->IsDelivery()) {
                             healPending=true;
                             healTarget=static_cast<BodyPart>(i);
-                            healMedicine=static_cast<ItemType>(data.type);
                         }
                     }
                 }
@@ -659,7 +651,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
                 ImGui::Text("%s: %.0f / 100",BodyPartNames[i],hideout.vitals.BodyHealth(static_cast<BodyPart>(i)));
-                ImGui::TextUnformatted("치료 아이템을 끌어 놓아 치료");
+                ImGui::TextUnformatted("붕대를 끌어 놓아 치료");
                 ImGui::EndTooltip();
             }
             ImGui::PopID();
@@ -745,15 +737,12 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 IM_COL32(135,68,58,255), IM_COL32(63,112,137,255), IM_COL32(152,132,71,255),
                 IM_COL32(91,113,77,255), IM_COL32(84,95,70,255), IM_COL32(121,97,83,255),
                 IM_COL32(111,86,82,255), IM_COL32(91,104,80,255), IM_COL32(122,123,111,255),
-                IM_COL32(72,99,76,255), IM_COL32(135,82,66,255), IM_COL32(153,96,72,255),
-                IM_COL32(169,114,78,255), IM_COL32(126,111,71,255), IM_COL32(155,87,63,255),
-                IM_COL32(139,96,66,255), IM_COL32(114,82,65,255), IM_COL32(171,126,87,255),
-                IM_COL32(96,111,86,255)
+                IM_COL32(72,99,76,255), IM_COL32(96,111,86,255)
             };
             const ImU32 color=colors[item.type];
             draw->AddRectFilled(low,{low.x+size.x,low.y+size.y},color,2);
             const ImU32 iconColor=IM_COL32(225,220,197,215);
-            if (IsHealingItem(static_cast<ItemType>(item.type))) {
+            if (item.type==static_cast<int>(ItemType::Bandage)) {
                 draw->AddRectFilled({low.x+size.x*.42f,low.y+size.y*.2f},
                     {low.x+size.x*.58f,low.y+size.y*.8f},iconColor,1);
                 draw->AddRectFilled({low.x+size.x*.2f,low.y+size.y*.42f},
@@ -781,9 +770,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 ImGui::EndDragDropSource();
             }
             if (clicked) {
-                if (hideoutHealthTab && IsHealingItem(static_cast<ItemType>(item.type))) {
+                if (hideoutHealthTab && item.type==static_cast<int>(ItemType::Bandage)) {
                     healDialogRequested=true;
-                    hideoutHealingItem=item.type;
                 } else if (item.type==RifleGear) {
                     equipRifleByClick=true;
                 } else if (IsClothing(static_cast<ItemType>(item.type))) {
@@ -849,10 +837,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::EndDisabled();
     if (healDialogRequested) ImGui::OpenPopup("치료 부위 선택##Hideout");
     if (ImGui::BeginPopupModal("치료 부위 선택##Hideout",nullptr,ImGuiWindowFlags_AlwaysAutoResize)) {
-        const auto medicine = static_cast<ItemType>(hideoutHealingItem);
-        ImGui::Text("치료할 부위를 선택하세요. (%s %d개, 부위 체력 +%.0f)",
-            GetItemDefinition(medicine).name, hideout.stash[static_cast<std::size_t>(medicine)],
-            HealingAmount(medicine));
+        ImGui::Text("치료할 부위를 선택하세요. (창고 붕대 %d개)",
+            hideout.stash[static_cast<std::size_t>(ItemType::Bandage)]);
         for (int i=0;i<BodyPartCount;++i) {
             const auto part=static_cast<BodyPart>(i);
             ImGui::PushID(800+i);
@@ -872,7 +858,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     }
     // Mutate only after every source item has been drawn, never while iterating inventory.
     if (healPending) {
-        hideout.HealBodyPart(healTarget, healMedicine);
+        hideout.HealBodyPart(healTarget);
     } else if (equipPending) {
         hideout.ToggleClothing(equipmentTarget,pending.fromStash);
     } else if (transfer) {

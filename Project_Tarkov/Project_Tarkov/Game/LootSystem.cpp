@@ -89,7 +89,7 @@ void LootSystem::Render(Shader& shader, Mesh& mesh, Camera& camera, float width,
         glm::mat4 model = glm::translate(glm::mat4(1), items[i].position);
         model = glm::scale(model, glm::vec3(WorldItem::HalfSize * 2));
         const glm::vec3 color = static_cast<int>(i) == target ? glm::vec3(1, 0.85f, 0.2f) :
-            IsHealingItem(items[i].stack.type) ? glm::vec3(0.9f, 0.35f, 0.35f) :
+            items[i].stack.type == ItemType::Bandage ? glm::vec3(0.9f, 0.35f, 0.35f) :
             items[i].stack.type == ItemType::Water ? glm::vec3(0.25f, 0.6f, 1) :
             IsClothing(items[i].stack.type) ? glm::vec3(0.65f, 0.4f, 0.85f) : glm::vec3(0.7f, 0.6f, 0.35f);
         Renderer::Draw(shader, mesh, camera, model, width, height, color);
