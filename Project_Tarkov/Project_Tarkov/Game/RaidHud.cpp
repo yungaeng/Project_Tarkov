@@ -480,6 +480,14 @@ namespace
             draw->AddRectFilled({p.x+48,p.y+21},{p.x+72,p.y+24},color);
             draw->AddQuadFilled({p.x+5,p.y+21},{p.x+20,p.y+25},{p.x+15,p.y+35},{p.x,p.y+34},color);
             draw->AddRectFilled({p.x+30,p.y+27},{p.x+39,p.y+40},color,2);
+        } else if (type == static_cast<int>(ItemType::Boots)) {
+            for (float x : {p.x+10, p.x+36}) {
+                draw->AddRectFilled({x,p.y+7},{x+15,p.y+33},color,2);
+                draw->AddRectFilled({x,p.y+29},{x+25,p.y+40},color,3);
+                draw->AddLine({x,p.y+41},{x+25,p.y+41},IM_COL32(20,22,25,255),3);
+                for (float y=p.y+13;y<p.y+28;y+=5)
+                    draw->AddLine({x+4,y},{x+12,y},IM_COL32(85,88,93,255),1);
+            }
         } else if (IsClothing(static_cast<ItemType>(type))) {
             draw->AddRectFilled({p.x+18,p.y+8},{p.x+49,p.y+41},color,3);
             draw->AddLine({p.x+19,p.y+10},{p.x+7,p.y+25},color,9);
@@ -675,8 +683,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
         const ItemType leftTypes[]{ItemType::Helmet,ItemType::Shirt,ItemType::UnderShirt,ItemType::Backpack};
         const char* leftNames[]{"머리","상의","브라","배낭"};
-        const ItemType rightTypes[]{ItemType::Vest,ItemType::Trousers,ItemType::Underpants};
-        const char* rightNames[]{"전술조끼","하의","팬티"};
+        const ItemType rightTypes[]{ItemType::Vest,ItemType::Trousers,ItemType::Underpants,ItemType::Boots};
+        const char* rightNames[]{"전술조끼","하의","팬티","신발"};
         auto slot=[&](int id,ItemType type,const char* name,ImVec2 position) {
             ImGui::PushID(id);
             ImGui::SetCursorScreenPos(position);
@@ -709,7 +717,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const float step=132.f;
         for (int i=0;i<4;++i)
             slot(600+i,leftTypes[i],leftNames[i],{origin.x,modelPosition.y+8+i*step});
-        for (int i=0;i<3;++i)
+        for (int i=0;i<4;++i)
             slot(610+i,rightTypes[i],rightNames[i],{origin.x+panelWidth-slotWidth,modelPosition.y+44+i*step});
         ImGui::EndChild();
     };

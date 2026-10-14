@@ -15,7 +15,6 @@ struct CharacterVisualState
     bool dead = false, equipped = false, aiming = false, fired = false;
     float reloadRemaining = 0, aimPitch = 0;
     bool hasWeapon = true;
-    glm::vec3 positionOffset{0.0f};
 };
 
 class CharacterVisual
@@ -39,12 +38,19 @@ public:
 
 private:
     void UploadPalette();
+    void AnimateLootSearch(float dt);
     struct Assets;
     std::shared_ptr<Assets> assets;
     GLuint paletteBuffer = 0, paletteTexture = 0;
     float poseElapsed = 0;
+    float backpackClock = 0, backpackMotion = 0;
     bool lootPoseValid = false;
     float lootPoseHeight = .75f;
+    float lootClock = 0;
+    glm::mat4 lootInverse{1};
+    std::array<glm::vec3, 2> lootHandTargets{}, lootElbows{};
+    glm::vec3 lootPalmDirection{0, -1, 0};
+    glm::vec3 lootSweepDirection{0};
     std::array<glm::vec3, 4> lootSupports{};
     SkeletalAnimation animation;
     WeaponVisual weapon;

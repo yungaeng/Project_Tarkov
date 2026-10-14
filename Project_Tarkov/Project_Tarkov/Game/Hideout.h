@@ -11,14 +11,16 @@ struct StashPlacement { int type, x, y, width, height; };
 class Hideout
 {
 public:
-    std::array<int, ItemTypeCount> stash{{10, 10, 10, 10, 10, 10, 10, 10, 10, 10}};
+    // Starter totals include worn clothing and the loaded rifle; no duplicates.
+    // Bandage, water, ammo, shirt, trousers, underwear, vest, helmet, backpack, boots.
+    std::array<int, ItemTypeCount> stash{{10, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0}};
     PlayerVitals vitals;
     std::uint32_t clothingMask = DefaultClothingMask;
-    int rifles = 10;
+    int rifles = 0;
     std::vector<StashPlacement> stashLayout;
     Inventory loadout;
-    bool rifle = false;
-    int magazine = 0;
+    bool rifle = true;
+    int magazine = 30;
     int spawn = 0;
     bool ready = false;
     std::string message;

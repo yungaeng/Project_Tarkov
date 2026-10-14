@@ -41,7 +41,7 @@ def camouflage(size=2048):
 
 def write_mesh(path, vertices, triangles, joints):
     with path.open('wb') as f:
-        f.write(b'TKCHAR04')
+        f.write(b'TKCHAR05' if np.any(vertices['garment'] == 8) else b'TKCHAR04')
         f.write(struct.pack('<III', len(joints), len(vertices), triangles.size))
         for name, position in joints.items():
             raw = name.encode('ascii')

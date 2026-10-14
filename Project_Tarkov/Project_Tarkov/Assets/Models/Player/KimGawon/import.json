@@ -1,8 +1,8 @@
 {
   "source": "F:\\Koikatsu\\Export_PMX\\20261010085443_김가원\\model.pmx",
   "height_m": 1.8,
-  "vertices": 94652,
-  "triangles": 69876,
+  "vertices": 98138,
+  "triangles": 71038,
   "joints": 52,
   "materials": [
     {
@@ -513,13 +513,34 @@
   },
   "fitted_underwear": {
     "generator": "Tools/fit_underwear.py",
-    "base_vertices": 74078,
-    "base_triangles": 63018,
+    "base_vertices": 91616,
+    "base_triangles": 68864,
     "allowance_cm": {
       "3": 0.3,
-      "4": 0.08
+      "4": 0.06
     },
     "parts": [
+      {
+        "name": "thong_waistband",
+        "garment": 4,
+        "first_vertex": 91616,
+        "vertex_count": 750,
+        "triangles": 250
+      },
+      {
+        "name": "thong_front",
+        "garment": 4,
+        "first_vertex": 92366,
+        "vertex_count": 4470,
+        "triangles": 1490
+      },
+      {
+        "name": "thong_back",
+        "garment": 4,
+        "first_vertex": 96836,
+        "vertex_count": 1302,
+        "triangles": 434
+      },
       {
         "name": "bra_underband",
         "garment": 3,
@@ -568,29 +589,23 @@
         "first_vertex": 86963,
         "vertex_count": 309,
         "triangles": 103
-      },
-      {
-        "name": "thong_waistband",
-        "garment": 4,
-        "first_vertex": 87272,
-        "vertex_count": 1146,
-        "triangles": 382
-      },
-      {
-        "name": "thong_front",
-        "garment": 4,
-        "first_vertex": 88418,
-        "vertex_count": 4698,
-        "triangles": 1566
-      },
-      {
-        "name": "thong_back",
-        "garment": 4,
-        "first_vertex": 93116,
-        "vertex_count": 1536,
-        "triangles": 512
       }
     ],
     "note": "Clipped body surface with interpolated body skin weights; shared character palette."
+  },
+  "combat_boots": {
+    "generator": "Tools/create_combat_boots.py",
+    "garment": 8,
+    "slot": 7,
+    "mesh": "Tactical/black_boots.mesh",
+    "material": "Tactical/black_boots_material.png",
+    "vertices": 4344,
+    "triangles": 1448,
+    "atlas_region": [
+      3328,
+      2336,
+      256,
+      64
+    ]
   }
 }

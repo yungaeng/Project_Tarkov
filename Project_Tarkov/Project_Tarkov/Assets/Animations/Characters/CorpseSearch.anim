@@ -1,0 +1,12 @@
+# Additive lower-back sway over the fitted kneeling pose. Centimeters / degrees.
+# A 2.4-second loop accompanies alternating hands without moving the legs.
+Spine 0.0 0 0 0 0 0 0
+Spine 0.6 0 0 0.6 1.5 0 0
+Spine 1.2 0 0 0 0 0 0
+Spine 1.8 0 0 -0.6 -1.5 0 0
+Spine 2.4 0 0 0 0 0 0
+Spine1 0.0 0 0 0 0 0 0
+Spine1 0.6 0 0 0 0.5 0 0
+Spine1 1.2 0 0 0 0 0 0
+Spine1 1.8 0 0 0 -0.5 0 0
+Spine1 2.4 0 0 0 0 0 0

@@ -101,7 +101,7 @@ void RaidScene::Update(float dt)
     if (!corpseInteraction && corpseTarget >= 0 && Input::GetKeyDown(GLFW_KEY_F)) {
         corpseInteraction = true;
         const auto* corpse = combat.Corpse(corpseTarget);
-        // Keep hands and knees planted; search for the closest clear spot around the corpse.
+        // Keep feet and knees supported while the hands search the corpse's waist.
         const auto placementClear = [&](const glm::vec3& candidate, float height,
             const std::array<glm::vec3, 4>& supports) {
             for (const auto& support : supports)
@@ -111,20 +111,17 @@ void RaidScene::Update(float dt)
             return combat.LootSpaceClear(candidate, corpseTarget);
         };
         const auto anchor = playerVisual.FitLootPose(*player, corpse->body, *corpse->visual, placementClear);
-        const bool clear = player->IsGrounded() && playerVisual.LootPoseValid();
-        if (clear) {
-            beforeLootCamera = camera;
-            beforeLootPosition = player->position;
-            beforeLootRotation = player->rotation.y;
-            player->position = anchor;
-            player->rotation.y = corpse->body.rotation.y + 180.f;
-            player->SetLooting(true);
-            lootingCorpse = corpseTarget;
-            freeLook = false;
-            actions.Cancel();
-            combat.CancelInput();
-            Input::SetCursorCaptured(false);
-        } else loot.Notify("시체 주변에 파밍 자세를 잡을 안전한 공간이 없습니다.");
+        beforeLootCamera = camera;
+        beforeLootPosition = player->position;
+        beforeLootRotation = player->rotation.y;
+        player->position = anchor;
+        player->rotation.y = corpse->body.rotation.y + 180.f;
+        player->SetLooting(true);
+        lootingCorpse = corpseTarget;
+        freeLook = false;
+        actions.Cancel();
+        combat.CancelInput();
+        Input::SetCursorCaptured(false);
     }
     if (lootingCorpse >= 0) {
         if (takeCorpseStack) {
@@ -166,14 +163,6 @@ void RaidScene::Update(float dt)
     loot.Update(dt, *player, camera, collisionWorld, canLook && corpseTarget < 0 && !corpseInteraction, Input::GetKeyDown(GLFW_KEY_F));
     CharacterVisualState visualState{!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
         combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasRifle()};
-    if (const WorldItem* target = loot.Target())
-    {
-        const float yaw = glm::radians(player->rotation.y);
-        const glm::vec3 left(-std::cos(yaw), 0.0f, std::sin(yaw));
-        const glm::vec3 lootBase = target->position - glm::vec3(0.0f, WorldItem::HalfSize, 0.0f);
-        visualState.positionOffset = lootBase - player->position +
-            left * (player->GetSettings().bodyRadius * 2.0f);
-    }
     playerVisual.Update(dt, *player, visualState);
     if (freeLook)
         FollowCamera(previewCamera);

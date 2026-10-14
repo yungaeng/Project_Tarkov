@@ -15,6 +15,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     static const ItemDefinition backpack{ "전술 배낭", 1, 1.5f };
     static const ItemDefinition underShirt{ "검은 스포츠 브라", 1, 0.15f };
     static const ItemDefinition underpants{ "검은 티팬티", 1, 0.1f };
+    static const ItemDefinition boots{ "검정색 군화", 1, 1.4f };
     switch (type)
     {
     case ItemType::Bandage: return bandage;
@@ -25,6 +26,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     case ItemType::Vest: return vest;
     case ItemType::Helmet: return helmet;
     case ItemType::Backpack: return backpack;
+    case ItemType::Boots: return boots;
     case ItemType::UnderShirt: return underShirt;
     case ItemType::Underpants: return underpants;
     }

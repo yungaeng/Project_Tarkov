@@ -10,7 +10,7 @@ from PIL import Image
 def load(path):
     with path.open('rb') as f:
         magic = f.read(8)
-        assert magic in (b'TKCHAR01', b'TKCHAR02', b'TKCHAR03', b'TKCHAR04')
+        assert magic in (b'TKCHAR01', b'TKCHAR02', b'TKCHAR03', b'TKCHAR04', b'TKCHAR05')
         nj, nv, ni = struct.unpack('<III', f.read(12))
         joints = {}
         for _ in range(nj):
@@ -30,7 +30,7 @@ def load(path):
     for field in ('position', 'normal', 'uv', 'weights'): assert np.isfinite(vertices[field]).all()
     assert (vertices['uv'] >= 0).all() and (vertices['uv'] <= 1).all()
     if 'garment' in vertices.dtype.names:
-        assert set(vertices['garment']) <= set(range(8 if magic == b'TKCHAR04' else 6))
+        assert set(vertices['garment']) <= set(range(9 if magic == b'TKCHAR05' else 8 if magic == b'TKCHAR04' else 6))
         assert np.all(vertices['garment'][indices] == vertices['garment'][indices[:, :1]])
     for side in ('Left', 'Right'):
         assert all(side + suffix in joints for suffix in ('Arm', 'ForeArm', 'Hand'))
@@ -54,6 +54,7 @@ def preview(vertices, triangles, atlas, width=640, height=800, yaw=0, low=None, 
         garment = int(vertices['garment'][tri[0]]) if 'garment' in vertices.dtype.names else 0
         if 1 <= garment <= 4 and not (clothing_mask & (1 << (garment-1))): continue
         if 6 <= garment <= 7 and not (clothing_mask & (1 << (garment-2))): continue
+        if garment == 8 and not (clothing_mask & (1 << 7)): continue
         if garment == 3 and clothing_mask & 1: continue
         if garment == 4 and clothing_mask & 2: continue
         a, b, c = p[tri]
@@ -88,19 +89,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', type=Path)
     parser.add_argument('--preview', type=Path)
-    parser.add_argument('--clothing-mask', type=int, default=63, choices=range(64))
+    parser.add_argument('--clothing-mask', type=int, default=191, choices=range(256))
     args = parser.parse_args()
     vertices, triangles, joints = load(args.directory/'character.mesh')
     print(f'Valid: {len(vertices)} vertices, {len(triangles)} triangles, {len(joints)} joints; normalized weights and valid UVs.')
     if 'garment' in vertices.dtype.names:
         groups = vertices['garment'][triangles[:, 0]]
         permanent = (groups == 0) | (groups == 5)
-        for mask in range(64):
+        for mask in range(256):
             visible = permanent.copy()
             for group in range(1, 5):
                 if mask & (1 << (group-1)): visible |= groups == group
             for group in (6, 7):
                 if mask & (1 << (group-2)): visible |= groups == group
+            if mask & (1 << 7): visible |= groups == 8
             if mask & 1: visible[groups == 3] = False
             if mask & 2: visible[groups == 4] = False
             assert visible[permanent].all()
@@ -109,7 +111,8 @@ if __name__ == '__main__':
                 assert (visible[groups == group] == expected).all()
             for group in (6, 7):
                 assert (visible[groups == group] == bool(mask & (1 << (group-2)))).all()
-        print('All 64 clothing combinations toggle each garment independently and preserve the body.')
+            assert (visible[groups == 8] == bool(mask & (1 << 7))).all()
+        print('All 256 clothing combinations toggle each garment independently and preserve the body.')
     report = json.loads((args.directory/'import.json').read_text(encoding='utf-8'))
     names = list(joints)
     for part in report.get('clothing', []):

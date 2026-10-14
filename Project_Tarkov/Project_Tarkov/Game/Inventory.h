@@ -4,11 +4,11 @@
 #include <cstdint>
 
 // Keep existing numeric IDs for saved inventories (the former skirt slot is trousers).
-enum class ItemType { Bandage, Water, Ammo, Shirt, Trousers, UnderShirt, Underpants, Vest, Helmet, Backpack, Count };
+enum class ItemType { Bandage, Water, Ammo, Shirt, Trousers, UnderShirt, Underpants, Vest, Helmet, Backpack, Boots, Count };
 inline constexpr int ItemTypeCount = static_cast<int>(ItemType::Count);
-inline constexpr int ClothingSlotCount = 7;
+inline constexpr int ClothingSlotCount = 8;
 inline constexpr std::uint32_t AllClothingMask = (1u << ClothingSlotCount) - 1;
-inline bool IsClothing(ItemType type) { return type >= ItemType::Shirt && type <= ItemType::Backpack; }
+inline bool IsClothing(ItemType type) { return type >= ItemType::Shirt && type <= ItemType::Boots; }
 inline std::uint32_t ClothingBit(ItemType type) {
     return IsClothing(type) ? 1u << (static_cast<int>(type) - static_cast<int>(ItemType::Shirt)) : 0;
 }

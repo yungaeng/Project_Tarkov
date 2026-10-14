@@ -351,27 +351,6 @@ bool SkeletalAnimation::GroundLootSupports(const glm::mat4& model, float ground)
             data->pose[lower->second].rotation.Normalize();
             data->RefreshGlobals();
         }
-        auto hand = world(side + "Hand");
-        hand.y = ground + .025f;
-        const auto elbow = world(side + "ForeArm");
-        const auto shoulder = world(side + "Arm");
-        const float reach = glm::length(elbow - shoulder) +
-            glm::length(world(side + "Hand") - elbow) - .002f;
-        const float drop = shoulder.y - hand.y;
-        if (std::abs(drop) >= reach) return false;
-        glm::vec3 handOffset(hand.x - shoulder.x, 0, hand.z - shoulder.z);
-        const float horizontalReach = std::sqrt(reach * reach - drop * drop);
-        if (glm::length(handOffset) > horizontalReach) {
-            handOffset = glm::normalize(handOffset) * horizontalReach;
-            hand.x = shoulder.x + handOffset.x;
-            hand.z = shoulder.z + handOffset.z;
-        }
-        auto palm = world(side + "HandMiddle1") - world(side + "Hand");
-        palm.y = 0;
-        if (glm::length(palm) < .001f) return false;
-        const auto direction = glm::vec3(inverse * glm::vec4(glm::normalize(palm), 0));
-        SolveArm(side, local(hand), local(elbow), direction, 1);
-        if (glm::length(world(side + "Hand") - hand) > .008f) return false;
     }
     RefreshVertices();
     return true;
@@ -488,7 +467,8 @@ bool SkeletalAnimation::LoadAppearance(const std::string& path)
     read(jointCount); read(vertexCount); read(indexCount);
     auto fail = [&]() { data->error = "Invalid character appearance: " + path; return false; };
     const bool legacyGarments = std::string(magic, 8) == "TKCHAR02";
-    const bool tacticalGarments = std::string(magic, 8) == "TKCHAR04";
+    const bool footwearGarments = std::string(magic, 8) == "TKCHAR05";
+    const bool tacticalGarments = std::string(magic, 8) == "TKCHAR04" || footwearGarments;
     const bool garmentData = legacyGarments || std::string(magic, 8) == "TKCHAR03" || tacticalGarments;
     if (!in || (!garmentData && std::string(magic, 8) != "TKCHAR01") || jointCount == 0 || jointCount > 256 ||
         vertexCount == 0 || vertexCount > 1000000 || indexCount == 0 || indexCount > 6000000 || indexCount % 3) return fail();
@@ -540,7 +520,7 @@ bool SkeletalAnimation::LoadAppearance(const std::string& path)
         for (auto& w : weights) read(w);
         std::uint32_t garment = 0;
         if (garmentData) read(garment);
-        if (garment > (tacticalGarments ? 7u : 5u)) return fail();
+        if (garment > (footwearGarments ? 8u : tacticalGarments ? 7u : 5u)) return fail();
         if (legacyGarments && (garment == 3 || garment == 4)) garment = 0;
         if (!in) return fail();
         for (auto v : values) if (!std::isfinite(v)) return fail();
