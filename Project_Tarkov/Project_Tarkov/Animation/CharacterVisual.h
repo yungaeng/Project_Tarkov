@@ -29,6 +29,7 @@ public:
     void Render(const Character& character, Shader& shader, Camera& camera, float width, float height,
         const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool firstPerson = false);
     void Reset();
+    glm::vec3 FirstPersonCameraPosition(const Character& character) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
         const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear);

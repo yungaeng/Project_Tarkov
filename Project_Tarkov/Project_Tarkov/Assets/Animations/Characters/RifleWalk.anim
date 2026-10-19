@@ -1,12 +1,14 @@
-# Controlled advance: preserve the FBX leg cycle with a compact upper body.
-Spine 0 0 0 0 5 0 -.5
-Spine .2 0 0 0 5.5 0 0
-Spine .4 0 0 0 5 0 .5
-Spine .6 0 0 0 5.5 0 0
-Spine .8 0 0 0 5 0 -.5
+# Bind-relative controlled upper body; preserve the FBX leg cycle.
+Spine 0 0 0 0 8 0 -.5
+Spine .2 0 0 0 8.5 0 0
+Spine .4 0 0 0 8 0 .5
+Spine .6 0 0 0 8.5 0 0
+Spine .8 0 0 0 8 0 -.5
 Spine2 0 0 0 0 2 -.6 .4
 Spine2 .4 0 0 0 2 .6 -.4
 Spine2 .8 0 0 0 2 -.6 .4
 Neck 0 0 0 0 -5 .4 0
 Neck .4 0 0 0 -5 -.4 0
 Neck .8 0 0 0 -5 .4 0
+Spine1 0 0 0 0 1 0 0
+Spine1 .8 0 0 0 1 0 0

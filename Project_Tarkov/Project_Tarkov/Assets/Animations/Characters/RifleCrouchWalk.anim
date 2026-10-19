@@ -1,10 +1,19 @@
-# Controlled crouched movement.
-Spine2 0 0 0 0 -3 0 -.7
-Spine2 .55 0 0 0 -2 0 .7
-Spine2 1.1 0 0 0 -3 0 -.7
-RightArm 0 0 0 0 -2 -3 2
-RightArm .55 0 0 0 -1 -2 2
-RightArm 1.1 0 0 0 -2 -3 2
-LeftArm 0 0 0 0 -2 3 -2
-LeftArm .55 0 0 0 -1 2 -2
-LeftArm 1.1 0 0 0 -2 3 -2
+# Crouch walk: low shoulders and alternating weight shift, synchronized to the FBX cycle.
+Spine 0 0 0 0 4 0 -1
+Spine .275 0 0 0 5 0 0
+Spine .55 0 0 0 4 0 1
+Spine .825 0 0 0 5 0 0
+Spine 1.1 0 0 0 4 0 -1
+Spine2 0 0 0 0 -5 -.5 .6
+Spine2 .55 0 0 0 -5 .5 -.6
+Spine2 1.1 0 0 0 -5 -.5 .6
+Neck 0 0 0 0 -3 .5 0
+Neck .55 0 0 0 -3 -.5 0
+Neck 1.1 0 0 0 -3 .5 0
+Spine1 0 0 0 0 0 0 0
+Spine1 1.1 0 0 0 0 0 0
+Hips 0 0 -48 0 0 0 -1
+Hips .275 0 -47 0 0 0 0
+Hips .55 0 -48 0 0 0 1
+Hips .825 0 -47 0 0 0 0
+Hips 1.1 0 -48 0 0 0 -1

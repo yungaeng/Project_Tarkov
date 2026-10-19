@@ -19,6 +19,7 @@ private:
     bool prone = false;
     bool sprinting = false;
     bool moving = false;
+    float actualMoveSpeed = 0;
     bool looting = false;
     CharacterSettings settings;
 
@@ -32,6 +33,7 @@ public:
     float GetEyeHeight() const { return prone ? settings.proneEyeHeight : crouching ? settings.crouchingEyeHeight : settings.standingEyeHeight; }
     bool IsSprinting() const { return sprinting; }
     bool IsMoving() const { return moving; }
+    float GetMoveSpeed() const { return actualMoveSpeed; }
     bool IsLooting() const { return looting; }
     void SetLooting(bool value) { looting = value; if (value) { StopMovement(); sprinting = false; } }
     float GetBodyHeight() const { return looting ? 1.2f : prone ? settings.proneBodyHeight : crouching ? settings.crouchingBodyHeight : settings.bodyHeight; }

@@ -622,7 +622,14 @@ bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& pat
     return true;
 }
 
-void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, bool skin)
+float SkeletalAnimation::CyclePhase() const
+{
+    const auto found = data->asset->clips.find(data->selected);
+    return found == data->asset->clips.end() || found->second.duration <= 0 ? 0.f :
+        static_cast<float>(data->time / found->second.duration);
+}
+
+void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, bool skin, float playbackSpeed)
 {
     const auto found = data->asset->clips.find(name);
     if (found == data->asset->clips.end() || !std::isfinite(dt) || dt < 0) return;
@@ -637,7 +644,8 @@ void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, 
         data->blendTime = 0;
     }
     const float elapsed = (std::min)(dt, 1.0f);
-    if (playing) data->time = std::fmod(data->time + elapsed * clip.rate, clip.duration);
+    if (!std::isfinite(playbackSpeed)) playbackSpeed = 1.f;
+    if (playing) data->time = std::fmod(data->time + elapsed * clip.rate * std::clamp(playbackSpeed, 0.f, 2.f), clip.duration);
     else data->idleTime = std::fmod(data->idleTime + elapsed, 3.5);
     data->blendTime = (std::min)(data->blendTime + elapsed, 0.15f);
     for (size_t i = 0; i < data->asset->nodes.size(); ++i)

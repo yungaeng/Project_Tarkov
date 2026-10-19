@@ -24,7 +24,8 @@ public:
     bool LoadModel(const std::string& path);
     bool LoadAppearance(const std::string& path);
     bool LoadClip(const std::string& name, const std::string& path);
-    void Update(float dt, const std::string& clip, bool playing, bool skin = true);
+    void Update(float dt, const std::string& clip, bool playing, bool skin = true, float playbackSpeed = 1.f);
+    float CyclePhase() const;
     const std::vector<AnimatedVertex>& Vertices() const;
     const std::vector<unsigned int>& Indices() const;
     const std::string& Error() const;

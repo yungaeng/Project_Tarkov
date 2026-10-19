@@ -1,8 +1,25 @@
-# Compact stationary crouch, keep existing crouched lower-body pose.
-Spine2 0 0 0 0 -4 0 0
-Spine2 1.4 0 0 0 -5 0 .3
-Spine2 2.8 0 0 0 -4 0 0
-RightArm 0 0 0 0 -3 -3 3
-RightArm 2.8 0 0 0 -3 -3 3
-LeftArm 0 0 0 0 -3 3 -3
-LeftArm 2.8 0 0 0 -3 3 -3
+# Bind-relative balanced squat, feet apart and knees bent; torso supports the rifle.
+Hips 0 0 -48 0 0 0 0
+Hips 2.8 0 -48 0 0 0 0
+RightUpLeg 0 0 0 0 64 0 -7
+RightUpLeg 2.8 0 0 0 64 0 -7
+LeftUpLeg 0 0 0 0 64 0 7
+LeftUpLeg 2.8 0 0 0 64 0 7
+RightLeg 0 0 0 0 -112 0 0
+RightLeg 2.8 0 0 0 -112 0 0
+LeftLeg 0 0 0 0 -112 0 0
+LeftLeg 2.8 0 0 0 -112 0 0
+RightFoot 0 0 0 0 48 0 0
+RightFoot 2.8 0 0 0 48 0 0
+LeftFoot 0 0 0 0 48 0 0
+LeftFoot 2.8 0 0 0 48 0 0
+Spine 0 0 0 0 12 0 0
+Spine 1.4 0 0 0 12.5 0 0
+Spine 2.8 0 0 0 12 0 0
+Spine1 0 0 0 0 0 0 0
+Spine1 2.8 0 0 0 0 0 0
+Spine2 0 0 0 0 -3 0 -.2
+Spine2 1.4 0 0 0 -3.5 0 .2
+Spine2 2.8 0 0 0 -3 0 -.2
+Neck 0 0 0 0 -7 0 0
+Neck 2.8 0 0 0 -7 0 0

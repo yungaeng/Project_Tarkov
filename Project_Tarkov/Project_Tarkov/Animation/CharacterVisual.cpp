@@ -195,11 +195,15 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     const bool crouching = character.IsCrouching();
     const bool prone = character.IsProne();
     const char* clip = airborne || prone ? "idle" : crouching ? "crouch" : moving ? (character.IsSprinting() ? "run" : "walk") : "idle";
-    animation.Update(dt, clip, moving || !crouching, false);
+    const auto& movement = character.GetSettings();
+    const float referenceSpeed = prone ? movement.proneSpeed : crouching ? movement.crouchSpeed :
+        character.IsSprinting() ? movement.runSpeed : movement.walkSpeed;
+    const float pace = moving ? std::clamp(character.GetMoveSpeed() / referenceSpeed, 0.f, 1.5f) : 1.f;
+    animation.Update(dt, clip, moving && !prone && !airborne, false, pace);
     const float blend = 1 - std::exp(-dt * 12);
     proneWeight += ((prone ? 1.f : 0.f) - proneWeight) * (1.f - std::exp(-dt * 7.f));
     crawlWeight += ((prone && moving ? 1.f : 0.f) - crawlWeight) * blend;
-    if (prone && moving) crawlClock = std::fmod(crawlClock + dt, assets->crawlClip.Duration());
+    if (prone && moving) crawlClock = std::fmod(crawlClock + dt * pace, assets->crawlClip.Duration());
     holdWeight += ((state.equipped ? 1.0f : 0.0f) - holdWeight) * blend;
     const bool sprint = moving && character.IsSprinting() && !crouching && !state.aiming;
     const int stance = prone ? 0 : crouching ? (moving ? 4 : 3) : moving ? (sprint ? 2 : 1) : 0;
@@ -209,8 +213,10 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (holdWeight > 0.001f) animation.ApplyMotion(assets->holdClip, 0, holdWeight, true, false, false);
     for (int i = 0; i < 5; ++i) {
         const auto& motion = assets->stances[i];
-        animation.ApplyMotion(motion, std::fmod(motionClock, motion.Duration()),
-            stanceWeights[i] * holdWeight * (1 - aimWeight * .7f), false, false, false);
+        const float phase = i == 1 || i == 2 || i == 4 ? animation.CyclePhase() * motion.Duration() :
+            std::fmod(motionClock, motion.Duration());
+        animation.ApplyMotion(motion, phase,
+            stanceWeights[i] * holdWeight * (1.f - proneWeight) * (1.f - jumpWeight), true, false, false);
     }
     animation.ApplyMotion(assets->proneClip, 0, proneWeight, true, false, false);
     animation.ApplyMotion(assets->crawlClip, crawlClock, crawlWeight * proneWeight, false, false, false);
@@ -230,19 +236,54 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         grip = glm::rotate(grip, glm::radians(-std::clamp(state.aimPitch, -89.f, 89.f)), glm::vec3(1, 0, 0));
         weaponModel = weapon.ModelMatrix(grip);
         const auto right = glm::vec3(weaponModel * glm::vec4(WeaponVisual::FiringGrip(), 1)) / scale;
-        const auto left = glm::vec3(weaponModel * glm::vec4(weapon.SupportGrip(), 1)) / scale;
+        auto left = glm::vec3(weaponModel * glm::vec4(weapon.SupportGrip(), 1)) / scale;
         const glm::vec3 rightPalm = glm::vec3(weaponModel * glm::vec4(1, 0, 0.4f, 0)) / scale;
-        const glm::vec3 leftPalm = glm::vec3(weaponModel * glm::vec4(-0.3f, 0, 1, 0)) / scale;
+        glm::vec3 leftPalm = glm::vec3(weaponModel * glm::vec4(-0.3f, 0, 1, 0)) / scale;
+        // Release the support hand during crawling; otherwise rifle IK erases the crawl.
+        const float support = crawlWeight * proneWeight * (1.f - aimWeight) *
+            (state.reloadRemaining > 0 || recoilTime < .15f ? 0.f : 1.f);
+        const float phase = crawlClock / assets->crawlClip.Duration();
+        const float reach = std::cos(phase * 6.2831853f);
+        const float lift = (std::max)(0.f, std::sin(phase * 6.2831853f));
+        left = glm::mix(left, glm::vec3(.25f, .12f + .07f * lift, .48f + .15f * reach) / scale, support);
+        leftPalm = glm::mix(leftPalm, glm::vec3(0, -1, .15f) / scale, support);
         // Tuck the elbows during standing locomotion without changing the grip targets.
         const float compact = (stanceWeights[0] + stanceWeights[1] + stanceWeights[2]) *
             (1.f - proneWeight) * (state.reloadRemaining > 0 ? 0.f : 1.f);
-        const auto rightElbow = glm::mix(glm::vec3(-.3f, -.4f, .1f), glm::vec3(-.18f, -.36f, .08f), compact);
-        const auto leftElbow = glm::mix(glm::vec3(.5f, -.4f, .1f), glm::vec3(.30f, -.34f, .16f), compact);
-        animation.SolveArm("Right", right, (shoulder + rightElbow) / scale, rightPalm, holdWeight);
-        animation.SolveArm("Left", left, (shoulder + leftElbow) / scale, leftPalm, holdWeight);
+        auto rightElbow = glm::mix(glm::vec3(-.3f, -.4f, .1f), glm::vec3(-.18f, -.36f, .08f), compact);
+        auto leftElbow = glm::mix(glm::vec3(.5f, -.4f, .1f), glm::vec3(.30f, -.34f, .16f), compact);
+        rightElbow = glm::mix(shoulder + rightElbow, glm::vec3(-.24f, .12f, .32f), proneWeight);
+        leftElbow = glm::mix(shoulder + leftElbow, glm::vec3(.30f, .12f, .32f), proneWeight);
+        animation.SolveArm("Right", right, rightElbow / scale, rightPalm, holdWeight);
+        animation.SolveArm("Left", left, leftElbow / scale, leftPalm, holdWeight);
         animation.RefreshPose();
     }
     UploadPalette();
+}
+
+glm::vec3 CharacterVisual::FirstPersonCameraPosition(const Character& character) const
+{
+    const auto actor = glm::translate(glm::mat4(1), character.position) *
+        glm::rotate(glm::mat4(1), glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
+    if (!assets) return glm::vec3(actor * glm::vec4(0, character.GetEyeHeight(), .4f, 1));
+    const auto scale = character.scale * character.GetSettings().modelScale;
+    const auto head = animation.NodePosition("Head") * scale;
+    glm::vec3 camera = head + glm::vec3(0, .14f, .12f);
+    // Conservative animated body spheres, expanded by the camera near-plane radius.
+    // Solve toward the actor's front, independent of look pitch: looking down cannot
+    // pull the camera backward into the chest. Helmet and carrier padding are included.
+    const char* joints[] = {"Hips", "Spine", "Spine1", "Spine2", "Neck", "Head", "LeftArm", "RightArm"};
+    const float radii[] = {.24f, .25f, .26f, .27f, .15f, .23f, .16f, .16f};
+    constexpr float cameraRadius = .22f;
+    for (int i = 0; i < 8; ++i) {
+        const auto center = animation.NodePosition(joints[i]) * scale;
+        const float radius = radii[i] + cameraRadius;
+        const auto xy = glm::vec2(camera.x - center.x, camera.y - center.y);
+        const float remaining = radius * radius - glm::dot(xy, xy);
+        if (remaining > 0)
+            camera.z = (std::max)(camera.z, center.z + std::sqrt(remaining) + .005f);
+    }
+    return glm::vec3(actor * glm::vec4(camera, 1));
 }
 
 void CharacterVisual::Render(const Character& character, Shader& shader, Camera& camera, float width, float height,

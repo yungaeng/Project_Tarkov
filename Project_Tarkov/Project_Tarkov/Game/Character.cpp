@@ -72,6 +72,7 @@ void Character::StopMovement()
 void Character::Update(float dt)
 {
     moving = false;
+    actualMoveSpeed = 0;
     if (!active || !std::isfinite(dt) || dt <= 0.0f)
         return;
 
@@ -106,6 +107,7 @@ void Character::Update(float dt)
         }
     }
     const glm::vec3 displacement = position - previousPosition;
+    actualMoveSpeed = glm::length(glm::vec3(displacement.x, 0, displacement.z)) / elapsed;
     moving = grounded && glm::length(glm::vec3(displacement.x, 0, displacement.z)) > 0.00001f;
     if (moving) rotation.y = glm::degrees(std::atan2(displacement.x, displacement.z));
 }
