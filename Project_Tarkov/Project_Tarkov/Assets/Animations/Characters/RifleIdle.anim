@@ -1,10 +1,23 @@
-# Additive local rotations, model centimeters. Seamless 3 second breathing.
-Spine2 0 0 0 0 0 0 0
-Spine2 1.5 0 0 0 -1 0 .4
-Spine2 3 0 0 0 0 0 0
-RightArm 0 0 0 0 0 0 0
-RightArm 1.5 0 0 0 .6 0 -.4
-RightArm 3 0 0 0 0 0 0
-LeftArm 0 0 0 0 0 0 0
-LeftArm 1.5 0 0 0 .6 0 .4
-LeftArm 3 0 0 0 0 0 0
+# Tactical ready: soft knees, forward lean and quiet breathing. Model centimeters.
+Hips 0 0 -2 0 0 0 0
+Hips 3 0 -2 0 0 0 0
+RightUpLeg 0 0 0 0 5 0 -2
+RightUpLeg 3 0 0 0 5 0 -2
+LeftUpLeg 0 0 0 0 7 0 2
+LeftUpLeg 3 0 0 0 7 0 2
+RightLeg 0 0 0 0 -10 0 0
+RightLeg 3 0 0 0 -10 0 0
+LeftLeg 0 0 0 0 -12 0 0
+LeftLeg 3 0 0 0 -12 0 0
+RightFoot 0 0 0 0 5 0 0
+RightFoot 3 0 0 0 5 0 0
+LeftFoot 0 0 0 0 5 0 0
+LeftFoot 3 0 0 0 5 0 0
+Spine 0 0 0 0 4 0 0
+Spine 1.5 0 0 0 4.5 0 0
+Spine 3 0 0 0 4 0 0
+Spine2 0 0 0 0 2 0 -.25
+Spine2 1.5 0 0 0 2.5 0 .25
+Spine2 3 0 0 0 2 0 -.25
+Neck 0 0 0 0 -4 0 0
+Neck 3 0 0 0 -4 0 0

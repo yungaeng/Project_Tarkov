@@ -20,7 +20,7 @@ namespace
             const float yaw = glm::radians(body.rotation.y);
             return body.position + glm::vec3(std::sin(yaw)*0.7f, 1.0f, std::cos(yaw)*0.7f);
         }
-        return body.position + glm::vec3(0, body.IsLooting() ? 0.55f : body.IsCrouching() ? body.GetSettings().crouchingEyeHeight : body.GetSettings().standingEyeHeight, 0);
+        return body.position + glm::vec3(0, body.GetEyeHeight(), 0);
     }
     bool Visible(const CollisionWorld& world, glm::vec3 from, glm::vec3 to)
     {
@@ -49,6 +49,7 @@ namespace
 
 void CombatSystem::Init(const CollisionWorld& world)
 {
+    gunshotAudio.Init();
     enemies.clear();
     kills.clear();
     for (const glm::vec3 position : IndustrialZone::Enemies)
@@ -107,6 +108,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         {
             --magazine;
             fired = true;
+            gunshotAudio.Play();
             cooldown = 0.15f;
             // Camera selects an aim point; the second ray starts at the player's eye,
             // so the third-person camera cannot shoot around intervening cover.
@@ -201,6 +203,15 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 const int hitPart = (static_cast<int>(enemyIndex) + static_cast<int>(elapsedSeconds)) % BodyPartCount;
                 player.vitals.Damage(static_cast<BodyPart>(hitPart), 40);
                 enemy.fired = true;
+                if (Input::IsFocused()) {
+                    const auto offset = Eye(enemy.body) - camera.position;
+                    const float soundDistance = glm::length(offset);
+                    const auto right = glm::cross(camera.front, glm::vec3(0, 1, 0));
+                    const float rightLength = glm::length(right);
+                    const float pan = soundDistance > .001f && rightLength > .001f ?
+                        glm::dot(offset / soundDistance, right / rightLength) : 0.f;
+                    gunshotAudio.Play(.55f / (1.f + soundDistance * soundDistance / 100.f), pan);
+                }
                 enemy.attackTimer = 1.2f;
             }
         }
@@ -300,6 +311,8 @@ const Enemy* CombatSystem::Corpse(int index) const
 
 int CombatSystem::FindCorpse(const Player& player, const CollisionWorld& world) const
 {
+    // Searching uses a taller kneeling pose; stand up before entering it.
+    if (player.IsProne()) return -1;
     float nearest = 2.5f;
     int selected = -1;
     for (int i = 0; i < static_cast<int>(enemies.size()); ++i) {

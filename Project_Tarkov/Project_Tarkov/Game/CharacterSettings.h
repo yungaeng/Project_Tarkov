@@ -7,10 +7,14 @@ struct CharacterSettings
     float walkSpeed = RaidConfig::WalkSpeed;
     float runSpeed = RaidConfig::RunSpeed;
     float crouchSpeed = 2.5f;
+    float proneSpeed = 0.8f;
+    float proneBodyHeight = 0.55f;
+    float proneEyeHeight = 0.45f;
     float bodyRadius = 0.35f;
     float bodyHeight = 1.8f;
     float crouchingBodyHeight = 1.1f;
     float gravity = 9.81f;
+    float jumpSpeed = 5.0f;
     float terminalSpeed = 50.0f;
     float standingEyeHeight = 1.7f;
     float crouchingEyeHeight = 1.0f;

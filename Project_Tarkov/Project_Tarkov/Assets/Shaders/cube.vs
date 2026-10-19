@@ -9,6 +9,7 @@ flat out int Garment;
 out vec2 UV;
 out vec3 FragPos;
 out vec3 Normal;
+out vec3 BindPosition;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -26,6 +27,8 @@ void main()
 {
     UV = aUV;
     Garment = skinned ? aGarment : 0;
+    // Clothing coverage must follow the body through skinning, not world height.
+    BindPosition = aPos;
     vec3 position = aPos;
     vec3 normal = aNormal;
     if (skinned)

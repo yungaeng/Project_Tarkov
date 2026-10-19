@@ -14,6 +14,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Application.cpp"><Filter>Core</Filter></ClCompile>
+    <ClCompile Include="Core\GunshotAudio.cpp"><Filter>Core</Filter></ClCompile>
+    <ClInclude Include="Core\GunshotAudio.h"><Filter>Core</Filter></ClInclude>
     <ClInclude Include="Graphics\AssimpHelper.h"><Filter>Graphics</Filter></ClInclude>
     <ClCompile Include="Graphics\Camera.cpp"><Filter>Graphics</Filter></ClCompile>
     <ClCompile Include="Game\Entity.cpp"><Filter>Game</Filter></ClCompile>
@@ -102,6 +104,10 @@
     <None Include="Assets\Models\Weapons\MuzzleFlash.obj"><Filter>Assets</Filter></None>
     <None Include="Assets\Models\Weapons\Rifle.obj"><Filter>Assets</Filter></None>
     <None Include="Assets\Animations\Characters\Death.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\Jump.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\Land.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\Prone.anim"><Filter>Assets</Filter></None>
+    <None Include="Assets\Animations\Characters\ProneCrawl.anim"><Filter>Assets</Filter></None>
     <None Include="Assets\Animations\Characters\RifleHold.anim"><Filter>Assets</Filter></None>
     <None Include="Assets\Animations\Characters\RifleReload.anim"><Filter>Assets</Filter></None>
     <None Include="Assets\Animations\Weapons\Aim.anim"><Filter>Assets</Filter></None>

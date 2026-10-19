@@ -7,6 +7,7 @@
 
 void Character::SetCrouching(bool value)
 {
+    if (prone) return;
     if (!value && crouching && collisionWorld &&
         !collisionWorld->CanOccupy(position, settings.bodyRadius, settings.bodyHeight))
         return;
@@ -16,11 +17,33 @@ void Character::SetCrouching(bool value)
     if (crouching) sprinting = false;
 }
 
+bool Character::SetProne(bool value)
+{
+    if (value == prone) return true;
+    if (!active || looting || (value && !grounded)) return false;
+    const float height = value ? settings.proneBodyHeight : settings.bodyHeight;
+    if (collisionWorld && !collisionWorld->CanOccupy(position, settings.bodyRadius, height)) return false;
+    prone = value;
+    crouching = false;
+    sprinting = false;
+    return true;
+}
+
 void Character::SetCollisionWorld(const CollisionWorld* world)
 {
     collisionWorld = world;
     verticalVelocity = 0;
     grounded = false;
+}
+
+bool Character::Jump()
+{
+    if (!active || !grounded || crouching || prone || looting || !collisionWorld ||
+        !collisionWorld->IsSupported(position, settings.bodyRadius, GetBodyHeight()))
+        return false;
+    verticalVelocity = settings.jumpSpeed;
+    grounded = false;
+    return true;
 }
 
 void Character::SetMovement(const glm::vec3& direction, float speed)
@@ -71,7 +94,7 @@ void Character::Update(float dt)
             collisionWorld->MoveAxis(position, settings.bodyRadius, bodyHeight, 2, dz);
             if (collisionWorld->MoveAxis(position, settings.bodyRadius, bodyHeight, 1, verticalVelocity * step))
                 verticalVelocity = 0;
-            grounded = collisionWorld->IsSupported(position, settings.bodyRadius, bodyHeight);
+            grounded = verticalVelocity <= 0 && collisionWorld->IsSupported(position, settings.bodyRadius, bodyHeight);
             if (grounded && verticalVelocity < 0) verticalVelocity = 0;
         }
         else

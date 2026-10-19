@@ -59,6 +59,9 @@ private:
     CharacterVisualState state;
     float deathTime = 0, holdWeight = 0;
     float motionClock = 0, aimWeight = 0, recoilTime = 1;
+    float jumpWeight = 0, jumpPhase = 0, landingTime = 1;
+    bool wasAirborne = false;
+    float proneWeight = 0, crawlClock = 0, crawlWeight = 0;
     std::array<float, 5> stanceWeights{};
     bool dying = false;
     bool firePending = false;

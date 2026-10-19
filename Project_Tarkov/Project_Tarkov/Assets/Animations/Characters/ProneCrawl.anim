@@ -1,0 +1,24 @@
+# Alternating knees and elbows, one 1.4-second crawling cycle.
+Hips 0 0 0 0 0 -2 0
+Hips 0.35 0 1 0 0 0 0
+Hips 0.7 0 0 0 0 2 0
+Hips 1.05 0 1 0 0 0 0
+Hips 1.4 0 0 0 0 -2 0
+RightUpLeg 0 0 0 0 16 0 -12
+RightUpLeg 0.7 0 0 0 0 0 0
+RightUpLeg 1.4 0 0 0 16 0 -12
+RightLeg 0 0 0 0 -32 0 0
+RightLeg 0.7 0 0 0 0 0 0
+RightLeg 1.4 0 0 0 -32 0 0
+LeftUpLeg 0 0 0 0 0 0 0
+LeftUpLeg 0.7 0 0 0 16 0 12
+LeftUpLeg 1.4 0 0 0 0 0 0
+LeftLeg 0 0 0 0 0 0 0
+LeftLeg 0.7 0 0 0 -32 0 0
+LeftLeg 1.4 0 0 0 0 0 0
+RightArm 0 0 0 0 0 0 0
+RightArm 0.7 0 0 0 12 0 6
+RightArm 1.4 0 0 0 0 0 0
+LeftArm 0 0 0 0 12 0 -6
+LeftArm 0.7 0 0 0 0 0 0
+LeftArm 1.4 0 0 0 12 0 -6

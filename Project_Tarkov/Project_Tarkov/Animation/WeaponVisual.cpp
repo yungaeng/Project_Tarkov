@@ -72,8 +72,8 @@ glm::mat4 WeaponVisual::ModelMatrix(const glm::mat4& shoulder) const
     if (!dead)
     {
         auto idle = assets->idle.Sample("Weapon", std::fmod(clock, assets->idle.Duration()));
-        idle.position *= (1 + moveWeight) * (1 - aimWeight * .8f);
-        idle.rotation *= 1 - aimWeight * .8f;
+        idle.position *= (1 + moveWeight * .35f) * (1 - aimWeight * .8f);
+        idle.rotation *= (1 - moveWeight * .25f) * (1 - aimWeight * .8f);
         auto running = assets->run.Sample("Weapon", std::fmod(clock, assets->run.Duration()));
         running.position *= sprintWeight; running.rotation *= sprintWeight;
         model *= running.Matrix();

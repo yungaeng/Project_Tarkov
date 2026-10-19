@@ -13,8 +13,7 @@ void ThirdPersonCameraController::Rotate(Camera& camera, const glm::vec2& mouseD
 
 void ThirdPersonCameraController::Follow(Camera& camera, const Character& character) const
 {
-    const auto& body = character.GetSettings();
-    const float eyeHeight = character.IsCrouching() ? body.crouchingEyeHeight : body.standingEyeHeight;
+    const float eyeHeight = character.GetEyeHeight();
     camera.position = character.position - camera.front * settings.distance
         + glm::vec3(0, eyeHeight + settings.heightOffset, 0);
 }

@@ -12,8 +12,8 @@ namespace { constexpr int MaxStored = 1000000; }
 
 namespace
 {
-    constexpr int StashColumns = 20;
-    constexpr int StashRows = 4;
+    constexpr int StashColumns = Hideout::StashColumns;
+    constexpr int StashRows = Hideout::StashRows;
 
     std::pair<int, int> StashItemSize(int type)
     {

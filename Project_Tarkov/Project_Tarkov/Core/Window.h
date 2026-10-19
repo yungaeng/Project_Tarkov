@@ -9,15 +9,15 @@ private:
     GLFWwindow* handle = nullptr;
     bool initialized = false;
 
-    int width = 1280;
-    int height = 720;
+    int width = 1600;
+    int height = 900;
 
     bool fullscreen = false;
 
     int savedX = 100;
     int savedY = 100;
-    int savedW = 1280;
-    int savedH = 720;
+    int savedW = 1600;
+    int savedH = 900;
 
 public:
     static void ResizeCallback(

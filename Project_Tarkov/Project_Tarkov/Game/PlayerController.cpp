@@ -30,10 +30,11 @@ void PlayerController::UpdateMovement(Player& player, const Camera& camera) cons
     player.SetSprinting(false);
     if (!IsGameplayInputEnabled() || !player.vitals.Alive()) return;
 
+    if (Input::GetKeyDown(GLFW_KEY_Z)) player.SetProne(!player.IsProne());
     player.SetCrouching(Input::GetKey(GLFW_KEY_LEFT_CONTROL));
     player.SetSprinting(Input::GetKey(GLFW_KEY_LEFT_SHIFT) && player.vitals.CanSprint());
     const auto& settings = player.GetSettings();
-    const float speed = player.IsCrouching() ? settings.crouchSpeed :
+    const float speed = player.IsProne() ? settings.proneSpeed : player.IsCrouching() ? settings.crouchSpeed :
         player.IsSprinting() ? settings.runSpeed : settings.walkSpeed;
 
     const glm::vec3 forward = glm::normalize(glm::vec3(camera.front.x, 0, camera.front.z));
@@ -44,4 +45,5 @@ void PlayerController::UpdateMovement(Player& player, const Camera& camera) cons
     if (Input::GetKey(GLFW_KEY_D)) movement += right;
     if (Input::GetKey(GLFW_KEY_A)) movement -= right;
     player.SetMovement(movement, speed);
+    if (Input::GetKeyDown(GLFW_KEY_SPACE)) player.Jump();
 }

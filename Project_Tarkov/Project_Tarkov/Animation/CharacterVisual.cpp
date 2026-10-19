@@ -62,6 +62,8 @@ struct CharacterVisual::Assets
     Mesh mesh, backpack, backpackDetail;
     Texture texture;
     MotionClip deathClip, lootClip, lootSearchClip, holdClip, reloadClip, aimClip, recoilClip;
+    MotionClip jumpClip, landClip;
+    MotionClip proneClip, crawlClip;
     std::array<MotionClip, 5> stances;
 };
 
@@ -87,6 +89,10 @@ void CharacterVisual::Init()
         CreateBackpackShell(shared->backpack);
         shared->backpackDetail.CreateCube();
         shared->deathClip.Load("Assets/Animations/Characters/Death.anim");
+        shared->jumpClip.Load("Assets/Animations/Characters/Jump.anim");
+        shared->landClip.Load("Assets/Animations/Characters/Land.anim");
+        shared->proneClip.Load("Assets/Animations/Characters/Prone.anim");
+        shared->crawlClip.Load("Assets/Animations/Characters/ProneCrawl.anim");
         shared->lootClip.Load("Assets/Animations/Characters/CorpseLoot.anim");
         shared->lootSearchClip.Load("Assets/Animations/Characters/CorpseSearch.anim");
         shared->holdClip.Load("Assets/Animations/Characters/RifleHold.anim");
@@ -166,6 +172,19 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         UploadPalette();
         return;
     }
+    // Velocity drives the pose so a ceiling hit or a long fall cannot loop the jump.
+    // Stationary preview characters have no vertical velocity and stay in idle.
+    const bool airborne = !character.IsGrounded() &&
+        (wasAirborne || std::abs(character.GetVerticalVelocity()) > .001f);
+    if (wasAirborne && character.IsGrounded()) landingTime = 0;
+    else landingTime += dt;
+    wasAirborne = airborne;
+    if (airborne) {
+        jumpPhase = std::clamp(.5f - character.GetVerticalVelocity() /
+            (2.f * character.GetSettings().jumpSpeed), 0.f, 1.f);
+        landingTime = assets->landClip.Duration();
+    }
+    jumpWeight += ((airborne ? 1.f : 0.f) - jumpWeight) * (1.f - std::exp(-dt * 18.f));
     poseElapsed += dt;
     if (poseElapsed < poseInterval) return;
     dt = poseElapsed;
@@ -174,12 +193,16 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     firePending = false;
     const bool moving = character.IsMoving();
     const bool crouching = character.IsCrouching();
-    const char* clip = crouching ? "crouch" : moving ? (character.IsSprinting() ? "run" : "walk") : "idle";
+    const bool prone = character.IsProne();
+    const char* clip = airborne || prone ? "idle" : crouching ? "crouch" : moving ? (character.IsSprinting() ? "run" : "walk") : "idle";
     animation.Update(dt, clip, moving || !crouching, false);
     const float blend = 1 - std::exp(-dt * 12);
+    proneWeight += ((prone ? 1.f : 0.f) - proneWeight) * (1.f - std::exp(-dt * 7.f));
+    crawlWeight += ((prone && moving ? 1.f : 0.f) - crawlWeight) * blend;
+    if (prone && moving) crawlClock = std::fmod(crawlClock + dt, assets->crawlClip.Duration());
     holdWeight += ((state.equipped ? 1.0f : 0.0f) - holdWeight) * blend;
     const bool sprint = moving && character.IsSprinting() && !crouching && !state.aiming;
-    const int stance = crouching ? (moving ? 4 : 3) : moving ? (sprint ? 2 : 1) : 0;
+    const int stance = prone ? 0 : crouching ? (moving ? 4 : 3) : moving ? (sprint ? 2 : 1) : 0;
     motionClock = std::fmod(motionClock + dt, 924.0f);
     aimWeight += ((state.aiming && !sprint && state.reloadRemaining <= 0 ? 1.f : 0.f) - aimWeight) * blend;
     for (int i = 0; i < 5; ++i) stanceWeights[i] += ((i == stance ? 1.f : 0.f) - stanceWeights[i]) * blend;
@@ -189,9 +212,14 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         animation.ApplyMotion(motion, std::fmod(motionClock, motion.Duration()),
             stanceWeights[i] * holdWeight * (1 - aimWeight * .7f), false, false, false);
     }
+    animation.ApplyMotion(assets->proneClip, 0, proneWeight, true, false, false);
+    animation.ApplyMotion(assets->crawlClip, crawlClock, crawlWeight * proneWeight, false, false, false);
     animation.ApplyMotion(assets->aimClip, 0, aimWeight * holdWeight, false, false, false);
     animation.ApplyMotion(assets->recoilClip, recoilTime, holdWeight, false, false, false);
     if (state.reloadRemaining > 0) animation.ApplyMotion(assets->reloadClip, 2 - state.reloadRemaining, holdWeight, false, false, false);
+    animation.ApplyMotion(assets->jumpClip, jumpPhase, jumpWeight * (1.f - proneWeight), true, false, false);
+    if (!airborne && !prone && landingTime < assets->landClip.Duration())
+        animation.ApplyMotion(assets->landClip, landingTime, 1.f, false, false, false);
     animation.RefreshPose();
     if (state.hasWeapon && holdWeight > 0.001f) {
         const glm::vec3 scale = character.scale * character.GetSettings().modelScale;
@@ -205,8 +233,13 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         const auto left = glm::vec3(weaponModel * glm::vec4(weapon.SupportGrip(), 1)) / scale;
         const glm::vec3 rightPalm = glm::vec3(weaponModel * glm::vec4(1, 0, 0.4f, 0)) / scale;
         const glm::vec3 leftPalm = glm::vec3(weaponModel * glm::vec4(-0.3f, 0, 1, 0)) / scale;
-        animation.SolveArm("Right", right, (shoulder + glm::vec3(-0.3f, -0.4f, 0.1f)) / scale, rightPalm, holdWeight);
-        animation.SolveArm("Left", left, (shoulder + glm::vec3(0.5f, -0.4f, 0.1f)) / scale, leftPalm, holdWeight);
+        // Tuck the elbows during standing locomotion without changing the grip targets.
+        const float compact = (stanceWeights[0] + stanceWeights[1] + stanceWeights[2]) *
+            (1.f - proneWeight) * (state.reloadRemaining > 0 ? 0.f : 1.f);
+        const auto rightElbow = glm::mix(glm::vec3(-.3f, -.4f, .1f), glm::vec3(-.18f, -.36f, .08f), compact);
+        const auto leftElbow = glm::mix(glm::vec3(.5f, -.4f, .1f), glm::vec3(.30f, -.34f, .16f), compact);
+        animation.SolveArm("Right", right, (shoulder + rightElbow) / scale, rightPalm, holdWeight);
+        animation.SolveArm("Left", left, (shoulder + leftElbow) / scale, leftPalm, holdWeight);
         animation.RefreshPose();
     }
     UploadPalette();
@@ -474,6 +507,10 @@ void CharacterVisual::Reset()
     dying = false;
     firePending = false;
     deathTime = holdWeight = motionClock = aimWeight = 0;
+    jumpWeight = jumpPhase = 0;
+    landingTime = 1;
+    wasAirborne = false;
+    proneWeight = crawlClock = crawlWeight = 0;
     recoilTime = 1;
     stanceWeights = {};
     deathRoot = {};

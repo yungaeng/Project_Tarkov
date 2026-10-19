@@ -11,6 +11,8 @@ struct StashPlacement { int type, x, y, width, height; };
 class Hideout
 {
 public:
+    static constexpr int StashColumns = 10;
+    static constexpr int StashRows = 8;
     // Starter totals include worn clothing and the loaded rifle; no duplicates.
     // Bandage, water, ammo, shirt, trousers, underwear, vest, helmet, backpack, boots.
     std::array<int, ItemTypeCount> stash{{10, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0}};

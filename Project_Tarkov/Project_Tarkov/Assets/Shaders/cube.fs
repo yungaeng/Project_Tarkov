@@ -5,6 +5,7 @@ out vec4 FragColor;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 UV;
+in vec3 BindPosition;
 uniform bool textured;
 uniform sampler2D diffuseTexture;
 uniform int clothingMask;
@@ -52,6 +53,11 @@ void main()
         // Inner layers remain equipped underneath outerwear without intersecting it.
         if (Garment == 3 && (clothingMask & 1) != 0) discard;
         if (Garment == 4 && (clothingMask & 2) != 0) discard;
+        // Match combat_trousers' bind-space hems in Tools/create_tactical_outfit.py.
+        // Hide only covered skin; keep feet and the body above the waistband visible.
+        // Interpolating bind position also clips triangles that cross either hem.
+        if (Garment == 5 && (clothingMask & 2) != 0 &&
+            BindPosition.y >= 12.5 && BindPosition.y <= 117.0) discard;
         vec4 texel = texture(diffuseTexture, UV);
         // Permanent dark base layer replaces masked skin when the shirt is removed.
         if (Garment == 5 && (clothingMask & 1) == 0 && texel.a < 0.35)

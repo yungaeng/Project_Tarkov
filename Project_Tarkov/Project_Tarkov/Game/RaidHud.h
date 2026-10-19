@@ -34,6 +34,7 @@ private:
     bool windowReady = false;
     bool rendererReady = false;
     bool hideoutHealthTab = false;
+    char hideoutStashSearch[128]{};
     float hideoutPreviewRotation = 0.f;
     float reloadHoldSeconds = 0.f;
     float ammoDisplaySeconds = 0.f;

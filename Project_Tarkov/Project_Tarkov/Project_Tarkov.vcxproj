@@ -145,6 +145,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Core\Application.cpp" />
+    <ClCompile Include="Core\GunshotAudio.cpp" />
+    <ClInclude Include="Core\GunshotAudio.h" />
     <ClInclude Include="Graphics\AssimpHelper.h" />
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Game\Entity.cpp" />
@@ -248,6 +250,10 @@
     <None Include="Assets\Models\Weapons\MuzzleFlash.obj" />
     <None Include="Assets\Models\Weapons\Rifle.obj" />
     <None Include="Assets\Animations\Characters\Death.anim" />
+    <None Include="Assets\Animations\Characters\Jump.anim" />
+    <None Include="Assets\Animations\Characters\Land.anim" />
+    <None Include="Assets\Animations\Characters\Prone.anim" />
+    <None Include="Assets\Animations\Characters\ProneCrawl.anim" />
     <None Include="Assets\Animations\Characters\CorpseLoot.anim" />
     <None Include="Assets\Animations\Characters\RifleHold.anim" />
     <None Include="Assets\Animations\Characters\RifleReload.anim" />

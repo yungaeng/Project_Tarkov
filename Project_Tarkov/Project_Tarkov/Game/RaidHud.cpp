@@ -461,7 +461,11 @@ namespace
             static_cast<int>(std::ceil((preview.position.y + preview.size.y) * preview.framebufferScale.y));
         glViewport(x,y,width,height);
         glEnable(GL_SCISSOR_TEST);
-        glScissor(x,y,width,height);
+        const int clipLeft=(std::max)(x,static_cast<int>(command->ClipRect.x*preview.framebufferScale.x));
+        const int clipRight=(std::min)(x+width,static_cast<int>(command->ClipRect.z*preview.framebufferScale.x));
+        const int clipBottom=(std::max)(y,viewport[1]+viewport[3]-static_cast<int>(command->ClipRect.w*preview.framebufferScale.y));
+        const int clipTop=(std::min)(y+height,viewport[1]+viewport[3]-static_cast<int>(command->ClipRect.y*preview.framebufferScale.y));
+        glScissor(clipLeft,clipBottom,(std::max)(0,clipRight-clipLeft),(std::max)(0,clipTop-clipBottom));
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -619,32 +623,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         }
         ImGui::EndDragDropTarget();
     };
-    auto card = [&](int id, const char* name, int type, int count, bool sourceStash, StackId stack, float width, float height) {
-        ImGui::PushID(id);
-        const auto start = ImGui::GetCursorScreenPos();
-        ImGui::Button("##gear", {width,height});
-        target(sourceStash,sourceStash || type != RifleGear ? -1 : RifleGear);
-        if (count > 0 && ImGui::BeginDragDropSource()) {
-            GearDrag data{type,sourceStash && type<RifleGear ? (std::min)(count,GetItemDefinition(static_cast<ItemType>(type)).maxStack) : count,sourceStash,stack};
-            ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
-            ImGui::Text("%s x%d",name,type==RifleGear?1:data.quantity);
-            ImGui::EndDragDropSource();
-        }
-        auto* draw = ImGui::GetWindowDrawList();
-        if (count > 0) GearIcon(draw,{start.x+8,start.y+5},type,
-            type==1 ? IM_COL32(122,155,168,255) : IM_COL32(182,171,130,255));
-        draw->AddText({start.x+8,start.y+height-35},IM_COL32(216,215,195,255),name);
-        const std::string amount = count ? "x"+std::to_string(count) : "비어 있음";
-        draw->AddText({start.x+8,start.y+height-17},IM_COL32(155,155,138,255),amount.c_str());
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            ImGui::TextUnformatted(name);
-            ImGui::TextUnformatted(sourceStash ? "출전 장비로 끌어 옮기세요." : "보관 영역으로 끌어 옮기세요.");
-            ImGui::EndTooltip();
-        }
-        ImGui::PopID();
-    };
-
     const bool wide=ImGui::GetContentRegionAvail().x>=1050;
     const float available=ImGui::GetContentRegionAvail().y;
     const float panelHeight=(std::max)(180.f,wide||hideoutHealthTab?available:(available-8.f)*.5f);
@@ -658,70 +636,120 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     preview.camera.up={0,1,0};
     preview.camera.fieldOfView=38.f;
 
+    // All equipment cards share the reference's compact header and striped empty body.
+    auto equipmentCard=[&](int id,const char* label,int type,ImVec2 p,ImVec2 size) {
+        ImGui::PushID(id);
+        ImGui::SetCursorScreenPos(p);
+        const bool clothing=type>=0 && type<RifleGear && IsClothing(static_cast<ItemType>(type));
+        const bool occupied=type==RifleGear?hideout.rifle:
+            clothing && (hideout.clothingMask&ClothingBit(static_cast<ItemType>(type)));
+        ImGui::InvisibleButton("EquipmentCard",size);
+        const bool hovered=ImGui::IsItemHovered();
+        const bool clicked=ImGui::IsItemClicked();
+        if (clothing) {
+            equipmentDropTarget(static_cast<ItemType>(type));
+            if (clicked) hideout.ToggleClothing(static_cast<ItemType>(type));
+        } else if (type==RifleGear) {
+            target(false,RifleGear);
+            if (clicked) hideout.ToggleRifle();
+            if (occupied && ImGui::BeginDragDropSource()) {
+                GearDrag data{RifleGear,1,false,0};
+                ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
+                ImGui::TextUnformatted("소총");
+                ImGui::EndDragDropSource();
+            }
+        }
+        auto* draw=ImGui::GetWindowDrawList();
+        const float header=ImGui::GetFontSize()+4.f;
+        ImVec2 bottom(p.x+size.x,p.y+size.y), body(p.x,p.y+header);
+        draw->AddRectFilled(body,bottom,occupied?IM_COL32(68,70,65,190):IM_COL32(34,38,38,160));
+        draw->PushClipRect(body,bottom,true);
+        if (!occupied)
+            for (float x=p.x-size.y;x<bottom.x;x+=12.f)
+                draw->AddLine({x,body.y},{x+size.y,bottom.y},IM_COL32(112,116,113,26),4.f);
+        draw->PopClipRect();
+        draw->AddRectFilledMultiColor(p,{bottom.x,body.y},IM_COL32(104,109,108,245),
+            IM_COL32(74,80,80,245),IM_COL32(48,53,54,245),IM_COL32(67,74,75,245));
+        draw->AddRect(body,bottom,occupied?IM_COL32(186,157,108,255):IM_COL32(120,127,124,210));
+        draw->PushClipRect(p,bottom,true);
+        draw->AddText({p.x+4,p.y+1},IM_COL32(222,225,222,255),label);
+        draw->AddText({bottom.x-14,p.y},IM_COL32(222,225,222,255),">");
+        if (type>=0) {
+            const float iconScale=(std::max)(.2f,(std::min)((size.x-16.f)/72.f,(size.y-header-32.f)/44.f));
+            const ImVec2 icon(p.x+(size.x-72.f*iconScale)*.5f,
+                body.y+(size.y-header-44.f*iconScale)*.5f);
+            const int first=draw->VtxBuffer.Size;
+            GearIcon(draw,{0,0},type,occupied?IM_COL32(185,190,170,240):IM_COL32(129,137,133,80));
+            for (int i=first;i<draw->VtxBuffer.Size;++i) {
+                auto& v=draw->VtxBuffer[i].pos;
+                v={icon.x+v.x*iconScale,icon.y+v.y*iconScale};
+            }
+        }
+        if (occupied) {
+            const char* name=type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(type)).name;
+            draw->AddText({p.x+5,body.y+3},IM_COL32(226,226,215,255),name);
+            if (type==RifleGear) {
+                const std::string rounds=std::to_string(hideout.magazine)+"/30";
+                draw->AddText({bottom.x-ImGui::CalcTextSize(rounds.c_str()).x-6,bottom.y-header},
+                    IM_COL32(237,235,214,255),rounds.c_str());
+            }
+        }
+        draw->PopClipRect();
+        if (hovered) {
+            draw->AddRect(p,bottom,IM_COL32(218,204,159,230));
+            ImGui::SetTooltip(type<0?"현재 비어 있는 장비 슬롯입니다.":
+                occupied?"클릭하여 창고에 보관합니다.":"클릭하거나 창고 장비를 끌어 놓아 착용합니다.");
+        }
+        ImGui::PopID();
+    };
+
     auto drawCharacterPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
         const ImVec2 origin=ImGui::GetCursorScreenPos();
-        const float panelWidth=ImGui::GetContentRegionAvail().x;
-        const float slotWidth=(std::min)(208.f,(std::max)(100.f,(panelWidth-140.f)*.5f));
-        const float modelWidth=(std::max)(1.f,panelWidth-slotWidth*2-18.f);
-        const float modelHeight=(std::max)(245.f,(std::min)(480.f,panelHeight-24.f));
-        const ImVec2 modelPosition(origin.x+slotWidth+9.f,origin.y+8.f);
-        const ImVec2 modelSize(modelWidth,modelHeight);
+        const float width=ImGui::GetContentRegionAvail().x;
+        const float scale=width/500.f;
+        const float height=660.f*scale;
         auto* draw=ImGui::GetWindowDrawList();
-        draw->AddRectFilled(modelPosition,{modelPosition.x+modelSize.x,modelPosition.y+modelSize.y},
-            IM_COL32(25,29,26,235),3.f);
-        for (float x=modelPosition.x+20;x<modelPosition.x+modelSize.x;x+=28)
-            draw->AddLine({x,modelPosition.y},{x,modelPosition.y+modelSize.y},IM_COL32(55,61,52,65));
-        preview.position=modelPosition;
-        preview.size=modelSize;
+        preview.position=origin;
+        preview.size={width,height};
+        draw->AddRectFilledMultiColor(origin,{origin.x+width,origin.y+height},
+            IM_COL32(39,47,54,255),IM_COL32(55,54,42,255),IM_COL32(12,22,20,255),IM_COL32(14,23,23,255));
         draw->AddCallback(DrawCharacterPreview,&preview);
         draw->AddCallback(ImDrawCallback_ResetRenderState,nullptr);
-        ImGui::SetCursorScreenPos(modelPosition);
-        ImGui::InvisibleButton("CharacterRotationTarget",modelSize);
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
-            hideoutPreviewRotation=std::fmod(hideoutPreviewRotation+90.f,360.f);
-
-        const ItemType leftTypes[]{ItemType::Helmet,ItemType::Shirt,ItemType::UnderShirt,ItemType::Backpack};
-        const char* leftNames[]{"머리","상의","브라","배낭"};
-        const ItemType rightTypes[]{ItemType::Vest,ItemType::Trousers,ItemType::Underpants,ItemType::Boots};
-        const char* rightNames[]{"전술조끼","하의","팬티","신발"};
-        auto slot=[&](int id,ItemType type,const char* name,ImVec2 position) {
-            ImGui::PushID(id);
-            ImGui::SetCursorScreenPos(position);
-            const bool worn=(hideout.clothingMask&ClothingBit(type))!=0;
-            const bool available=hideout.loadout.Count(type)>0||hideout.stash[static_cast<int>(type)]>0;
-            const float slotHeight=124.f;
-            ImGui::PushStyleColor(ImGuiCol_Button,ImVec4(.14f,.16f,.14f,.42f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(.28f,.29f,.23f,.55f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(.38f,.37f,.29f,.65f));
-            ImGui::Button("##equipment-slot",{slotWidth,slotHeight});
-            ImGui::PopStyleColor(3);
-            equipmentDropTarget(type);
-            if (ImGui::IsItemClicked() && (worn||available))
-                hideout.ToggleClothing(type);
-            auto* slotDraw=ImGui::GetWindowDrawList();
-            const ImVec2 low(position.x+1,position.y+1), high(position.x+slotWidth-1,position.y+slotHeight-1);
-            slotDraw->AddRect(low,high,worn?IM_COL32(188,170,108,230):IM_COL32(116,121,103,210),2.f,0,1.5f);
-            slotDraw->AddText({position.x+6,position.y+7},IM_COL32(208,207,188,255),name);
-            const char* value=worn?GetItemDefinition(type).name:"비어 있음";
-            slotDraw->AddText({position.x+6,position.y+70},worn?IM_COL32(219,205,146,255):IM_COL32(137,143,128,255),value);
-            if (ImGui::IsItemHovered()) {
-                ImGui::BeginTooltip();
-                ImGui::Text("%s 슬롯",name);
-                ImGui::TextUnformatted(worn?"클릭하면 창고에 보관합니다.":
-                    available?"해당 장비를 끌어 놓거나 클릭해 착용합니다.":"창고에서 장비를 끌어 놓으세요.");
-                ImGui::EndTooltip();
-            }
-            ImGui::PopID();
+        auto slot=[&](int id,const char* name,int type,float x,float y,float w,float h) {
+            equipmentCard(id,name,type,{origin.x+x*scale,origin.y+y*scale},{w*scale,h*scale});
         };
-        const float step=132.f;
-        for (int i=0;i<4;++i)
-            slot(600+i,leftTypes[i],leftNames[i],{origin.x,modelPosition.y+8+i*step});
-        for (int i=0;i<4;++i)
-            slot(610+i,rightTypes[i],rightNames[i],{origin.x+panelWidth-slotWidth,modelPosition.y+44+i*step});
+        slot(600,"헤드셋",-1,0,0,130,148);
+        slot(601,"모자",static_cast<int>(ItemType::Helmet),185,0,130,148);
+        slot(602,"얼굴",-1,370,0,130,148);
+        slot(603,"완장",-1,0,168,130,66);
+        slot(604,"인식표",-1,0,248,130,66);
+        slot(605,"방탄복",static_cast<int>(ItemType::Vest),185,168,130,146);
+        slot(606,"안경",-1,370,168,130,146);
+        slot(607,"주무기 1",RifleGear,0,336,315,148);
+        slot(608,"권총집",-1,370,336,130,148);
+        slot(609,"주무기 2",-1,0,506,315,148);
+        slot(610,"칼집",-1,370,506,130,148);
+        ImGui::SetCursorScreenPos({origin.x+135*scale,origin.y+40*scale});
+        if (ImGui::InvisibleButton("RotateCharacter",{45*scale,260*scale}))
+            hideoutPreviewRotation=std::fmod(hideoutPreviewRotation+90.f,360.f);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("클릭하여 캐릭터 회전");
+        ImGui::SetCursorScreenPos({origin.x,origin.y+height+12});
+        ImGui::Text("무게 %.1f kg",hideout.loadout.TotalWeight());
+        ImGui::SameLine();
+        ImGui::TextColored({.72f,.86f,.30f,1},"체력 %.0f",hideout.vitals.Health());
+        ImGui::TextColored({.39f,.71f,.85f,1},"수분 %.0f",hideout.vitals.Hydration());
+        ImGui::SameLine();
+        ImGui::Text("스태미나 %.0f",hideout.vitals.Stamina());
+        if (ImGui::CollapsingHeader("의상")) {
+            const ItemType types[]{ItemType::Shirt,ItemType::Trousers,ItemType::UnderShirt,ItemType::Underpants,ItemType::Boots};
+            for (int i=0;i<5;++i) {
+                const ImVec2 p=ImGui::GetCursorScreenPos();
+                equipmentCard(620+i,GetItemDefinition(types[i]).name,static_cast<int>(types[i]),p,{width,76});
+            }
+        }
         ImGui::EndChild();
     };
-
     auto drawHealthPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
         const ImVec2 origin=ImGui::GetCursorScreenPos();
@@ -770,46 +798,89 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 
     auto drawLoadoutPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        ImGui::Separator();
-        ImGui::TextUnformatted("주무기");
-        card(100,"소총",RifleGear,hideout.rifle?1:0,false,0,ImGui::GetContentRegionAvail().x,82);
-        ImGui::Text("탄창   %d / 30",hideout.magazine);
-        ImGui::SameLine();
-        ImGui::BeginDisabled(!hideout.rifle||hideout.magazine>=30||hideout.stash[static_cast<int>(ItemType::Ammo)]==0);
-        if (ImGui::SmallButton("탄창 장전")) hideout.LoadMagazine();
-        ImGui::EndDisabled();
-        ImGui::Separator();
-        ImGui::Text("휴대 슬롯   %d / %d   |   무게 %.1f kg",
-            static_cast<int>(hideout.loadout.Items().size()),hideout.loadout.SlotCapacity(),hideout.loadout.TotalWeight());
+        const float width=ImGui::GetContentRegionAvail().x;
+        const float gap=3.f;
+        const float cell=(width-gap*5)/6;
         const auto& items=hideout.loadout.Items();
-        const int columns=(std::max)(1,static_cast<int>(ImGui::GetContentRegionAvail().x/210));
-        const float gap=6.f;
-        const float cell=(ImGui::GetContentRegionAvail().x-(columns-1)*gap)/columns;
-        for (int i=0;i<hideout.loadout.SlotCapacity();++i) {
-            if (i%columns) ImGui::SameLine(0,gap);
-            if (i<static_cast<int>(items.size())) {
-                const auto& stack=items[i];
-                card(200+i,GetItemDefinition(stack.type).name,static_cast<int>(stack.type),stack.quantity,false,stack.id,cell,82);
-            } else card(200+i,"빈 슬롯",0,0,false,0,cell,82);
-        }
+        const bool vest=(hideout.clothingMask&ClothingBit(ItemType::Vest))!=0;
+        const bool backpack=(hideout.clothingMask&ClothingBit(ItemType::Backpack))!=0;
+        auto grid=[&](const char* title,int first,int count,int columns,ItemType gear) {
+            ImGui::TextUnformatted(title);
+            const ImVec2 origin=ImGui::GetCursorScreenPos();
+            const bool hasGear=gear!=ItemType::Count;
+            const float offset=hasGear?2*(cell+gap):0.f;
+            if (hasGear)
+                equipmentCard(650+static_cast<int>(gear),title,static_cast<int>(gear),origin,{cell*2+gap,cell*2+gap});
+            for (int i=0;i<count;++i) {
+                ImGui::SetCursorScreenPos({origin.x+offset+(i%columns)*(cell+gap),origin.y+(i/columns)*(cell+gap)});
+                ImGui::PushID(first+i);
+                const ImVec2 p=ImGui::GetCursorScreenPos();
+                ImGui::InvisibleButton("CarriedItem",{cell,cell});
+                target(false,-1);
+                auto* draw=ImGui::GetWindowDrawList();
+                draw->AddRectFilled(p,{p.x+cell,p.y+cell},IM_COL32(54,59,56,180));
+                draw->AddRect(p,{p.x+cell,p.y+cell},IM_COL32(120,127,121,210));
+                if (first+i<static_cast<int>(items.size())) {
+                    const auto& item=items[first+i];
+                    if (ImGui::BeginDragDropSource()) {
+                        GearDrag data{static_cast<int>(item.type),item.quantity,false,item.id};
+                        ImGui::SetDragDropPayload(GearPayload,&data,sizeof(data));
+                        ImGui::TextUnformatted(GetItemDefinition(item.type).name);
+                        ImGui::EndDragDropSource();
+                    }
+                    draw->PushClipRect(p,{p.x+cell,p.y+cell},true);
+                    const int firstVertex=draw->VtxBuffer.Size;
+                    GearIcon(draw,{0,0},static_cast<int>(item.type),IM_COL32(184,184,149,255));
+                    const float s=cell/80.f;
+                    for (int v=firstVertex;v<draw->VtxBuffer.Size;++v) {
+                        auto& pos=draw->VtxBuffer[v].pos;
+                        pos={p.x+4+pos.x*s,p.y+16+pos.y*s};
+                    }
+                    draw->AddText({p.x+3,p.y+2},IM_COL32(215,219,211,255),GetItemDefinition(item.type).name);
+                    const std::string quantity=std::to_string(item.quantity);
+                    draw->AddText({p.x+cell-ImGui::CalcTextSize(quantity.c_str()).x-3,p.y+cell-19},
+                        IM_COL32(228,225,199,255),quantity.c_str());
+                    draw->PopClipRect();
+                    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s x%d\n창고로 끌어 놓아 보관",GetItemDefinition(item.type).name,item.quantity);
+                }
+                ImGui::PopID();
+            }
+            const float rows=static_cast<float>((count+columns-1)/columns);
+            ImGui::SetCursorScreenPos({origin.x,origin.y+(std::max)(hasGear?2.f:1.f,rows)*(cell+gap)+18});
+        };
+        grid("전술 조끼",BaseInventorySlots,vest?6:0,3,ItemType::Vest);
+        grid("주머니",0,BaseInventorySlots,6,ItemType::Count);
+        ImGui::TextUnformatted("특수 슬롯");
+        const ImVec2 special=ImGui::GetCursorScreenPos();
+        for (int i=0;i<3;++i)
+            equipmentCard(680+i,"",-1,{special.x+i*(cell+gap),special.y},{cell,cell});
+        ImGui::SetCursorScreenPos({special.x,special.y+cell+18});
+        grid("배낭",BaseInventorySlots+(vest?6:0),backpack?12:0,4,ItemType::Backpack);
+        ImGui::Separator();
+        ImGui::Text("휴대품 %d / %d",static_cast<int>(items.size()),hideout.loadout.SlotCapacity());
+        ImGui::BeginDisabled(!hideout.rifle||hideout.magazine>=30||hideout.stash[static_cast<int>(ItemType::Ammo)]==0);
+        if (ImGui::Button("탄창 장전")) hideout.LoadMagazine();
+        ImGui::EndDisabled();
         ImGui::EndChild();
     };
-
     auto drawStashPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        if (ImGui::SmallButton("창고 자동정리"))
+        ImGui::SetNextItemWidth((std::max)(80.f,ImGui::GetContentRegionAvail().x-115.f));
+        ImGui::InputTextWithHint("##StashSearch","검색",hideoutStashSearch,sizeof(hideoutStashSearch));
+        ImGui::SameLine();
+        if (ImGui::SmallButton("자동정리"))
             hideout.AutoArrangeStash();
-        constexpr int stashColumns=20, stashRows=4;
+        constexpr int stashColumns=Hideout::StashColumns, stashRows=Hideout::StashRows;
         const float gap=2.f;
         const ImVec2 panelAvailable=ImGui::GetContentRegionAvail();
         const float stashWidth=panelAvailable.x;
         const float scrollHeight=(std::max)(64.f,panelAvailable.y);
         ImGui::BeginChild("StashGridScroll",{stashWidth,scrollHeight},
-            true,ImGuiWindowFlags_AlwaysVerticalScrollbar);
+            true,ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar);
         const ImVec2 gridViewport=ImGui::GetContentRegionAvail();
-        const float widthCell=(gridViewport.x-(stashRows-1)*gap)/stashRows;
-        const float heightCell=(scrollHeight-8.f*gap)/7.f;
-        const float cell=(std::max)(1.f,(std::min)((std::min)(widthCell,heightCell),96.f));
+        const float widthCell=(gridViewport.x-(stashColumns-1)*gap)/stashColumns;
+
+        const float cell=(std::max)(32.f,(std::min)(widthCell,80.f));
         const ImVec2 gridOrigin=ImGui::GetCursorScreenPos();
         const auto placements=hideout.StashLayout();
         std::array<std::array<bool,stashRows>,stashColumns> occupied{};
@@ -819,7 +890,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                     occupied[static_cast<std::size_t>(item.x+x)][static_cast<std::size_t>(item.y+y)]=true;
         auto* draw=ImGui::GetWindowDrawList();
         for (int x=0;x<stashColumns;++x) for (int y=0;y<stashRows;++y) {
-            const ImVec2 low(gridOrigin.x+y*(cell+gap),gridOrigin.y+x*(cell+gap));
+            const ImVec2 low(gridOrigin.x+x*(cell+gap),gridOrigin.y+y*(cell+gap));
             const ImU32 tileColor=((x+y)&1) ? IM_COL32(38,43,37,255) : IM_COL32(29,34,30,255);
             draw->AddRectFilled(low,{low.x+cell,low.y+cell},tileColor);
             draw->AddRect(low,{low.x+cell,low.y+cell},IM_COL32(102,111,91,210),0.f,0,1.f);
@@ -833,32 +904,32 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         }
         for (std::size_t i=0;i<placements.size();++i) {
             const auto& item=placements[i];
-            const ImVec2 low(gridOrigin.x+item.y*(cell+gap),gridOrigin.y+item.x*(cell+gap));
-            const ImVec2 size(item.height*cell+(item.height-1)*gap,item.width*cell+(item.width-1)*gap);
+            const char* itemName=item.type==RifleGear?"소총":GetItemDefinition(static_cast<ItemType>(item.type)).name;
+            if (hideoutStashSearch[0] && std::string(itemName).find(hideoutStashSearch)==std::string::npos)
+                continue;
+            const ImVec2 low(gridOrigin.x+item.x*(cell+gap),gridOrigin.y+item.y*(cell+gap));
+            const ImVec2 size(item.width*cell+(item.width-1)*gap,item.height*cell+(item.height-1)*gap);
             const ImU32 colors[]{
                 IM_COL32(135,68,58,255), IM_COL32(63,112,137,255), IM_COL32(152,132,71,255),
                 IM_COL32(91,113,77,255), IM_COL32(84,95,70,255), IM_COL32(121,97,83,255),
                 IM_COL32(111,86,82,255), IM_COL32(91,104,80,255), IM_COL32(122,123,111,255),
-                IM_COL32(72,99,76,255), IM_COL32(96,111,86,255)
+                IM_COL32(72,99,76,255), IM_COL32(96,111,86,255), IM_COL32(83,85,67,255)
             };
             const ImU32 color=colors[item.type];
             draw->AddRectFilled(low,{low.x+size.x,low.y+size.y},color,2);
             const ImU32 iconColor=IM_COL32(225,220,197,215);
-            if (item.type==static_cast<int>(ItemType::Bandage)) {
-                draw->AddRectFilled({low.x+size.x*.42f,low.y+size.y*.2f},
-                    {low.x+size.x*.58f,low.y+size.y*.8f},iconColor,1);
-                draw->AddRectFilled({low.x+size.x*.2f,low.y+size.y*.42f},
-                    {low.x+size.x*.8f,low.y+size.y*.58f},iconColor,1);
-            } else if (item.type==static_cast<int>(ItemType::Water)) {
-                draw->AddCircleFilled({low.x+size.x*.5f,low.y+size.y*.55f},
-                    (std::min)(size.x,size.y)*.22f,iconColor,12);
-            } else if (item.type==RifleGear) {
-                draw->AddLine({low.x+size.x*.12f,low.y+size.y*.75f},
-                    {low.x+size.x*.88f,low.y+size.y*.25f},iconColor,(std::max)(1.f,cell*.12f));
-            } else {
-                draw->AddRectFilled({low.x+size.x*.27f,low.y+size.y*.27f},
-                    {low.x+size.x*.73f,low.y+size.y*.73f},iconColor,2);
+            draw->PushClipRect(low,{low.x+size.x,low.y+size.y},true);
+            const int firstVertex=draw->VtxBuffer.Size;
+            GearIcon(draw,{0,0},item.type,iconColor);
+            const float iconScale=(std::max)(.2f,(std::min)((size.x-8)/72.f,(size.y-22)/44.f));
+            for (int v=firstVertex;v<draw->VtxBuffer.Size;++v) {
+                auto& p=draw->VtxBuffer[v].pos;
+                p={low.x+(size.x-72*iconScale)*.5f+p.x*iconScale,
+                    low.y+16+(size.y-16-44*iconScale)*.5f+p.y*iconScale};
             }
+            draw->AddText({low.x+3,low.y+2},IM_COL32(231,232,217,255),itemName);
+            draw->PopClipRect();
+            draw->AddRect(low,{low.x+size.x,low.y+size.y},IM_COL32(174,165,126,240));
             ImGui::SetCursorScreenPos(low);
             ImGui::PushID(static_cast<int>(i));
             ImGui::InvisibleButton("StashItem",{size.x,size.y});
@@ -900,6 +971,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
                 equipRifleByClick=false;
             }
         }
+        ImGui::SetCursorScreenPos(gridOrigin);
+        ImGui::Dummy({stashColumns*(cell+gap),stashRows*(cell+gap)});
         ImGui::EndChild();
         ImGui::EndChild();
     };
@@ -917,9 +990,9 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     } else if (ImGui::BeginTable(wide?"HideoutLayout":"HideoutLayoutNarrow",wide?3:2,
         ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
         if (wide) {
-            ImGui::TableSetupColumn("캐릭터",ImGuiTableColumnFlags_WidthStretch,1.3f);
+            ImGui::TableSetupColumn("캐릭터",ImGuiTableColumnFlags_WidthStretch,1.15f);
             ImGui::TableSetupColumn("인벤토리",ImGuiTableColumnFlags_WidthStretch,1.0f);
-            ImGui::TableSetupColumn("창고",ImGuiTableColumnFlags_WidthStretch,1.2f);
+            ImGui::TableSetupColumn("창고",ImGuiTableColumnFlags_WidthStretch,1.45f);
             ImGui::TableNextColumn();
             drawCharacterPanel("CharacterPanel");
             ImGui::TableNextColumn();

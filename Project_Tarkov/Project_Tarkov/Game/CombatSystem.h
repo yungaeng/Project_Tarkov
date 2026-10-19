@@ -1,5 +1,6 @@
 #pragma once
 #include "Character.h"
+#include "../Core/GunshotAudio.h"
 #include "../Animation/CharacterVisual.h"
 #include "../RaidSummary.h"
 #include <memory>
@@ -46,8 +47,9 @@ public:
     bool TakeCorpseRifle(int index);
     bool LootSpaceClear(const glm::vec3& center, int ignoredCorpse) const;
     void CancelInput() { reload = 0; aiming = false; }
-    void Reset() { enemies.clear(); kills.clear(); elapsedSeconds = 0; CancelInput(); }
+    void Reset() { gunshotAudio.Reset(); enemies.clear(); kills.clear(); elapsedSeconds = 0; CancelInput(); }
 private:
+    GunshotAudio gunshotAudio;
     std::vector<Enemy> enemies;
     std::vector<KillRecord> kills;
     int magazine = 30;

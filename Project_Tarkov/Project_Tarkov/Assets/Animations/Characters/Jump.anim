@@ -1,0 +1,20 @@
+# Velocity-normalized airborne pose: 0 takeoff, 0.5 apex, 1 falling.
+# Lower body only; weapon hold, aim and reload retain the upper body.
+RightUpLeg 0 0 0 0 12 0 -3
+RightUpLeg 0.5 0 0 0 38 0 -5
+RightUpLeg 1 0 0 0 8 0 -3
+RightLeg 0 0 0 0 -28 0 0
+RightLeg 0.5 0 0 0 -65 0 0
+RightLeg 1 0 0 0 -16 0 0
+RightFoot 0 0 0 0 10 0 0
+RightFoot 0.5 0 0 0 20 0 0
+RightFoot 1 0 0 0 5 0 0
+LeftUpLeg 0 0 0 0 20 0 3
+LeftUpLeg 0.5 0 0 0 48 0 5
+LeftUpLeg 1 0 0 0 10 0 3
+LeftLeg 0 0 0 0 -35 0 0
+LeftLeg 0.5 0 0 0 -75 0 0
+LeftLeg 1 0 0 0 -20 0 0
+LeftFoot 0 0 0 0 12 0 0
+LeftFoot 0.5 0 0 0 24 0 0
+LeftFoot 1 0 0 0 8 0 0

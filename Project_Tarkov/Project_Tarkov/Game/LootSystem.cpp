@@ -61,8 +61,7 @@ void LootSystem::Update(float dt, Player& player, const Camera& camera, const Co
     }
     if (target < 0) return;
     const auto& item = items[static_cast<std::size_t>(target)];
-    const glm::vec3 eye = player.position + glm::vec3(0, player.IsCrouching() ?
-        player.GetSettings().crouchingEyeHeight : player.GetSettings().standingEyeHeight, 0);
+    const glm::vec3 eye = player.position + glm::vec3(0, player.GetEyeHeight(), 0);
     const glm::vec3 toItem = item.position - eye;
     const float reach = glm::length(toItem);
     if (reach > 2.5f || Blocked(world, camera.position, direction, nearest) ||

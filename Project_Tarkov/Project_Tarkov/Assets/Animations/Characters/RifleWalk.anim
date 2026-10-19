@@ -1,10 +1,12 @@
-# Small shoulder sway; preserve the FBX leg cycle.
-Spine2 0 0 0 0 1 0 -1
-Spine2 .4 0 0 0 2 0 1
-Spine2 .8 0 0 0 1 0 -1
-RightArm 0 0 0 0 1 -1 0
-RightArm .4 0 0 0 -1 1 0
-RightArm .8 0 0 0 1 -1 0
-LeftArm 0 0 0 0 1 -1 0
-LeftArm .4 0 0 0 -1 1 0
-LeftArm .8 0 0 0 1 -1 0
+# Controlled advance: preserve the FBX leg cycle with a compact upper body.
+Spine 0 0 0 0 5 0 -.5
+Spine .2 0 0 0 5.5 0 0
+Spine .4 0 0 0 5 0 .5
+Spine .6 0 0 0 5.5 0 0
+Spine .8 0 0 0 5 0 -.5
+Spine2 0 0 0 0 2 -.6 .4
+Spine2 .4 0 0 0 2 .6 -.4
+Spine2 .8 0 0 0 2 -.6 .4
+Neck 0 0 0 0 -5 .4 0
+Neck .4 0 0 0 -5 -.4 0
+Neck .8 0 0 0 -5 .4 0
