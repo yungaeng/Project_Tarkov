@@ -1,90 +1,32 @@
 # Project_Tarkov
 
-# 타르코프 게임 제작
+Windows / C++17 / OpenGL 3.3 기반의 싱글플레이 타르코프형 게임 프로젝트입니다.
 
-## 빌드 환경
+**은신처 장비 준비 → 레이드 → 탐색·루팅·AI 전투 → 탈출 또는 사망/MIA → 결과·저장 → 재출격** 흐름을 구현하고 있습니다.
 
-Windows / Visual Studio 2022 / MSVC v143 기반 C++ 프로젝트입니다.
-기본 확인 대상 구성은 **Debug | x64**입니다.
+## 개발 문서
 
-설치할 도구와 외부 라이브러리, Visual Studio 설정, 빌드·실행 방법,
-오류 해결 방법은 [빌드 환경 가이드](docs/BUILD.md)에 정리되어 있습니다.
-GLAD를 포함한 의존성은 vcpkg manifest로 복원합니다.
-Visual Studio에서 `Project_Tarkov/Project_Tarkov.sln`을 열고 Debug | x64로 빌드합니다.
+문서는 다음 두 가지로 관리합니다. 기준일은 2026-10-22입니다.
 
-## 캐릭터 애니메이션
+- [개발된 내용](docs/IMPLEMENTED.md): 현재 코드 기준 전체 기능, 조작, 수치, 구조, 에셋·도구, 빌드·저장 방법과 검증 이력.
+- [개발할 내용](docs/PLANNED.md): 실제 Escape from Tarkov 자료와의 비교, 현재 한계, 상세 요구사항, 우선순위·의존성·완료 기준과 조사 출처.
 
-대기(Idle), 걷기, 달리기, 웅크리기 이동·대기를 지원합니다.
-상태 전환과 Idle.fbx 구성은 [애니메이션 가이드](docs/ANIMATION.md)를 참고하세요.
+기존 docs의 기능별 문서 18개는 위 두 문서에 통합했습니다. 구현 여부와 실제 실행 검증 여부를 구분합니다.
 
-## 26/5/3
-### Core와 Graphics 제작
-<img width="1600" height="1042" alt="image" src="https://github.com/user-attachments/assets/337c3567-76b4-4e29-87e7-b79e0361629f" />
-<img width="1688" height="798" alt="image" src="https://github.com/user-attachments/assets/6f018011-7e68-4eda-a663-51f05cfe695f" />
+## 빠른 시작
 
-## 26/5/4
-### Entity와 Game안의 RaidScene 제작
-### RaidScene : 키입력을 받아 움직이는 Cube와 바닥 floor 생성
-### 마우스 회전으로 화면 회전, 화면이 회전하면 키입력도 변화
-<img width="1883" height="1091" alt="image" src="https://github.com/user-attachments/assets/a3b1ddc8-6796-4060-b706-54454e1a981d" />
-<img width="357" height="779" alt="image" src="https://github.com/user-attachments/assets/c5534a14-5c35-4d45-b9c4-2a5bc8e32fd3" />
+1. Windows에 Visual Studio 2022 C++ 데스크톱 개발 도구, MSVC v143, Windows SDK와 vcpkg를 준비합니다.
+2. 필요하면 `VCPKG_ROOT`를 설정합니다. 루트 `vcpkg.json`으로 의존성을 복원합니다.
+3. `Project_Tarkov/Project_Tarkov.sln`을 열어 **Debug | x64**로 빌드합니다.
+4. 실행 파일과 DLL, 복사된 `Assets` 폴더를 함께 사용합니다.
 
-### player 사람모양의 모델로 변경
-### F11 전체화면, 전체화면 변경 시, 화면 재조정
-### I키 인벤토리, 마우스 포커스 해제
-### Shift, Ctrl 달리기 웅크리기 속도 제한
-<img width="1707" height="1075" alt="image" src="https://github.com/user-attachments/assets/ef96186c-9d08-4bec-801e-5c69821cacc9" />
+자세한 환경·실행·문제 해결은 [개발된 내용의 빌드와 실행](docs/IMPLEMENTED.md#2-빌드와-실행)을 참고하세요. 저장 파일은 현재 작업 디렉터리의 `Saves/hideout.txt`입니다.
 
+## 현재 범위
 
-## 26/10/8
-### Entity → Character → Player 구조로 캐릭터 이동 처리 분리
-### 중력과 지면 판정, 벽과 상자 충돌 추가
-### 벽에 닿으면 멈추거나 벽을 따라 이동, 바닥 끝에서는 낙하
+- 500×500m 산업단지, 주요 건물 5개, 적 5명, 월드 루팅 20곳.
+- 25분 레이드, 무작위 스폰 2곳, 기본 탈출구 2곳.
+- 이동·점프·웅크리기·포복, 1/3인칭, 소총 전투, 시체 수색.
+- 부위 체력·수분·스태미나, 장비 착탈, 10×8 창고, v9 프로필 저장.
 
-### 캐릭터 대기, 걷기, 달리기, 웅크리기 애니메이션 적용
-### Idle.fbx에 대기 호흡 동작 추가, 웅크린 상태에서도 호흡 표현
-### 이동 방향으로 캐릭터 회전, 애니메이션 전환 시 0.15초 보간
-### 벽에 막혀 실제 이동이 없으면 대기 동작으로 전환
-
-### 창 포커스를 잃으면 입력 차단, 커서 재포착 시 시점 튐 방지
-### 셰이더 파일 변경 시 다시 로드, 오류 발생 시 기존 셰이더 유지
-
-### 불필요한 .build, tests, tools 폴더와 build.ps1 정리
-### Visual Studio 솔루션에서 빌드하도록 안내 수정
-### 라이브러리 복원에 필요한 vcpkg.json 유지
-
-
-## 소스 구조
-
-폴더별 역할과 업데이트 순서는 [구조 가이드](docs/STRUCTURE.md)를 참고하세요.
-
-## 아이템과 인벤토리
-
-F키로 가까운 아이템을 줍고 I키로 인벤토리를 확인합니다. [사용법과 구조](docs/INVENTORY.md)를 참고하세요.
-
-## 개발 목표와 작업 스펙
-
-- [프로젝트 완성 스펙](docs/COMPLETION_SPEC.md): 최소 완성 범위, 게임 규칙, 구현 순서와 완료 기준
-- [다음 작업 스펙](docs/NEXT_TASK_SPEC.md): 아이템 사용·버리기의 상세 요구사항
-
-## 아이템 사용·전투·적 AI
-
-아이템 사용·버리기, 체력·수분·스태미나, 소총 전투와 적 AI·사망 전리품을 구현했습니다. 조작과 구현 범위는 [게임플레이 가이드](docs/GAMEPLAY.md)를 참고하세요. 요청에 따라 빌드·실행은 하지 않았습니다.
-
-총기 모델·애니메이션, 플레이어와 동일한 적 모델, 공용 사망 애니메이션을 추가했습니다. [전투 에셋 가이드](docs/COMBAT_ASSETS.md)를 참고하세요.
-
-## 성능 개선
-
-GPU 스키닝, 인덱스 렌더링, 공용 캐릭터 에셋, 시야 판정·원거리 포즈 갱신 제한, uniform 캐시와 셰이더 변경 확인 주기 제한을 적용했습니다. 자세한 동작과 검증 범위는 [성능 가이드](docs/PERFORMANCE.md)를 참고하세요. 요청에 따라 빌드·실행은 하지 않았습니다.
-
-## 그래픽 렌더링
-
-4× MSAA, 선형 색공간 조명, ACES 톤매핑, 방향광과 거리 안개를 적용했습니다. 효과 설명은 [그래픽 가이드](docs/GRAPHICS.md)를 참고하세요.
-
-## Map 01 — Industrial Zone
-
-500m × 500m 산업단지 MVP, 스폰 선택(2/3), 25분 타이머, 기본 탈출구 및 결과 처리를 추가했습니다. 구현 범위와 조작은 [Map 01 구현 안내](docs/MAP01_IMPLEMENTATION.md), 원문은 [설계 문서](docs/MAP01_DESIGN.md)를 참고하세요. 빌드·실행은 하지 않았습니다.
-
-## 은신처와 게임 진입
-
-은신처에서 소총·탄약·보급품을 준비하거나 창고에 보관하고 **ENTER RAID** 버튼으로 진입합니다. 레이드 결과에서 은신처로 돌아와 다시 출전할 수 있습니다. [은신처 가이드](docs/HIDEOUT.md)를 참고하세요.
+원작의 탄도·방탄·의료·경제·퀘스트·은신처 제작 및 온라인 시스템과는 구현 범위가 다릅니다. 상세 차이와 후속 작업은 [개발할 내용](docs/PLANNED.md)에 정리했습니다.
