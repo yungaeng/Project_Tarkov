@@ -141,4 +141,7 @@
     <None Include="Assets\Animations\Weapons\Crouch.anim"><Filter>Assets</Filter></None>
     <None Include="Assets\Animations\Characters\RifleWalk.anim"><Filter>Assets</Filter></None>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\InventoryUi.h"><Filter>Game</Filter></ClInclude>
+  </ItemGroup>
 </Project>

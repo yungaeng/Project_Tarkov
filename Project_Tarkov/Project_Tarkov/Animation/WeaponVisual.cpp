@@ -111,7 +111,8 @@ void WeaponVisual::Render(const glm::mat4& model, Shader& shader, Camera& camera
     if (!assets || !visible) return;
     Renderer::Draw(shader, assets->rifle, camera, model, width, height, glm::vec3(0.24f, 0.28f, 0.24f));
     const auto magazine = model * assets->reload.Sample("Magazine", reloadTime >= 0 ? reloadTime : 0).Matrix();
-    Renderer::Draw(shader, assets->magazine, camera, magazine, width, height, glm::vec3(0.12f, 0.14f, 0.13f));
+    if (magazineInserted || reloadTime >= 0)
+        Renderer::Draw(shader, assets->magazine, camera, magazine, width, height, glm::vec3(0.12f, 0.14f, 0.13f));
     Renderer::Draw(shader, assets->bolt, camera, model * assets->fire.Sample("Bolt", recoilTime).Matrix(), width, height, glm::vec3(0.4f));
     if (!dead && recoilTime < 0.055f)
         Renderer::Draw(shader, assets->muzzle, camera, model, width, height, glm::vec3(1, 0.75f, 0.15f));

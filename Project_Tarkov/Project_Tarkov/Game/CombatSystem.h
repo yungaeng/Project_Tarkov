@@ -31,10 +31,14 @@ public:
     void Init(const CollisionWorld& world);
     void Update(float dt, Player& player, Camera& camera, const CollisionWorld& world, LootSystem& loot, bool enabled);
     void Render(Shader& shader, Camera& camera, float width, float height);
-    int Magazine() const { return magazine; }
+    int Magazine() const { const auto* w = ActiveWeapon(); return w ? w->rounds : 0; }
     bool Equipped() const { return equipped; }
-    bool HasRifle() const { return hasRifle; }
-    void SetLoadout(bool rifle, int rounds) { hasRifle = equipped = rifle; magazine = rifle ? rounds : 0; }
+    bool HasWeapon() const { return carried && (carried->At(-1) || carried->At(-2) || carried->At(-3)); }
+    bool HasRifle() const { return carried && (carried->At(-1) || carried->At(-2)); }
+    void SetLoadout(Inventory& inventory) { carried = &inventory; activeSlot = inventory.At(-1) ? -1 : inventory.At(-2) ? -2 : -3; equipped = ActiveWeapon() != nullptr; }
+    const ItemStack* ActiveWeapon() const { return carried ? carried->At(activeSlot) : nullptr; }
+    bool ShowFireMode() const { return fireModeDisplayTime>0; }
+    const char* FireModeName() const { const auto* w = ActiveWeapon(); return !w ? "비무장" : w->fireMode == FireMode::Safe ? "안전" : w->fireMode == FireMode::Auto ? "연발" : "단발"; }
     bool Aiming() const { return aiming; }
     bool Fired() const { return fired; }
     float ReloadTime() const { return reload; }
@@ -43,18 +47,23 @@ public:
     const std::vector<KillRecord>& KillRecords() const { return kills; }
     int FindCorpse(const Player& player, const CollisionWorld& world) const;
     const Enemy* Corpse(int index) const;
+    Enemy* EditableCorpse(int index) { return Corpse(index) ? &enemies[static_cast<std::size_t>(index)] : nullptr; }
     bool TakeCorpseItem(int index, StackId id, Player& player);
-    bool TakeCorpseRifle(int index);
+    bool TakeCorpseRifle(int index, Player& player);
     bool LootSpaceClear(const glm::vec3& center, int ignoredCorpse) const;
     void CancelInput() { reload = 0; aiming = false; }
-    void Reset() { gunshotAudio.Reset(); enemies.clear(); kills.clear(); elapsedSeconds = 0; CancelInput(); }
+    void Reset() { carried = nullptr; gunshotAudio.Reset(); enemies.clear(); kills.clear(); elapsedSeconds = 0; CancelInput(); }
 private:
     GunshotAudio gunshotAudio;
     std::vector<Enemy> enemies;
     std::vector<KillRecord> kills;
+    Inventory* carried = nullptr;
+    int activeSlot = -1;
+    StackId reloadWeapon = 0, reloadMagazine = 0;
     int magazine = 30;
-    bool equipped = true, hasRifle = true, aiming = false;
+    bool equipped = true, aiming = false;
     bool fired = false;
+    float fireModeDisplayTime = 0;
     float cooldown = 0, reload = 0, messageTime = 0, elapsedSeconds = 0;
     std::string message;
 };

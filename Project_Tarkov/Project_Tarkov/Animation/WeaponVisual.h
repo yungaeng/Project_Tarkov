@@ -16,10 +16,12 @@ public:
     glm::vec3 SupportGrip() const;
     static glm::vec3 FiringGrip() { return {-0.045f, -0.025f, -0.048f}; }
     void Reset();
+    void SetMagazineInserted(bool inserted) { magazineInserted = inserted; }
 private:
     struct Assets;
     std::shared_ptr<Assets> assets;
     float clock = 0, recoilTime = 10, equipTime = 0, reloadTime = -1, aimWeight = 0, moveWeight = 0;
     float sprintWeight = 0, crouchWeight = 0;
     bool visible = false, wasEquipped = false, dead = false;
+    bool magazineInserted = true;
 };

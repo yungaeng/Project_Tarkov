@@ -141,6 +141,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (!state.dead) backpackClock = std::fmod(backpackClock + dt * (character.IsSprinting() ? 11.f : 7.f), 6.2831853f);
 
     state.equipped = state.equipped && state.hasWeapon;
+    weapon.SetMagazineInserted(state.magazineInserted);
     recoilTime = state.fired ? 0 : recoilTime + dt;
     firePending |= state.fired;
     if (state.dead)
@@ -168,7 +169,19 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     }
     if (character.IsLooting()) {
         // Keep the knees planted while searching the waist pockets.
-        AnimateLootSearch(dt);
+        if (lootPreview) {
+            // UI previews use the authored kneel/search clips without a world corpse or collision fit.
+            if (!lootPreviewInitialized) {
+                animation.Update(0,"idle",false,false);
+                animation.ApplyMotion(assets->lootClip,0,1,true,false,true);
+                animation.CapturePose();
+                lootClock=0;
+                lootPreviewInitialized=true;
+            }
+            lootClock=std::fmod(lootClock+dt,2.4f);
+            animation.ApplyMotion(assets->lootSearchClip,lootClock,1,false,true,false);
+            animation.RefreshPose();
+        } else AnimateLootSearch(dt);
         UploadPalette();
         return;
     }
@@ -526,8 +539,16 @@ void CharacterVisual::AnimateLootSearch(float dt)
     animation.RefreshPose();
 }
 
+void CharacterVisual::SetLootPreview(bool enabled)
+{
+    if (lootPreview==enabled) return;
+    lootPreview=enabled;
+    lootPreviewInitialized=false;
+}
+
 void CharacterVisual::Reset()
 {
+    lootPreview=lootPreviewInitialized=false;
     if (paletteTexture) glDeleteTextures(1, &paletteTexture);
     if (paletteBuffer) glDeleteBuffers(1, &paletteBuffer);
     paletteTexture = paletteBuffer = 0;

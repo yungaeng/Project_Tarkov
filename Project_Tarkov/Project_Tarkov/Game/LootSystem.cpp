@@ -71,7 +71,7 @@ void LootSystem::Update(float dt, Player& player, const Camera& camera, const Co
         return;
     }
     if (!pickupPressed) return;
-    if (player.GetInventory().TryAdd(item.stack))
+    if (player.GetInventory().Pickup(item.stack))
     {
         message = std::string("획득: ") + GetItemDefinition(item.stack.type).name;
         items.erase(items.begin() + target);
@@ -106,15 +106,46 @@ void LootSystem::Reset()
 void LootSystem::Spawn(glm::vec3 center, ItemStack stack)
 {
     if (stack.quantity <= 0) return;
-    items.emplace_back(center, ItemStack{stack.type, stack.quantity});
+    stack.slot = -100; stack.id = nextWorldId++;
+    items.emplace_back(center, stack);
     target = -1;
+}
+
+bool LootSystem::DropNear(glm::vec3 position, ItemStack stack, const CollisionWorld& world)
+{
+    if (stack.quantity <= 0) return false;
+    constexpr float half = WorldItem::HalfSize;
+    // Prefer beside the body, then its support point if nearby space is obstructed.
+    const glm::vec3 offsets[] = {{.7f,0,0},{-.7f,0,0},{0,0,.7f},{0,0,-.7f},
+        {.7f,0,.7f},{-.7f,0,.7f},{.7f,0,-.7f},{-.7f,0,-.7f},{0,0,0}};
+    for (const auto& offset : offsets) {
+        auto center = position + offset;
+        float top = -1.0e30f;
+        for (const auto& box : world.GetBoxes())
+            if (center.x-half >= box.min.x && center.x+half <= box.max.x &&
+                center.z-half >= box.min.z && center.z+half <= box.max.z &&
+                box.max.y <= position.y+.5f && box.max.y >= position.y-1.5f)
+                top = (std::max)(top,box.max.y);
+        if (top < -1.0e20f) continue;
+        center.y = top+half+.001f;
+        if (!world.CanOccupy(center-glm::vec3(0,half,0),half,half*2)) continue;
+        const auto origin = position+glm::vec3(0,half+.02f,0);
+        const auto delta = center-origin;
+        const float distance = glm::length(delta);
+        if (distance > .001f && Blocked(world,origin,delta/distance,distance)) continue;
+        Spawn(center,stack);
+        return true;
+    }
+    return false; // The owner retains the weapon and retries after settling.
 }
 
 bool LootSystem::Drop(Player& player, StackId id, bool all, const Camera& camera, const CollisionWorld& world)
 {
     const auto* entry = player.GetInventory().Find(id);
     if (!entry || !player.IsGrounded()) { Notify("공중에 있거나 선택한 아이템이 없어 버릴 수 없습니다"); return false; }
-    const ItemStack dropped{entry->type, all ? entry->quantity : 1};
+    ItemStack dropped = *entry;
+    dropped.quantity = all ? entry->quantity : 1;
+    dropped.slot = -100; dropped.id = 0;
     glm::vec3 forward(camera.front.x, 0, camera.front.z);
     if (glm::length(forward) < 0.001f) forward = {0, 0, -1};
     forward = glm::normalize(forward);
@@ -159,5 +190,31 @@ bool LootSystem::Drop(Player& player, StackId id, bool all, const Camera& camera
         return true;
     }
     Notify("아이템을 내려놓을 안전한 공간이 없습니다");
+    return false;
+}
+
+std::vector<ItemStack> LootSystem::Nearby(const Player& player, const CollisionWorld& world) const
+{
+    std::vector<ItemStack> result;
+    const auto eye = player.position + glm::vec3(0, player.GetEyeHeight(), 0);
+    for (const auto& item : items) {
+        const auto delta = item.position - eye;
+        const float distance = glm::length(delta);
+        if (distance <= 2.5f && (distance < .001f || !Blocked(world, eye, delta / distance, distance))) result.push_back(item.stack);
+    }
+    return result;
+}
+bool LootSystem::TakeNearby(StackId id, Player& player, const CollisionWorld& world, int slot)
+{
+    if (!player.vitals.Alive()) return false;
+    const auto nearby = Nearby(player, world);
+    if (std::none_of(nearby.begin(), nearby.end(), [&](const ItemStack& s) { return s.id == id; })) return false;
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        if (it->stack.id != id) continue;
+        auto copy = it->stack; copy.slot = slot;
+        const bool taken = slot == -100 ? player.GetInventory().Pickup(copy) : player.GetInventory().TryAdd(copy);
+        if (!taken) return false;
+        items.erase(it); target = -1; return true;
+    }
     return false;
 }

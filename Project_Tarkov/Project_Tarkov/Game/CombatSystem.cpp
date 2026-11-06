@@ -55,17 +55,21 @@ void CombatSystem::Init(const CollisionWorld& world)
     for (const glm::vec3 position : IndustrialZone::Enemies)
     {
         Enemy enemy;
+        enemy.inventory.SetSlotCapacity(80);
         enemy.body.SetCollisionWorld(&world);
         enemy.body.position = enemy.home = enemy.lastSeen = position;
         enemy.inventory.TryAdd({ItemType::Ammo, 20});
         enemy.inventory.TryAdd({ItemType::Bandage, 1});
         enemy.inventory.TryAdd({ItemType::Water, 1});
+        enemy.inventory.TryAdd({ItemType::Magazine, 1, 0, 20});
         enemy.visual = std::make_unique<CharacterVisual>();
         enemy.visual->Init();
         enemies.push_back(std::move(enemy));
     }
+    fireModeDisplayTime = 0;
     magazine = 30;
-    hasRifle = equipped = true;
+    equipped = true;
+    carried = nullptr;
     aiming = false;
     fired = false;
     cooldown = reload = messageTime = elapsedSeconds = 0;
@@ -82,31 +86,55 @@ int CombatSystem::LivingEnemies() const
 void CombatSystem::Update(float dt, Player& player, Camera& camera, const CollisionWorld& world, LootSystem& loot, bool enabled)
 {
     elapsedSeconds += dt;
+    fireModeDisplayTime = (std::max)(0.f,fireModeDisplayTime-dt);
     fired = false;
     cooldown = (std::max)(0.0f, cooldown - dt);
     messageTime = (std::max)(0.0f, messageTime - dt);
     if (messageTime == 0) message.clear();
     enabled = enabled && player.vitals.Alive();
     if (!enabled) reload = 0;
-    if (enabled && hasRifle && Input::GetKeyDown(GLFW_KEY_1)) { equipped = !equipped; reload = 0; }
-    if (reload > 0)
-    {
-        reload = (std::max)(0.0f, reload - dt);
-        if (reload == 0) magazine += player.GetInventory().Take(ItemType::Ammo, 30 - magazine);
+    auto& inventory = player.GetInventory();
+    carried = &inventory;
+    for (int key = 0; key < 3; ++key) {
+        if (enabled && Input::GetKeyDown(GLFW_KEY_1 + key)) {
+            const int slot = -1 - key;
+            if (activeSlot == slot && equipped) equipped = false;
+            else { activeSlot = slot; equipped = inventory.At(slot) != nullptr; }
+            reload = 0;
+        }
     }
-    if (enabled && equipped && Input::GetKeyDown(GLFW_KEY_R) && reload == 0)
-    {
-        if (magazine < 30 && player.GetInventory().Count(ItemType::Ammo) > 0) reload = 2;
-        else { message = "탄창이 가득 찼거나 예비 탄약이 없습니다"; messageTime = 2; }
+    auto* weapon = inventory.At(activeSlot) ? inventory.Edit(inventory.At(activeSlot)->id) : nullptr;
+    if (!weapon) { equipped = false; reload = 0; }
+    magazine = weapon ? weapon->rounds : 0;
+    if (enabled && equipped && weapon && Input::GetKeyDown(GLFW_KEY_B)) {
+        weapon->fireMode = static_cast<FireMode>((static_cast<int>(weapon->fireMode) + 1) % 3);
+        fireModeDisplayTime=2.f;
+    }
+    if (reload > 0) {
+        reload = (std::max)(0.0f, reload - dt);
+        if (reload == 0) {
+            const auto* source = inventory.Find(reloadMagazine);
+            if (weapon && weapon->id == reloadWeapon && source && source->slot >= 12 && source->slot < 18 &&
+                (player.clothingMask & ClothingBit(ItemType::Vest))) inventory.InsertMagazine(reloadMagazine, reloadWeapon);
+            weapon = inventory.At(activeSlot) ? inventory.Edit(inventory.At(activeSlot)->id) : nullptr;
+            magazine = weapon ? weapon->rounds : 0;
+        }
+    }
+    if (enabled && equipped && weapon && Input::GetKeyDown(GLFW_KEY_R) && reload == 0) {
+        reloadMagazine = inventory.BestMagazine(weapon->type, player.clothingMask);
+        if (reloadMagazine) { reloadWeapon = weapon->id; reload = 2; }
+        else { message = "조끼에 호환되는 탄창이 없습니다"; messageTime = 2; }
     }
     aiming = enabled && equipped && reload == 0 && Input::Mouse(GLFW_MOUSE_BUTTON_RIGHT);
     camera.fieldOfView = aiming ? 50.0f : 75.0f;
-    if (enabled && equipped && reload == 0 && cooldown == 0 && Input::MouseDown(GLFW_MOUSE_BUTTON_LEFT))
+    if (enabled && equipped && reload == 0 && cooldown == 0 && weapon && weapon->fireMode != FireMode::Safe &&
+        (weapon->fireMode == FireMode::Auto ? Input::Mouse(GLFW_MOUSE_BUTTON_LEFT) : Input::MouseDown(GLFW_MOUSE_BUTTON_LEFT)))
     {
-        if (magazine == 0) { message = "탄약 소진 - R키로 재장전하세요"; messageTime = 2; }
+        if (!weapon->magazineInserted || magazine == 0) { message = "탄약 소진 - R키로 재장전하세요"; messageTime = 2; }
         else
         {
             --magazine;
+            weapon->rounds = magazine;
             fired = true;
             gunshotAudio.Play();
             cooldown = 0.15f;
@@ -178,6 +206,8 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         {
             enemy.state = EnemyState::Dead;
             enemy.body.Update(dt);
+            if (enemy.rifle && loot.DropNear(enemy.body.position, {ItemType::Rifle,1,0,30,true},world))
+                enemy.rifle = false;
             enemy.deadTime += dt;
             continue;
         }
@@ -336,19 +366,19 @@ bool CombatSystem::TakeCorpseItem(int index, StackId id, Player& player)
     const auto* entry = enemy.inventory.Find(id);
     if (!entry) return false;
     const ItemStack stack = *entry;
-    if (!player.GetInventory().TryAdd(stack)) return false;
+    auto pickup = stack; pickup.slot = -100;
+    if (!player.GetInventory().Pickup(pickup)) return false;
     enemy.inventory.Remove(id, stack.quantity);
     if (IsClothing(stack.type)) enemy.body.clothingMask &= ~ClothingBit(stack.type);
     return true;
 }
 
-bool CombatSystem::TakeCorpseRifle(int index)
+bool CombatSystem::TakeCorpseRifle(int index, Player& player)
 {
-    if (!Corpse(index) || hasRifle) return false;
+    if (!Corpse(index) || !player.IsLooting() || !player.vitals.Alive()) return false;
     auto& enemy = enemies[static_cast<std::size_t>(index)];
-    if (!enemy.rifle) return false;
+    if (!enemy.rifle || !player.GetInventory().Pickup({ItemType::Rifle, 1, 0, 30, true})) return false;
     enemy.rifle = false;
-    SetLoadout(true, 30);
     return true;
 }
 

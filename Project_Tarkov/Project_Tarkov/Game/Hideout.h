@@ -7,7 +7,7 @@
 
 struct StashPlacement { int type, x, y, width, height; };
 
-// Weapon ownership is separate from the existing consumable inventory.
+// v10 inventories own weapons and magazines; legacy counts are used only for migration.
 class Hideout
 {
 public:
@@ -19,8 +19,10 @@ public:
     PlayerVitals vitals;
     std::uint32_t clothingMask = DefaultClothingMask;
     int rifles = 0;
-    std::vector<StashPlacement> stashLayout;
     Inventory loadout;
+    Inventory storage;
+    bool DrinkWater(StackId id = 0, bool fromStash = true);
+    void RefreshWeapons();
     bool rifle = true;
     int magazine = 30;
     int spawn = 0;
@@ -28,17 +30,8 @@ public:
     std::string message;
     void Load();
     bool Save(bool requireStashSpace = false);
-    void Transfer(ItemType type, int quantity, bool take);
-    void StoreStack(StackId id);
-    void ToggleRifle();
-    void ToggleClothing(ItemType type, bool fromStash = false);
-    void LoadMagazine();
     bool HealBodyPart(BodyPart part);
-    std::vector<StashPlacement> StashLayout() const;
-    bool MoveStashItem(int sourceX, int sourceY, int destinationX, int destinationY);
     bool AutoArrangeStash();
     bool Depart();
     void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
-private:
-    bool NormalizeStash();
 };

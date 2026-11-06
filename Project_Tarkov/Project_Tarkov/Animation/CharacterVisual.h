@@ -15,6 +15,7 @@ struct CharacterVisualState
     bool dead = false, equipped = false, aiming = false, fired = false;
     float reloadRemaining = 0, aimPitch = 0;
     bool hasWeapon = true;
+    bool magazineInserted = true;
 };
 
 class CharacterVisual
@@ -29,6 +30,7 @@ public:
     void Render(const Character& character, Shader& shader, Camera& camera, float width, float height,
         const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool firstPerson = false);
     void Reset();
+    void SetLootPreview(bool enabled);
     glm::vec3 FirstPersonCameraPosition(const Character& character) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
@@ -46,6 +48,7 @@ private:
     float poseElapsed = 0;
     float backpackClock = 0, backpackMotion = 0;
     bool lootPoseValid = false;
+    bool lootPreview = false, lootPreviewInitialized = false;
     float lootPoseHeight = .75f;
     float lootClock = 0;
     glm::mat4 lootInverse{1};

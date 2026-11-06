@@ -1,5 +1,7 @@
 #pragma once
 #include "Inventory.h"
+#include <memory>
+#include "../Graphics/Texture.h"
 struct GLFWwindow;
 class Player;
 class CombatSystem;
@@ -11,18 +13,19 @@ class Hideout;
 class CharacterVisual;
 class Shader;
 class Camera;
+class CollisionWorld;
 struct Enemy;
 
 class RaidHud
 {
 public:
-    RaidHud() = default;
+    RaidHud();
     ~RaidHud();
     RaidHud(const RaidHud&) = delete;
     RaidHud& operator=(const RaidHud&) = delete;
     void Init(GLFWwindow* window);
-    void Render(const Player& player, const LootSystem& loot, const CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid,
-        const Enemy* corpse = nullptr, int corpseTarget = -1, StackId* takeStack = nullptr,
+    void Render(Player& player, LootSystem& loot, CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid,
+        const CollisionWorld& world, Shader& shader, Enemy* corpse = nullptr, int corpseTarget = -1, StackId* takeStack = nullptr,
         bool* takeWeapon = nullptr, bool* closeLoot = nullptr);
     void ResetAmmoIndicator();
     static float LootPanelWidth(float screenWidth) { return screenWidth * .42f < 520.f ? screenWidth * .42f : 520.f; }
@@ -30,6 +33,10 @@ public:
     bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader);
     void Shutdown();
 private:
+    Texture itemImages;
+    std::unique_ptr<CharacterVisual> inventoryPreviewVisual;
+    float inventoryPreviewRotation = 0.f;
+    float enemyPreviewRotation = 0.f;
     bool contextReady = false;
     bool windowReady = false;
     bool rendererReady = false;

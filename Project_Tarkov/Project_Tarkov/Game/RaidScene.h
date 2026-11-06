@@ -56,7 +56,6 @@ private:
     bool hasProvidedHideout = false;
     Inventory startingInventory;
     std::uint32_t startingClothingMask = 0;
-    bool startedWithRifle = false;
     RaidSummary summary;
     int lootingCorpse = -1, corpseTarget = -1;
     bool closeLootRequested = false;

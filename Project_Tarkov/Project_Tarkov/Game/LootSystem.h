@@ -28,10 +28,14 @@ public:
     void Reset();
     bool Drop(Player& player, StackId id, bool all, const Camera& camera, const CollisionWorld& world);
     void Spawn(glm::vec3 center, ItemStack stack);
+    bool DropNear(glm::vec3 position, ItemStack stack, const CollisionWorld& world);
+    std::vector<ItemStack> Nearby(const Player& player, const CollisionWorld& world) const;
+    bool TakeNearby(StackId id, Player& player, const CollisionWorld& world, int slot = -100);
     void Notify(const std::string& text) { message = text; messageTime = 3; }
 private:
     std::vector<WorldItem> items;
     int target = -1;
+    StackId nextWorldId = 1;
     std::string message;
     float messageTime = 0;
 };

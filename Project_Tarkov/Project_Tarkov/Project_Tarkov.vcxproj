@@ -226,6 +226,8 @@
   </Target>
   <ItemGroup>
     <ClInclude Include="Game\Inventory.h" />
+    <ClInclude Include="Game\InventoryUi.h" />
+    <None Include="Assets\UI\items.png" />
     <ClCompile Include="Game\Inventory.cpp" />
     <ClInclude Include="Game\LootSystem.h" />
     <ClCompile Include="Game\LootSystem.cpp" />

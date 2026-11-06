@@ -130,11 +130,11 @@ void RaidScene::Update(float dt)
             takeCorpseStack = 0;
         }
         if (takeCorpseWeapon) {
-            loot.Notify(combat.TakeCorpseRifle(lootingCorpse) ? "소총을 획득했습니다." : "이미 소총을 휴대하고 있습니다.");
+            loot.Notify(combat.TakeCorpseRifle(lootingCorpse, *player) ? "소총을 획득했습니다." : "무기 슬롯과 휴대 공간이 가득 찼습니다.");
             takeCorpseWeapon = false;
         }
     }
-    actions.Update(*player, loot, camera, collisionWorld, playerController.IsInventoryOpen() && Input::IsFocused() && lootingCorpse < 0);
+    actions.Update(*player, loot, camera, collisionWorld, (playerController.IsInventoryOpen() || lootingCorpse >= 0) && Input::IsFocused());
     const bool canLook = playerController.IsGameplayInputEnabled() && player->vitals.Alive() && lootingCorpse < 0;
     if (canLook && Input::GetKeyDown(GLFW_KEY_V))
         firstPerson = !firstPerson;
@@ -162,7 +162,8 @@ void RaidScene::Update(float dt)
     FollowCamera(camera);
     loot.Update(dt, *player, camera, collisionWorld, canLook && corpseTarget < 0 && !corpseInteraction, Input::GetKeyDown(GLFW_KEY_F));
     CharacterVisualState visualState{!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
-        combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasRifle()};
+        combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasWeapon()};
+    visualState.magazineInserted = combat.ActiveWeapon() && combat.ActiveWeapon()->magazineInserted;
     playerVisual.Update(dt, *player, visualState);
     // Resolve against this frame's animated pose, including stance transitions.
     if (firstPerson && lootingCorpse < 0) FollowCamera(camera);
@@ -189,11 +190,7 @@ void RaidScene::Render()
         deployRequested = hud.RenderHideout(hideout,*player,playerVisual,shader);
         return;
     }
-    int windowWidth = 0, windowHeight = 0;
-    glfwGetWindowSize(glfwGetCurrentContext(), &windowWidth, &windowHeight);
-    const float pixelScale = windowWidth > 0 ? static_cast<float>(width) / windowWidth : 1.f;
-    const int panelPixels = static_cast<int>((RaidHud::LootPanelWidth(static_cast<float>(windowWidth)) + 24.f) * pixelScale);
-    const int sceneWidth = lootingCorpse >= 0 ? (std::max)(1, width - panelPixels) : width;
+    const int sceneWidth = width;
     glViewport(0, 0, sceneWidth, height);
     Camera& viewCamera = freeLook ? previewCamera : camera;
     Renderer::PrepareFrame(shader, viewCamera, static_cast<float>(sceneWidth), static_cast<float>(height));
@@ -209,7 +206,7 @@ void RaidScene::Render()
         static_cast<float>(sceneWidth), static_cast<float>(height), glm::vec3(0.3f, 0.8f, 0.4f), firstPerson && lootingCorpse < 0);
     combat.Render(shader, viewCamera, static_cast<float>(sceneWidth), static_cast<float>(height));
     glViewport(0, 0, width, height);
-    hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid, combat.Corpse(lootingCorpse), corpseTarget,
+    hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid, collisionWorld, shader, combat.EditableCorpse(lootingCorpse), corpseTarget,
         &takeCorpseStack, &takeCorpseWeapon, &closeLootRequested);
 }
 
@@ -246,8 +243,6 @@ void RaidScene::FinishRaid(RaidPhase result)
             if (gained > 0)
                 summary.acquiredEquipment.push_back(std::string(GetItemDefinition(itemType).name) + " x" + std::to_string(gained));
         }
-        if (combat.HasRifle() && !startedWithRifle)
-            summary.acquiredEquipment.push_back("소총 x1");
 
         sceneManager.RequestLoad(std::make_unique<RaidResultScene>(sceneManager, std::move(hideout), summary));
         return;
@@ -296,8 +291,7 @@ void RaidScene::StartRaid()
     actions.Cancel();
     loot.Init();
     combat.Init(collisionWorld);
-    combat.SetLoadout(hideout.rifle, hideout.magazine);
-    startedWithRifle = combat.HasRifle();
+    combat.SetLoadout(player->GetInventory());
     summary = RaidSummary{};
     playerVisual.Reset();
     playerVisual.Init();
