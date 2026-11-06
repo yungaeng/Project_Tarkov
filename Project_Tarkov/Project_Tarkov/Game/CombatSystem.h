@@ -18,6 +18,7 @@ struct Enemy
     float health = 100, attackTimer = 1, searchTimer = 0;
     bool returning = false;
     Inventory inventory;
+    Inventory wornEquipment;
     bool rifle = true;
     float deadTime = 0;
     EnemyState state = EnemyState::Patrol;

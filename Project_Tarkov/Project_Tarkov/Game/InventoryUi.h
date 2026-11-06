@@ -70,7 +70,7 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
             if (IsWeapon(item->type) && item->magazineInserted && ImGui::MenuItem("탄창 분리"))
                 command={Action::Eject,{source,item->id}};
             if (source == 0 && ImGui::MenuItem("바닥 / 창고로 이동")) command = {Action::Move,{source,item->id},1,-100};
-            if (source == 1 && ImGui::MenuItem("휴대품으로 이동")) command = {Action::Move,{source,item->id},0,-100};
+            if ((source == 1 || source == 5) && ImGui::MenuItem("휴대품으로 이동")) command = {Action::Move,{source,item->id},0,-100};
             ImGui::EndPopup();
         }
         std::string amount = IsMagazine(item->type) || IsWeapon(item->type) ?

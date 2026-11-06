@@ -55,13 +55,15 @@ void CombatSystem::Init(const CollisionWorld& world)
     for (const glm::vec3 position : IndustrialZone::Enemies)
     {
         Enemy enemy;
-        enemy.inventory.SetSlotCapacity(80);
+        enemy.inventory.ConfigureGear(enemy.body.clothingMask);
+        enemy.wornEquipment.SetSlotCapacity(80);
         enemy.body.SetCollisionWorld(&world);
         enemy.body.position = enemy.home = enemy.lastSeen = position;
         enemy.inventory.TryAdd({ItemType::Ammo, 20});
         enemy.inventory.TryAdd({ItemType::Bandage, 1});
         enemy.inventory.TryAdd({ItemType::Water, 1});
-        enemy.inventory.TryAdd({ItemType::Magazine, 1, 0, 20});
+        const int magazineSlot = (enemy.body.clothingMask & ClothingBit(ItemType::Vest)) ? 12 : -100;
+        enemy.inventory.TryAdd({ItemType::Magazine, 1, 0, 20, false, magazineSlot});
         enemy.visual = std::make_unique<CharacterVisual>();
         enemy.visual->Init();
         enemies.push_back(std::move(enemy));
@@ -172,7 +174,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 if (enemy.health == 0) {
                     for (int slot = 0; slot < ClothingSlotCount; ++slot) {
                         const auto type = ClothingType(slot);
-                        if (enemy.body.clothingMask & ClothingBit(type)) enemy.inventory.TryAdd({type, 1});
+                        if (enemy.body.clothingMask & ClothingBit(type)) enemy.wornEquipment.TryAdd({type, 1});
                     }
                     message.clear();
                     const int killSeconds = static_cast<int>(elapsedSeconds);
@@ -368,7 +370,6 @@ bool CombatSystem::TakeCorpseItem(int index, StackId id, Player& player)
     auto pickup = stack; pickup.slot = -100;
     if (!player.GetInventory().Pickup(pickup)) return false;
     enemy.inventory.Remove(id, stack.quantity);
-    if (IsClothing(stack.type)) enemy.body.clothingMask &= ~ClothingBit(stack.type);
     return true;
 }
 

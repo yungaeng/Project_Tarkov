@@ -423,14 +423,14 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         if (enemyPanel) {
             item=nullptr;
             if (clothing && (panelClothing&ClothingBit(worn.type)))
-                for (const auto& entry:panelInventory->Items())
+                for (const auto& entry:corpse->wornEquipment.Items())
                     if (entry.type==worn.type) { item=&entry; break; }
             if (type==RifleGear && corpse->rifle) item=&enemyRifle;
         }
         auto* draw=ImGui::GetWindowDrawList();
         ImGui::SetCursorScreenPos(body);
         if (enemyPanel && item) {
-            InventoryUi::Cell(item,type==RifleGear?4:1,item->slot,texture,command,{size.x,size.y-header},.55f);
+            InventoryUi::Cell(item,type==RifleGear?4:5,item->slot,texture,command,{size.x,size.y-header},.55f);
         } else if (!enemyPanel && (clothing || weapon)) {
             InventoryUi::Cell(item,clothing?2:0,clothing?clothingSlot:weaponSlot,texture,command,{size.x,size.y-header},.35f);
         } else {
@@ -452,6 +452,32 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         draw->PopClipRect();
         ImGui::SetCursorScreenPos({p.x,bottom.y+4});
         ImGui::PopID();
+    };
+    auto drawCarriedSlots=[&]() {
+        const float width=ImGui::GetContentRegionAvail().x;
+        const float gap=3.f,cell=(width-gap*5)/6;
+        const bool vest=(panelClothing&ClothingBit(ItemType::Vest))!=0;
+        const bool backpack=(panelClothing&ClothingBit(ItemType::Backpack))!=0;
+        auto grid=[&](const char* title,int first,int count,int columns,ItemType gear) {
+            ImGui::TextUnformatted(title);
+            const auto origin=ImGui::GetCursorScreenPos();
+            const bool hasGear=gear!=ItemType::Count;
+            const float offset=hasGear?2*(cell+gap):0.f;
+            if (hasGear) equipmentCard(650+static_cast<int>(gear),title,static_cast<int>(gear),origin,{cell*2+gap,cell*2+gap});
+            InventoryUi::GridAt(*panelInventory,enemyPanel?1:0,first,count,columns,texture,command,
+                {origin.x+offset,origin.y},cell,gap);
+            const float rows=static_cast<float>((count+columns-1)/columns);
+            ImGui::SetCursorScreenPos({origin.x,origin.y+(std::max)(hasGear?2.f:1.f,rows)*(cell+gap)+18});
+        };
+        grid("전술 조끼",12,vest?6:0,3,ItemType::Vest);
+        grid("주머니",0,12,6,ItemType::Count);
+        ImGui::TextUnformatted("특수 슬롯");
+        const auto special=ImGui::GetCursorScreenPos();
+        for (int i=0;i<3;++i) equipmentCard(680+i,"",-1,{special.x+i*(cell+gap),special.y},{cell,cell});
+        ImGui::SetCursorScreenPos({special.x,special.y+cell+18});
+        grid("배낭",18,backpack?12:0,4,ItemType::Backpack);
+        ImGui::Separator();
+        ImGui::Text("휴대품 %d / %d",panelInventory->StorageUsed(),panelInventory->SlotCapacity());
     };
     auto drawCharacterPanel=[&](const char* childId) {
         float& panelRotation=enemyPanel?enemyPreviewRotation:inventoryPreviewRotation;
@@ -488,7 +514,6 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("클릭하여 캐릭터 회전");
         ImGui::SetCursorScreenPos({origin.x,origin.y+height+12});
         ImGui::Text("%s · %.1f kg",enemyPanel?"적 장비":"내 장비",panelInventory->TotalWeight());
-        if (enemyPanel) equipmentCard(611,"배낭",static_cast<int>(ItemType::Backpack),ImGui::GetCursorScreenPos(),{width,100});
         if (ImGui::CollapsingHeader("의상",enemyPanel?ImGuiTreeNodeFlags_DefaultOpen:0)) {
             const ItemType types[]{ItemType::Shirt,ItemType::Trousers,ItemType::UnderShirt,ItemType::Underpants,ItemType::Boots};
             for (int i=0;i<5;++i) {
@@ -502,20 +527,9 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         if (enemyPanel) {
             if (corpse->rifle && ImGui::Button("소총 획득") && takeWeapon) *takeWeapon=true;
             if (ImGui::CollapsingHeader("적 휴대품",ImGuiTreeNodeFlags_DefaultOpen)) {
-                const float cell=(width-12.f)/4.f;
-                auto origin=ImGui::GetCursorScreenPos();
-                int x=0,y=0,rowHeight=0;
-                for (const auto& entry:panelInventory->Items()) {
-                    if (panelClothing&ClothingBit(entry.type)) continue;
-                    const auto size=ItemFootprint(entry.type);
-                    if (x+size.width>4) { x=0; y+=rowHeight; rowHeight=0; }
-                    ImGui::SetCursorScreenPos({origin.x+x*(cell+3),origin.y+y*(cell+3)});
-                    InventoryUi::Cell(&entry,1,entry.slot,texture,command,
-                        {size.width*cell+(size.width-1)*3,size.height*cell+(size.height-1)*3});
-                    x+=size.width; rowHeight=(std::max)(rowHeight,size.height);
-                }
-                ImGui::SetCursorScreenPos(origin);
-                ImGui::Dummy({width,(y+rowHeight)*(cell+3)});
+                ImGui::PushID("EnemyCarried");
+                drawCarriedSlots();
+                ImGui::PopID();
             }
             if (ImGui::Button("수색 종료") && closeLoot) *closeLoot=true;
         }
@@ -523,30 +537,7 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
     };
     auto drawLoadoutPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{width,panelHeight},true);
-        const float width=ImGui::GetContentRegionAvail().x;
-        const float gap=3.f,cell=(width-gap*5)/6;
-        const bool vest=(player.clothingMask&ClothingBit(ItemType::Vest))!=0;
-        const bool backpack=(player.clothingMask&ClothingBit(ItemType::Backpack))!=0;
-        auto grid=[&](const char* title,int first,int count,int columns,ItemType gear) {
-            ImGui::TextUnformatted(title);
-            const auto origin=ImGui::GetCursorScreenPos();
-            const bool hasGear=gear!=ItemType::Count;
-            const float offset=hasGear?2*(cell+gap):0.f;
-            if (hasGear) equipmentCard(650+static_cast<int>(gear),title,static_cast<int>(gear),origin,{cell*2+gap,cell*2+gap});
-            InventoryUi::GridAt(inventory,0,first,count,columns,texture,command,
-                {origin.x+offset,origin.y},cell,gap);
-            const float rows=static_cast<float>((count+columns-1)/columns);
-            ImGui::SetCursorScreenPos({origin.x,origin.y+(std::max)(hasGear?2.f:1.f,rows)*(cell+gap)+18});
-        };
-        grid("전술 조끼",12,vest?6:0,3,ItemType::Vest);
-        grid("주머니",0,12,6,ItemType::Count);
-        ImGui::TextUnformatted("특수 슬롯");
-        const auto special=ImGui::GetCursorScreenPos();
-        for (int i=0;i<3;++i) equipmentCard(680+i,"",-1,{special.x+i*(cell+gap),special.y},{cell,cell});
-        ImGui::SetCursorScreenPos({special.x,special.y+cell+18});
-        grid("배낭",18,backpack?12:0,4,ItemType::Backpack);
-        ImGui::Separator();
-        ImGui::Text("휴대품 %d / %d",inventory.StorageUsed(),inventory.SlotCapacity());
+        drawCarriedSlots();
         ImGui::TextWrapped("탄창 우클릭: 채우기 / 빼내기 · 총기에 끌어 삽입");
         ImGui::EndChild();
     };
@@ -590,10 +581,21 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
                 actions.selected=command.item.id; actions.Request(InventoryAction::DropAll); ok=true;
             } else if (command.action==InventoryUi::Action::Use && command.item.source==0 && inventory.Find(command.item.id) && inventory.Find(command.item.id)->type==ItemType::Bandage) {
                 actions.selected=command.item.id; actions.Request(InventoryAction::Use); ok=true;
+            } else if (command.item.source==5 && corpse && (command.destination==0 || command.destination==2)) {
+                const auto* worn=corpse->wornEquipment.Find(command.item.id);
+                if (worn) {
+                    const auto remaining=corpse->body.clothingMask & ~ClothingBit(worn->type);
+                    auto pockets=corpse->inventory;
+                    command.item.source=1;
+                    if (pockets.ConfigureGear(remaining) && InventoryUi::Execute(command,inventory,&corpse->wornEquipment,
+                            player.clothingMask,player.vitals,player.appearance==PlayerAppearance::Male)) {
+                        corpse->inventory=std::move(pockets);
+                        corpse->body.clothingMask=remaining;
+                        ok=true;
+                    }
+                }
             } else {
                 ok=InventoryUi::Execute(command,inventory,corpse?&corpse->inventory:nullptr,player.clothingMask,player.vitals,player.appearance == PlayerAppearance::Male);
-                if (corpse) for (int i=0;i<ClothingSlotCount;++i)
-                    if (!corpse->inventory.Count(ClothingType(i))) corpse->body.clothingMask &= ~ClothingBit(ClothingType(i));
             }
             if (!ok) loot.Notify("이동/사용 불가: 공간, 장비 종류 또는 탄약을 확인하세요.");
         }
