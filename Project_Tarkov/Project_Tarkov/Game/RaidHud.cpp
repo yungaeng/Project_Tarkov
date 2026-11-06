@@ -242,7 +242,7 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
     auto& inventory = player.GetInventory();
     if (!inventoryPreviewVisual) {
         inventoryPreviewVisual=std::make_unique<CharacterVisual>();
-        inventoryPreviewVisual->Init();
+        inventoryPreviewVisual->Init(player.appearance);
     }
     Player inventoryCharacter;
     inventoryCharacter.clothingMask=player.clothingMask;
@@ -288,7 +288,7 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         for (const auto& stack : raid.recovered.Items())
             ImGui::Text("%s x%d", GetItemDefinition(stack.type).name, stack.quantity);
         for (int slot = 0; slot < ClothingSlotCount; ++slot) {
-            const auto type = ClothingType(slot);
+            const auto type = ClothingType(slot,player.appearance == PlayerAppearance::Male);
             if (raid.recoveredClothing & ClothingBit(type)) ImGui::Text("착용 회수: %s", GetItemDefinition(type).name);
         }
         ImGui::TextUnformatted(raid.saveMessage.c_str());
@@ -330,10 +330,10 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
             reloadHoldSeconds = 0.0f;
             reloadHoldTriggered = false;
         }
-        if (player.vitals.Health() < 100 || actions.healingMode) {
+        if (actions.healingMode) {
             const ImVec2 origin(16, nextY);
             DrawBodyMannequin(player.vitals, origin, scale, draw);
-            if (actions.healingMode) {
+            {
                 ImGui::SetNextWindowPos(origin);
                 ImGui::SetNextWindowSize({145 * scale + 20, 275 * scale + 20});
                 ImGui::Begin("치료 부위 선택", nullptr, ImGuiWindowFlags_NoDecoration |
@@ -347,30 +347,6 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
                 ImGui::End();
             }
             nextY += 310 * scale;
-        }
-        if (player.vitals.Hydration() <= 10) {
-            const ImVec2 low(16, nextY);
-            const ImVec2 high(74, nextY + 54);
-            draw->AddRectFilled(low, high, IM_COL32(20, 25, 28, 100), 5);
-            draw->AddCircleFilled({45, nextY + 34}, 11, IM_COL32(96, 190, 221, 135), 20);
-            draw->AddTriangleFilled({45, nextY + 6}, {34, nextY + 33}, {56, nextY + 33},
-                IM_COL32(96, 190, 221, 135));
-            nextY += 62;
-        }
-        if (player.vitals.Stamina() <= 10) {
-            const ImVec2 low(16, nextY);
-            const ImVec2 high(74, nextY + 54);
-            draw->AddRectFilled(low, high, IM_COL32(20, 25, 28, 100), 5);
-            const ImU32 runner = IM_COL32(220, 226, 220, 190);
-            draw->AddCircleFilled({46, nextY + 12}, 5, runner, 16);
-            draw->AddLine({44, nextY + 19}, {39, nextY + 30}, runner, 4);
-            draw->AddLine({42, nextY + 21}, {31, nextY + 25}, runner, 3);
-            draw->AddLine({42, nextY + 21}, {53, nextY + 18}, runner, 3);
-            draw->AddLine({39, nextY + 30}, {28, nextY + 40}, runner, 4);
-            draw->AddLine({28, nextY + 40}, {19, nextY + 38}, runner, 4);
-            draw->AddLine({39, nextY + 30}, {49, nextY + 37}, runner, 4);
-            draw->AddLine({49, nextY + 37}, {59, nextY + 34}, runner, 4);
-            nextY += 62;
         }
         if (ammoDisplaySeconds > 0.0f) {
             draw->AddRectFilled({16, nextY}, {235, nextY + 30}, IM_COL32(20, 25, 28, 170), 4);
@@ -440,7 +416,7 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         const bool clothing=type>=0 && type<ItemTypeCount && IsClothing(static_cast<ItemType>(type));
         const bool weapon=type>=RifleGear && type<=RifleGear+2;
         const int weaponSlot=type==RifleGear ? -1 : type==RifleGear+1 ? -2 : -3;
-        const int clothingSlot=clothing ? type-static_cast<int>(ItemType::Shirt) : 0;
+        const int clothingSlot=clothing ? ClothingSlot(static_cast<ItemType>(type)) : 0;
         ItemStack worn{clothing?static_cast<ItemType>(type):ItemType::Bandage,1,static_cast<StackId>(clothingSlot+1)};
         const ItemStack* item=weapon?panelInventory->At(weaponSlot):
             clothing && (panelClothing&ClothingBit(worn.type))?&worn:nullptr;
@@ -517,7 +493,10 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
             const ItemType types[]{ItemType::Shirt,ItemType::Trousers,ItemType::UnderShirt,ItemType::Underpants,ItemType::Boots};
             for (int i=0;i<5;++i) {
                 const ImVec2 p=ImGui::GetCursorScreenPos();
-                equipmentCard(620+i,GetItemDefinition(types[i]).name,static_cast<int>(types[i]),p,{width,76});
+                const bool male = !enemyPanel && player.appearance == PlayerAppearance::Male;
+                if (male && types[i] == ItemType::UnderShirt) continue;
+                const auto type = ClothingType(ClothingSlot(types[i]),male);
+                equipmentCard(620+i,GetItemDefinition(type).name,static_cast<int>(type),p,{width,76});
             }
         }
         if (enemyPanel) {
@@ -612,7 +591,7 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
             } else if (command.action==InventoryUi::Action::Use && command.item.source==0 && inventory.Find(command.item.id) && inventory.Find(command.item.id)->type==ItemType::Bandage) {
                 actions.selected=command.item.id; actions.Request(InventoryAction::Use); ok=true;
             } else {
-                ok=InventoryUi::Execute(command,inventory,corpse?&corpse->inventory:nullptr,player.clothingMask,player.vitals);
+                ok=InventoryUi::Execute(command,inventory,corpse?&corpse->inventory:nullptr,player.clothingMask,player.vitals,player.appearance == PlayerAppearance::Male);
                 if (corpse) for (int i=0;i<ClothingSlotCount;++i)
                     if (!corpse->inventory.Count(ClothingType(i))) corpse->body.clothingMask &= ~ClothingBit(ClothingType(i));
             }
@@ -706,7 +685,6 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     const bool wide=ImGui::GetContentRegionAvail().x>=1050;
     const float available=ImGui::GetContentRegionAvail().y;
     const float panelHeight=(std::max)(180.f,wide||hideoutHealthTab?available:(available-8.f)*.5f);
-    (void)character;
     Player previewCharacter;
     previewCharacter.position={0,0,0};
     previewCharacter.rotation.y=hideoutPreviewRotation;
@@ -725,7 +703,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const bool clothing=type>=0 && type<ItemTypeCount && IsClothing(static_cast<ItemType>(type));
         const bool weapon=type>=RifleGear && type<=RifleGear+2;
         const int weaponSlot=type==RifleGear ? -1 : type==RifleGear+1 ? -2 : -3;
-        const int clothingSlot=clothing ? type-static_cast<int>(ItemType::Shirt) : 0;
+        const int clothingSlot=clothing ? ClothingSlot(static_cast<ItemType>(type)) : 0;
         ItemStack worn{clothing?static_cast<ItemType>(type):ItemType::Bandage,1,static_cast<StackId>(clothingSlot+1)};
         const ItemStack* item=weapon?hideout.loadout.At(weaponSlot):
             clothing && (hideout.clothingMask&ClothingBit(worn.type))?&worn:nullptr;
@@ -755,6 +733,14 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     };
     auto drawCharacterPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
+        int selected = hideout.appearance == PlayerAppearance::Male ? 1 : 0;
+        if (ImGui::Combo("캐릭터 변경", &selected, "김가원\0남캐\0")) {
+            if (hideout.ChangeAppearance(selected == 1 ? PlayerAppearance::Male : PlayerAppearance::KimGawon)) {
+                character.appearance = hideout.appearance;
+                visual.Init(character.appearance);
+                inventoryPreviewVisual.reset();
+                        }
+        }
         const ImVec2 origin=ImGui::GetCursorScreenPos();
         const float width=ImGui::GetContentRegionAvail().x;
         const float scale=width/500.f;
@@ -795,7 +781,10 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             const ItemType types[]{ItemType::Shirt,ItemType::Trousers,ItemType::UnderShirt,ItemType::Underpants,ItemType::Boots};
             for (int i=0;i<5;++i) {
                 const ImVec2 p=ImGui::GetCursorScreenPos();
-                equipmentCard(620+i,GetItemDefinition(types[i]).name,static_cast<int>(types[i]),p,{width,76});
+                const bool male = hideout.appearance == PlayerAppearance::Male;
+                if (male && types[i] == ItemType::UnderShirt) continue;
+                const auto type = ClothingType(ClothingSlot(types[i]),male);
+                equipmentCard(620+i,GetItemDefinition(type).name,static_cast<int>(type),p,{width,76});
             }
         }
         ImGui::EndChild();
@@ -919,7 +908,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::EndDisabled();
     if (command.action!=InventoryUi::Action::None && hideout.ready && Input::IsFocused()) {
         auto before=hideout;
-        if (!InventoryUi::Execute(command,hideout.loadout,&hideout.storage,hideout.clothingMask,hideout.vitals))
+        if (!InventoryUi::Execute(command,hideout.loadout,&hideout.storage,hideout.clothingMask,hideout.vitals,hideout.appearance == PlayerAppearance::Male))
             hideout.message="이동/사용 불가: 빈 공간, 장비 종류, 탄약을 확인하세요.";
         else if (!hideout.Save()) { const auto failure=hideout.message; hideout=std::move(before); hideout.message=failure; }
     }

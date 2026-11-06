@@ -159,7 +159,7 @@ def convert(source, output, rig):
         path = next((pngs[n] for n in choices if n in pngs), None)
         if path:
             img = Image.open(path).convert('RGBA')
-            if name == 'cf_m_body' and (root / 'cf_m_body_AM.png').is_file():
+            if name in ('cf_m_body', 'cm_m_body') and (root / 'cf_m_body_AM.png').is_file():
                 # Exported clothing mask: red is visible skin in the fully dressed state.
                 mask = Image.open(root / 'cf_m_body_AM.png').convert('RGB').getchannel('R')
                 img.putalpha(mask.resize(img.size, Image.Resampling.NEAREST))
@@ -191,7 +191,7 @@ def convert(source, output, rig):
     body = models[0]
     body_ids, start = [], 0
     for material in body.materials:
-        if material['name'] == 'cf_m_body':
+        if material['name'] in ('cf_m_body', 'cm_m_body'):
             body_ids.extend(body.indices[start:start + material['count']])
         start += material['count']
     body_ids = np.unique(body_ids)
@@ -240,12 +240,13 @@ def convert(source, output, rig):
             if any(s in name for s in ('Bonelyfans', 'shadowcast', 'namida', 'gageye', 'm_Mask', 'shoes_uwabaki')): continue
             if name in ('cf_m_top_tsyatu01 8910', 'cf_m_bot_Heteacher_d 9000',
                         'cf_m_shorts_03 9200', 'cf_m_shorts_03 9220', 'bra_sports2_mat 9100'): continue
+            if 'cm_m_body' in {m['name'] for m in body.materials} and 'shoes_' in name: continue
             slot = material_image(mat)
             remap = {}
             used = np.unique(faces)
             is_clothing = model is models[1] and 'hair' not in name
             # Footwear stays permanent. 1..4 are upper/lower outerwear and underwear.
-            garment = 5 if name == 'cf_m_body' else 1 if 'top_' in name else 2 if 'bot_' in name else 3 if 'bra_sports2' in name else 4 if 'shorts_' in name else 0
+            garment = 9 if name.startswith('cm_m_dan') else 5 if name in ('cf_m_body', 'cm_m_body') else 1 if 'top_' in name else 2 if 'bot_' in name else 3 if 'bra_sports2' in name else 4 if 'shorts_' in name else 0
             transferred = clothing_weights(model, used) if is_clothing else {}
             first_vertex = len(vertices)
             linked_joints = set()
@@ -284,7 +285,7 @@ def convert(source, output, rig):
     output.mkdir(parents=True, exist_ok=True)
     atlas.save(output / 'character.png')
     with (output / 'character.mesh').open('wb') as f:
-        f.write(b'TKCHAR03')
+        f.write(b'TKCHAR06' if any(v[-1] == 9 for v in vertices) else b'TKCHAR03')
         f.write(struct.pack('<III', len(names), len(vertices), len(indices)))
         for name, pos in zip(names, bindings):
             raw = name.encode('ascii')

@@ -29,7 +29,7 @@ void InventoryActions::Update(Player& player, LootSystem& loot, const Camera& ca
         return;
     }
     if (action == InventoryAction::UnequipClothing) {
-        loot.Notify(inventory.UnequipClothing(clothingTarget, player.clothingMask) ?
+        loot.Notify(inventory.UnequipClothing(ClothingType(ClothingSlot(clothingTarget), player.appearance == PlayerAppearance::Male), player.clothingMask) ?
             "의상을 해제해 인벤토리에 보관했습니다" : "의상 해제 불가: 인벤토리 공간을 확인하세요");
         return;
     }
@@ -38,7 +38,7 @@ void InventoryActions::Update(Player& player, LootSystem& loot, const Camera& ca
         if (action == InventoryAction::Use)
         {
             if (IsClothing(stack->type)) {
-                loot.Notify(inventory.EquipClothing(target, player.clothingMask) ?
+                loot.Notify(CanWear(stack->type, player.appearance == PlayerAppearance::Male) && inventory.EquipClothing(target, player.clothingMask) ?
                     "의상을 착용했습니다" : "이미 같은 부위의 의상을 착용하고 있습니다");
                 if (!inventory.Find(selected)) selected = 0;
                 return;

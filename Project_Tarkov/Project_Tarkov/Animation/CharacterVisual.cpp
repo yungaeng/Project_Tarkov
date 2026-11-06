@@ -69,22 +69,24 @@ struct CharacterVisual::Assets
 
 CharacterVisual::~CharacterVisual() { Reset(); }
 
-void CharacterVisual::Init()
+void CharacterVisual::Init(PlayerAppearance appearance)
 {
     Reset();
+    const std::string folder = appearance == PlayerAppearance::Male ? "Assets/Models/Player/Male/" : "Assets/Models/Player/KimGawon/";
     if (!animation.LoadModel("Assets/Models/Player/Ch22_nonPBR.fbx") ||
-        !animation.LoadAppearance("Assets/Models/Player/KimGawon/character.mesh") ||
+        !animation.LoadAppearance(folder + "character.mesh") ||
         !animation.LoadClip("idle", "Assets/Idle.fbx") ||
         !animation.LoadClip("walk", "Assets/Walking.fbx") ||
         !animation.LoadClip("run", "Assets/Fast Run.fbx") ||
         !animation.LoadClip("crouch", "Assets/Crouched Walking.fbx"))
         throw std::runtime_error(animation.Error());
-    static std::weak_ptr<Assets> cache;
+    static std::map<PlayerAppearance, std::weak_ptr<Assets>> caches;
+    auto& cache = caches[appearance];
     assets = cache.lock();
     if (!assets)
     {
         auto shared = std::make_shared<Assets>();
-        if (!shared->texture.Load("Assets/Models/Player/KimGawon/character.png"))
+        if (!shared->texture.Load((folder + "character.png").c_str()))
             throw std::runtime_error("Character texture load failed");
         CreateBackpackShell(shared->backpack);
         shared->backpackDetail.CreateCube();

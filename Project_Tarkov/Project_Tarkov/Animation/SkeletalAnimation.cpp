@@ -467,7 +467,8 @@ bool SkeletalAnimation::LoadAppearance(const std::string& path)
     read(jointCount); read(vertexCount); read(indexCount);
     auto fail = [&]() { data->error = "Invalid character appearance: " + path; return false; };
     const bool legacyGarments = std::string(magic, 8) == "TKCHAR02";
-    const bool footwearGarments = std::string(magic, 8) == "TKCHAR05";
+    const bool coveredSkin = std::string(magic, 8) == "TKCHAR06";
+    const bool footwearGarments = coveredSkin || std::string(magic, 8) == "TKCHAR05";
     const bool tacticalGarments = std::string(magic, 8) == "TKCHAR04" || footwearGarments;
     const bool garmentData = legacyGarments || std::string(magic, 8) == "TKCHAR03" || tacticalGarments;
     if (!in || (!garmentData && std::string(magic, 8) != "TKCHAR01") || jointCount == 0 || jointCount > 256 ||
@@ -520,7 +521,7 @@ bool SkeletalAnimation::LoadAppearance(const std::string& path)
         for (auto& w : weights) read(w);
         std::uint32_t garment = 0;
         if (garmentData) read(garment);
-        if (garment > (footwearGarments ? 8u : tacticalGarments ? 7u : 5u)) return fail();
+        if (garment > (coveredSkin ? 9u : footwearGarments ? 8u : tacticalGarments ? 7u : 5u)) return fail();
         if (legacyGarments && (garment == 3 || garment == 4)) garment = 0;
         if (!in) return fail();
         for (auto v : values) if (!std::isfinite(v)) return fail();

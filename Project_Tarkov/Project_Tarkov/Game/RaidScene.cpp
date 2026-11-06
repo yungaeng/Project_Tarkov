@@ -35,6 +35,7 @@ void RaidScene::Init()
     if (!hasProvidedHideout)
         hideout.Load();
     player = std::make_unique<Player>();
+    player->appearance = hideout.appearance;
     player->SetCollisionWorld(&collisionWorld);
     player->position = IndustrialZone::Spawns[0];
     playerController.Reset();
@@ -45,7 +46,7 @@ void RaidScene::Init()
     if (!shader.LoadFromFile("Assets/Shaders/cube.vs", "Assets/Shaders/cube.fs"))
         throw std::runtime_error("Shader load failed");
     cubeMesh.CreateCube();
-    playerVisual.Init();
+    playerVisual.Init(hideout.appearance);
     loot.Init();
     combat.Init(collisionWorld);
     actions.Cancel();
@@ -63,7 +64,7 @@ void RaidScene::Update(float dt)
         }
         if (raid.returnToHideout) {
             playerVisual.Reset();
-            playerVisual.Init();
+            playerVisual.Init(hideout.appearance);
             raid.phase = RaidPhase::Hideout;
             raid.returnToHideout = false;
             raid.remaining = RaidConfig::RaidDuration;
@@ -235,7 +236,7 @@ void RaidScene::FinishRaid(RaidPhase result)
         summary.recoveredRifle = combat.HasRifle();
         for (int type = 0; type < ItemTypeCount; ++type) {
             const auto itemType = static_cast<ItemType>(type);
-            const auto bit = ClothingBit(itemType);
+            const auto bit = CanWear(itemType,player->appearance == PlayerAppearance::Male) ? ClothingBit(itemType) : 0u;
             const int startingWorn = (startingClothingMask & bit) ? 1 : 0;
             const int recoveredWorn = (player->clothingMask & bit) ? 1 : 0;
             const int gained = raid.recovered.Count(itemType) + recoveredWorn
@@ -278,6 +279,7 @@ void RaidScene::StartRaid()
     hideout.spawn = std::uniform_int_distribution<int>(0, static_cast<int>(IndustrialZone::Spawns.size()) - 1)(randomEngine);
     raid.assignedExit = hideout.spawn;
     player = std::make_unique<Player>();
+    player->appearance = hideout.appearance;
     player->SetCollisionWorld(&collisionWorld);
     player->position = IndustrialZone::Spawns[hideout.spawn];
     player->GetInventory() = hideout.loadout;
@@ -294,7 +296,7 @@ void RaidScene::StartRaid()
     combat.SetLoadout(player->GetInventory());
     summary = RaidSummary{};
     playerVisual.Reset();
-    playerVisual.Init();
+    playerVisual.Init(hideout.appearance);
     playerVisual.Update(0, *player, {false, combat.Equipped(), false, false, 0, 0, combat.HasRifle()});
     raid.exitDistance = glm::length(IndustrialZone::Exits[raid.assignedExit].position - player->position);
     focusGeneration = Input::FocusGeneration();

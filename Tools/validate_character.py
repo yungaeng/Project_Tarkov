@@ -10,7 +10,7 @@ from PIL import Image
 def load(path):
     with path.open('rb') as f:
         magic = f.read(8)
-        assert magic in (b'TKCHAR01', b'TKCHAR02', b'TKCHAR03', b'TKCHAR04', b'TKCHAR05')
+        assert magic in (b'TKCHAR01', b'TKCHAR02', b'TKCHAR03', b'TKCHAR04', b'TKCHAR05', b'TKCHAR06')
         nj, nv, ni = struct.unpack('<III', f.read(12))
         joints = {}
         for _ in range(nj):
@@ -30,7 +30,7 @@ def load(path):
     for field in ('position', 'normal', 'uv', 'weights'): assert np.isfinite(vertices[field]).all()
     assert (vertices['uv'] >= 0).all() and (vertices['uv'] <= 1).all()
     if 'garment' in vertices.dtype.names:
-        assert set(vertices['garment']) <= set(range(9 if magic == b'TKCHAR05' else 8 if magic == b'TKCHAR04' else 6))
+        assert set(vertices['garment']) <= set(range(10 if magic == b'TKCHAR06' else 9 if magic == b'TKCHAR05' else 8 if magic == b'TKCHAR04' else 6))
         assert np.all(vertices['garment'][indices] == vertices['garment'][indices[:, :1]])
     for side in ('Left', 'Right'):
         assert all(side + suffix in joints for suffix in ('Arm', 'ForeArm', 'Hand'))
@@ -55,6 +55,7 @@ def preview(vertices, triangles, atlas, width=640, height=800, yaw=0, low=None, 
         if 1 <= garment <= 4 and not (clothing_mask & (1 << (garment-1))): continue
         if 6 <= garment <= 7 and not (clothing_mask & (1 << (garment-2))): continue
         if garment == 8 and not (clothing_mask & (1 << 7)): continue
+        if garment == 9 and clothing_mask & 10: continue
         if garment == 3 and clothing_mask & 1: continue
         if garment == 4 and clothing_mask & 2: continue
         a, b, c = p[tri]

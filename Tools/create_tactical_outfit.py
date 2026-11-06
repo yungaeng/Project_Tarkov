@@ -41,7 +41,7 @@ def camouflage(size=2048):
 
 def write_mesh(path, vertices, triangles, joints):
     with path.open('wb') as f:
-        f.write(b'TKCHAR05' if np.any(vertices['garment'] == 8) else b'TKCHAR04')
+        f.write(b'TKCHAR06' if np.any(vertices['garment'] == 9) else b'TKCHAR05' if np.any(vertices['garment'] == 8) else b'TKCHAR04')
         f.write(struct.pack('<III', len(joints), len(vertices), triangles.size))
         for name, position in joints.items():
             raw = name.encode('ascii')
@@ -76,6 +76,12 @@ class Outfit:
 
     def add(self, name, positions, triangles, garment, material='camo', rigid=None, skin=None):
         p = np.asarray(positions, float)
+        if garment == 7 and np.any(self.base['garment'] == 9):
+            # Fit shell and fittings together. The original chin cup sat below the jaw.
+            if name in ('helmet_chin_cup', 'helmet_retention'):
+                p[:,1] = 168 + (p[:,1]-168)*.70
+            p[:,0] *= .90
+            p[:,2] = -1.65 + (p[:,2]+2.2)*.80
         t = np.asarray(triangles, int).reshape(-1, 3)
         normals = np.zeros_like(p)
         face = np.cross(p[t[:, 1]]-p[t[:, 0]], p[t[:, 2]]-p[t[:, 0]])

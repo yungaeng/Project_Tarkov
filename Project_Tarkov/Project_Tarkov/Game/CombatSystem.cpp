@@ -154,13 +154,12 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             {
                 const auto direction = delta / length;
                 nearest = length + 0.01f;
-                bool wall = false;
                 for (const auto& box : world.GetBoxes())
-                    if (RayBox(origin, direction, box.min, box.max, nearest, hit)) { nearest = hit; wall = true; }
+                    if (RayBox(origin, direction, box.min, box.max, nearest, hit)) nearest = hit;
                 for (std::size_t i = 0; i < enemies.size(); ++i)
                     if (enemies[i].health > 0 && HitBody(enemies[i].body, origin, direction, nearest, hit) && hit < nearest)
                     { nearest = hit; victim = static_cast<int>(i); impactPosition = origin + direction * hit; }
-                message = victim >= 0 ? "명중" : wall ? "엄폐물에 명중" : "빗나감";
+                message.clear();
             }
             else message = "엄폐물이 사격을 가로막고 있습니다";
             if (victim >= 0)
@@ -175,7 +174,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                         const auto type = ClothingType(slot);
                         if (enemy.body.clothingMask & ClothingBit(type)) enemy.inventory.TryAdd({type, 1});
                     }
-                    message = "적 처치";
+                    message.clear();
                     const int killSeconds = static_cast<int>(elapsedSeconds);
                     std::ostringstream timestamp;
                     timestamp << std::setfill('0') << std::setw(2) << killSeconds / 60

@@ -36,6 +36,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     case ItemType::Backpack: return backpack;
     case ItemType::Boots: return boots;
     case ItemType::UnderShirt: return underShirt;
+    case ItemType::Trunks: { static const ItemDefinition trunks{"트렁크 팬티",1,0.1f}; return trunks; }
     case ItemType::Underpants: return underpants;
     }
     throw std::invalid_argument("Unknown item type");

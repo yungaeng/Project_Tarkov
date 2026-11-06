@@ -28,7 +28,7 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 11\n" << clothingMask << '\n';
+    out << "HIDEOUT 13\n" << static_cast<int>(appearance) << ' ' << clothingMask << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
         for (const auto& item : inventory.Items())
@@ -52,6 +52,30 @@ bool Hideout::Save(bool requireStashSpace)
     return true;
 }
 
+static bool StoreGarment(Inventory& storage, ItemType type)
+{
+    while (!storage.TryAdd({type,1}))
+        if (!storage.SetSlotCapacity(storage.SlotCapacity()+10)) return false;
+    return true;
+}
+
+bool Hideout::ChangeAppearance(PlayerAppearance next)
+{
+    auto updated = *this;
+    bool male = appearance == PlayerAppearance::Male;
+    if (male != (next == PlayerAppearance::Male)) {
+        for (auto type : {ItemType::UnderShirt, male ? ItemType::Trunks : ItemType::Underpants}) {
+            if (!(updated.clothingMask & ClothingBit(type))) continue;
+            if (!StoreGarment(updated.storage,type)) return false;
+            updated.clothingMask &= ~ClothingBit(type);
+        }
+    }
+    updated.appearance = next;
+    if (!updated.Save()) { message=updated.message; return false; }
+    *this=std::move(updated);
+    return true;
+}
+
 void Hideout::Load()
 {
     std::error_code error;
@@ -61,6 +85,7 @@ void Hideout::Load()
         loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
         storage.SetSlotCapacity(80);
         for (int type=0; type<11; ++type) if (stash[type]) storage.TryAdd({static_cast<ItemType>(type),stash[type]});
+        storage.TryAdd({ItemType::Trunks,1});
         loadout.TryAdd({ItemType::Rifle,1,0,30,true,-1});
         loadout.TryAdd({ItemType::Magazine,1,0,30,false,12});
         loadout.TryAdd({ItemType::Magazine,1,0,0,false,13});
@@ -72,9 +97,13 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion==10 || savedVersion==11)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=13)) {
         Hideout next;
-        bool valid=static_cast<bool>(in >> next.clothingMask) && !(next.clothingMask & ~AllClothingMask);
+        int appearanceId = 0;
+        bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
+        // Retired appearance ID 1 uses the default character and its compatible equipment. 
+        next.appearance = appearanceId == static_cast<int>(PlayerAppearance::Male) ? PlayerAppearance::Male : PlayerAppearance::KimGawon;
+        valid=valid && static_cast<bool>(in >> next.clothingMask) && !(next.clothingMask & ~AllClothingMask);
         auto readInventory=[&](Inventory& inventory,bool isStorage) {
             int capacity=0,count=0;
             if (!(in >> capacity >> count) || count<0 || count>1000000) return false;
@@ -92,7 +121,7 @@ void Hideout::Load()
                     (!IsWeapon(item.type) && !IsMagazine(item.type) && item.rounds) ||
                     (IsWeapon(item.type) && !item.magazineInserted && item.rounds) ||
                     item.slot == -100) return false;
-                if (savedVersion==11) {
+                if (savedVersion>=11) {
                     if (inventory.Covering(item.slot) || !inventory.TryAdd(item)) return false;
                 } else {
                     if (inventory.TryAdd(item)) continue;
@@ -116,6 +145,15 @@ void Hideout::Load()
         if (in >> extra) valid=false;
         if (!valid) { ready=false; message="저장 파일이 손상되었습니다. 원본을 보존했습니다."; return; }
         next.ready=true; next.RefreshWeapons(); next.message="은신처를 불러왔습니다.";
+        if (savedVersion<13) {
+            if (!StoreGarment(next.storage,ItemType::Trunks)) return;
+            if (next.appearance==PlayerAppearance::Male && (next.clothingMask & ClothingBit(ItemType::UnderShirt))) {
+                if (!StoreGarment(next.storage,ItemType::UnderShirt)) return;
+                next.clothingMask &= ~ClothingBit(ItemType::UnderShirt);
+            }
+            in.close();
+            if (!next.Save()) { message=next.message; return; }
+        }
         *this=std::move(next); return;
     }
     in.clear(); in.seekg(0);
@@ -198,6 +236,7 @@ void Hideout::Load()
     for (int type=0;type<11;++type) if (next.stash[type] && !preserve({static_cast<ItemType>(type),next.stash[type]})) {
         ready=false; message="기존 창고를 재배치할 수 없습니다. 원본을 보존했습니다."; return;
     }
+    if (!preserve({ItemType::Trunks,1})) return;
     if (next.rifles && !preserve({ItemType::Rifle,next.rifles})) {
         ready=false; message="기존 총기를 재배치할 수 없습니다. 원본을 보존했습니다."; return;
     }

@@ -19,7 +19,7 @@ void RaidResultScene::Init()
     character.rotation.y = 0.0f;
     if (!shader.LoadFromFile("Assets/Shaders/cube.vs", "Assets/Shaders/cube.fs"))
         throw std::runtime_error("Result scene shader load failed");
-    visual.Init();
+    visual.Init(hideout.appearance);
     visual.Update(0, character, {false, summary.recoveredRifle, false, false, 0, 0, summary.recoveredRifle});
     hud.Init(glfwGetCurrentContext());
     Input::SetCursorCaptured(false);

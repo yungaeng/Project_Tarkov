@@ -134,12 +134,12 @@ inline void Carried(const Inventory& inventory, std::uint32_t clothing, ImTextur
     if (clothing & ClothingBit(ItemType::Backpack)) Grid("배낭",inventory,0,18,12,4,texture,command);
     else ImGui::TextDisabled("배낭 미착용");
 }
-inline bool Execute(Command command, Inventory& carried, Inventory* external, std::uint32_t& clothing, PlayerVitals& vitals)
+inline bool Execute(Command command, Inventory& carried, Inventory* external, std::uint32_t& clothing, PlayerVitals& vitals, bool male=false)
 {
     if (command.action == Action::None) return true;
     if (command.item.source == 2) {
         if (command.action != Action::Move || command.item.id < 1 || command.item.id > ClothingSlotCount) return false;
-        const auto type = ClothingType(static_cast<int>(command.item.id)-1);
+        const auto type = ClothingType(static_cast<int>(command.item.id)-1,male);
         const auto bit = ClothingBit(type);
         if (!(clothing & bit)) return false;
         auto next = carried;
@@ -168,7 +168,7 @@ inline bool Execute(Command command, Inventory& carried, Inventory* external, st
     if (command.action == Action::Eject) return source->EjectMagazine(item->id);
     if (command.action == Action::Use) {
         if (item->type == ItemType::Water) { if (!vitals.Drink()) return false; return source->Remove(item->id,1); }
-        if (!IsClothing(item->type)) return false;
+        if (!CanWear(item->type,male) || !IsClothing(item->type)) return false;
         if (source == &carried) return carried.EquipClothing(item->id,clothing);
         auto next = carried;
         const auto bit=ClothingBit(item->type);
@@ -176,8 +176,8 @@ inline bool Execute(Command command, Inventory& carried, Inventory* external, st
         source->Remove(item->id,1); clothing |= bit; carried=std::move(next); return true;
     }
     if (command.destination == 2) {
-        if (!IsClothing(item->type) || item->type != ClothingType(command.slot)) return false;
-        command.action=Action::Use; return Execute(command,carried,external,clothing,vitals);
+        if (!IsClothing(item->type) || item->type != ClothingType(command.slot,male)) return false;
+        command.action=Action::Use; return Execute(command,carried,external,clothing,vitals,male);
     }
     Inventory* destination=command.destination==0 ? &carried : command.destination==1 ? external : nullptr;
     if (!destination) return false;

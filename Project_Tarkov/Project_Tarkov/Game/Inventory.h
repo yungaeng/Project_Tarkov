@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // Keep existing numeric IDs for saved inventories (the former skirt slot is trousers).
-enum class ItemType { Bandage, Water, Ammo, Shirt, Trousers, UnderShirt, Underpants, Vest, Helmet, Backpack, Boots, Rifle, Magazine, Pistol, PistolMagazine, Count };
+enum class ItemType { Bandage, Water, Ammo, Shirt, Trousers, UnderShirt, Underpants, Vest, Helmet, Backpack, Boots, Rifle, Magazine, Pistol, PistolMagazine, Trunks, Count };
 inline bool IsWeapon(ItemType t) { return t == ItemType::Rifle || t == ItemType::Pistol; }
 inline bool IsMagazine(ItemType t) { return t == ItemType::Magazine || t == ItemType::PistolMagazine; }
 inline int MagazineCapacity(ItemType t) { return t == ItemType::Pistol || t == ItemType::PistolMagazine ? 15 : 30; }
@@ -13,11 +13,13 @@ enum class FireMode { Semi, Auto, Safe };
 inline constexpr int ItemTypeCount = static_cast<int>(ItemType::Count);
 inline constexpr int ClothingSlotCount = 8;
 inline constexpr std::uint32_t AllClothingMask = (1u << ClothingSlotCount) - 1;
-inline bool IsClothing(ItemType type) { return type >= ItemType::Shirt && type <= ItemType::Boots; }
+inline bool IsClothing(ItemType type) { return (type >= ItemType::Shirt && type <= ItemType::Boots) || type == ItemType::Trunks; }
+inline int ClothingSlot(ItemType t) { return static_cast<int>(t == ItemType::Trunks ? ItemType::Underpants : t) - static_cast<int>(ItemType::Shirt); }
+inline bool CanWear(ItemType t, bool male) { return male ? t != ItemType::UnderShirt && t != ItemType::Underpants : t != ItemType::Trunks; }
 inline std::uint32_t ClothingBit(ItemType type) {
-    return IsClothing(type) ? 1u << (static_cast<int>(type) - static_cast<int>(ItemType::Shirt)) : 0;
+    return IsClothing(type) ? 1u << ClothingSlot(type) : 0;
 }
-inline ItemType ClothingType(int slot) { return static_cast<ItemType>(static_cast<int>(ItemType::Shirt) + slot); }
+inline ItemType ClothingType(int slot, bool male=false) { if (male && slot==ClothingSlot(ItemType::Underpants)) return ItemType::Trunks; return static_cast<ItemType>(static_cast<int>(ItemType::Shirt) + slot); }
 inline constexpr int BaseInventorySlots = 12;
 inline int InventorySlotsForGear(std::uint32_t equipped) {
     return BaseInventorySlots + ((equipped & ClothingBit(ItemType::Vest)) ? 6 : 0) +
@@ -30,7 +32,7 @@ struct ItemSize { int width, height; };
 inline ItemSize ItemFootprint(ItemType type) {
     switch (type) {
     case ItemType::Water: case ItemType::Shirt: case ItemType::Trousers:
-    case ItemType::UnderShirt: case ItemType::Underpants: case ItemType::Magazine: return {1,2};
+    case ItemType::UnderShirt: case ItemType::Trunks: case ItemType::Underpants: case ItemType::Magazine: return {1,2};
     case ItemType::Ammo: case ItemType::Pistol: return {2,1};
     case ItemType::Vest: case ItemType::Helmet: case ItemType::Boots: return {2,2};
     case ItemType::Backpack: return {3,3};

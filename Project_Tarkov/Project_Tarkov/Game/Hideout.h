@@ -1,4 +1,5 @@
 #pragma once
+#include "PlayerAppearance.h"
 #include "Inventory.h"
 #include "PlayerVitals.h"
 #include <array>
@@ -16,6 +17,7 @@ public:
     // Starter totals include worn clothing and the loaded rifle; no duplicates.
     // Bandage, water, ammo, shirt, trousers, underwear, vest, helmet, backpack, boots.
     std::array<int, ItemTypeCount> stash{{10, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0}};
+    PlayerAppearance appearance = PlayerAppearance::KimGawon;
     PlayerVitals vitals;
     std::uint32_t clothingMask = DefaultClothingMask;
     int rifles = 0;
@@ -29,6 +31,7 @@ public:
     bool ready = false;
     std::string message;
     void Load();
+    bool ChangeAppearance(PlayerAppearance next);
     bool Save(bool requireStashSpace = false);
     bool HealBodyPart(BodyPart part);
     bool AutoArrangeStash();

@@ -1,4 +1,5 @@
 #pragma once
+#include "../Game/PlayerAppearance.h"
 #include "../Graphics/Mesh.h"
 #include "SkeletalAnimation.h"
 #include "WeaponVisual.h"
@@ -25,7 +26,7 @@ public:
     ~CharacterVisual();
     CharacterVisual(const CharacterVisual&) = delete;
     CharacterVisual& operator=(const CharacterVisual&) = delete;
-    void Init();
+    void Init(PlayerAppearance appearance = PlayerAppearance::KimGawon);
     void Update(float dt, const Character& character, const CharacterVisualState& state = {}, float poseInterval = 0.0f);
     void Render(const Character& character, Shader& shader, Camera& camera, float width, float height,
         const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool firstPerson = false);
