@@ -8,7 +8,7 @@
 class Player : public Character
 {
 public:
-    PlayerAppearance appearance = PlayerAppearance::KimGawon;
+    PlayerAppearance appearance = PlayerAppearance::Female;
     PlayerVitals vitals;
     Inventory& GetInventory() { return inventory; }
     const Inventory& GetInventory() const { return inventory; }

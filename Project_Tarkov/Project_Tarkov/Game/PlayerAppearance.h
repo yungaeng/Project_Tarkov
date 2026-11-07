@@ -1,3 +1,3 @@
 #pragma once
 
-enum class PlayerAppearance { KimGawon = 0, Male = 2 };
+enum class PlayerAppearance { Female = 0, Male = 2 };

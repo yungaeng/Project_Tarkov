@@ -72,7 +72,7 @@ CharacterVisual::~CharacterVisual() { Reset(); }
 void CharacterVisual::Init(PlayerAppearance appearance)
 {
     Reset();
-    const std::string folder = appearance == PlayerAppearance::Male ? "Assets/Models/Player/Male/" : "Assets/Models/Player/KimGawon/";
+    const std::string folder = appearance == PlayerAppearance::Male ? "Assets/Models/Player/Male/" : "Assets/Models/Player/여캐/";
     if (!animation.LoadModel("Assets/Models/Player/Ch22_nonPBR.fbx") ||
         !animation.LoadAppearance(folder + "character.mesh") ||
         !animation.LoadClip("idle", "Assets/Idle.fbx") ||

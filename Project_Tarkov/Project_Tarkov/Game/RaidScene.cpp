@@ -1,6 +1,10 @@
 #include "RaidScene.h"
 #include "RaidResultScene.h"
 #include "IndustrialDetails.h"
+#include "HideoutMap.h"
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include "../Core/Input.h"
 #include "../Scene/SceneManager.h"
 #include "../Graphics/Renderer.h"
@@ -9,6 +13,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <filesystem>
 #include <memory>
@@ -52,7 +57,15 @@ void RaidScene::Init()
     actions.Cancel();
     focusGeneration = Input::FocusGeneration();
     hud.Init(glfwGetCurrentContext());
-    Input::SetCursorCaptured(false);
+    // Opt-in camera for asset inspection in a test save.
+    char* setting = nullptr;
+    size_t length = 0;
+    if (_dupenv_s(&setting, &length, "TARKOV_RAID_PORTRAIT") == 0 && setting) {
+        raidPortrait = std::string(setting) == "1";
+        std::free(setting);
+    }
+    EnterHideout();
+    if (raidPortrait) StartRaid();
 }
 
 void RaidScene::Update(float dt)
@@ -74,12 +87,12 @@ void RaidScene::Update(float dt)
             raid.recovered = Inventory{};
             raid.recoveredClothing = 0;
             raid.saveMessage.clear();
-            Input::SetCursorCaptured(false);
+            EnterHideout();
         }
         return;
     }
     if (raid.phase == RaidPhase::Hideout) {
-        if (deployRequested) { deployRequested = false; StartRaid(); }
+        UpdateHideout(dt);
         return;
     }
     const float elapsed = std::isfinite(dt) ? (std::max)(0.0f, dt) : 0.0f;
@@ -188,12 +201,22 @@ void RaidScene::Render()
     glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
     if (width <= 0 || height <= 0) return;
     if (raid.phase == RaidPhase::Hideout) {
-        deployRequested = hud.RenderHideout(hideout,*player,playerVisual,shader);
+        RenderHideoutMap(width, height);
         return;
     }
     const int sceneWidth = width;
     glViewport(0, 0, sceneWidth, height);
-    Camera& viewCamera = freeLook ? previewCamera : camera;
+    Camera viewCamera = freeLook ? previewCamera : camera;
+    if (raidPortrait && raid.phase == RaidPhase::Active) {
+        const float yaw = glm::radians(player->rotation.y);
+        const glm::vec3 forward(std::sin(yaw), 0, std::cos(yaw));
+        const glm::vec3 side(forward.z, 0, -forward.x);
+        const auto target = player->position + glm::vec3(0, player->GetEyeHeight() - .06f, 0);
+        viewCamera.position = target + forward * .84f + side * .24f + glm::vec3(0,.03f,0);
+        viewCamera.front = glm::normalize(target - viewCamera.position);
+        viewCamera.up = {0,1,0};
+        viewCamera.fieldOfView = 34.f;
+    }
     Renderer::PrepareFrame(shader, viewCamera, static_cast<float>(sceneWidth), static_cast<float>(height));
     for (auto& batch : mapBatches)
     {
@@ -271,6 +294,10 @@ void RaidScene::StartRaid()
         return;
     }
     if (!hideout.Depart()) return;
+    std::vector<IndustrialZone::Block> blocks;
+    IndustrialZone::Build(collisionWorld, blocks);
+    IndustrialZone::AddDetails(collisionWorld, blocks);
+    IndustrialZone::Bake(blocks, mapBatches);
     freeLook = false;
     hud.ResetAmmoIndicator();
     raid = RaidStatus{};
@@ -354,4 +381,137 @@ void RaidScene::CloseCorpseLoot()
     closeLootRequested = false;
     takeCorpseStack = 0;
     takeCorpseWeapon = false;
+}
+
+void RaidScene::EnterHideout()
+{
+    HideoutMap::Build(collisionWorld, mapBatches);
+    player = std::make_unique<Player>();
+    player->SetCollisionWorld(&collisionWorld);
+    player->position = {3,0,2};
+    player->appearance = hideout.appearance;
+    player->clothingMask = hideout.clothingMask;
+    // Allow walking to medical care even when the saved profile needs healing.
+    playerVisual.Reset();
+    playerVisual.Init(hideout.appearance);
+    playerController.Reset();
+    firstPerson = false;
+    freeLook = false;
+    camera = Camera{};
+    hideoutPanel = false;
+    hideoutPrompt = hideoutZone = hideoutStation = 0;
+    deployRequested = false;
+    playerVisual.Update(0, *player, {false,false,false,false,0,0,false});
+    FollowCamera(camera);
+}
+
+void RaidScene::UpdateHideout(float dt)
+{
+    dt = std::clamp(std::isfinite(dt) ? dt : 0.f, 0.f, .1f);
+    if (deployRequested) { deployRequested = false; StartRaid(); return; }
+    if (hideoutPanel) {
+        if (Input::GetKeyDown(GLFW_KEY_ESCAPE) || Input::GetKeyDown(GLFW_KEY_I)) {
+            hideoutPanel = false;
+            player->appearance = hideout.appearance;
+            player->clothingMask = hideout.clothingMask;
+            Input::SetCursorCaptured(true);
+        }
+        return;
+    }
+    if (hideoutPrompt) {
+        if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
+            hideoutPrompt = 0;
+            Input::SetCursorCaptured(true);
+        }
+        return;
+    }
+    if (Input::IsFocused()) cameraController.Rotate(camera, Input::GetMouseDelta());
+    playerController.UpdateMovement(*player, camera);
+    player->Update(dt);
+    playerVisual.Update(dt, *player, {false,false,false,false,0,0,false});
+    FollowCamera(camera);
+    const auto p = player->position;
+    int zone = 0;
+    if (p.x < -.4f && p.z > .3f) zone = 1;
+    else if (std::abs(p.x-9.f)<1.3f && std::abs(p.z)<1.6f) zone = 2;
+    if (zone && zone != hideoutZone) {
+        hideoutPrompt = zone;
+        player->StopMovement();
+        Input::SetCursorCaptured(false);
+    }
+    hideoutZone = zone;
+    hideoutStation = 0;
+    if (p.x>.2f && p.x<5.8f && p.z < -4.f)
+        hideoutStation = p.x<2.1f ? 1 : p.x<3.9f ? 2 : 3;
+    if (!hideoutPrompt && hideoutStation && Input::GetKeyDown(GLFW_KEY_F)) {
+        hideoutPanel = true;
+        hud.SetHideoutHealthTab(hideoutStation == 1);
+        player->StopMovement();
+        Input::SetCursorCaptured(false);
+    }
+}
+
+void RaidScene::RenderHideoutMap(int width, int height)
+{
+    if (hideoutPanel) {
+        if (hud.RenderHideout(hideout,*player,playerVisual,shader,true)) {
+            hideoutPanel = false;
+            player->appearance = hideout.appearance;
+            player->clothingMask = hideout.clothingMask;
+            Input::SetCursorCaptured(true);
+        }
+        return;
+    }
+    glViewport(0,0,width,height);
+    Renderer::PrepareFrame(shader,camera,float(width),float(height));
+    for (auto& batch : mapBatches) {
+        if (!Renderer::IsVisible(batch.low,batch.high,glm::mat4(1))) continue;
+        Renderer::Draw(shader,batch.mesh,camera,glm::mat4(1),float(width),float(height),batch.color);
+    }
+    playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::SetNextWindowPos({20,20});
+    ImGui::SetNextWindowBgAlpha(.8f);
+    ImGui::Begin("은신처 안내",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
+    ImGui::TextUnformatted("은신처 · 개방형 테라스 아파트 · 3인칭");
+    ImGui::TextUnformatted("← 복도 왼쪽 끝: 레이드 진입 | 방 1: 장비 준비 | 방 2: 캐릭터 전환");
+    ImGui::TextUnformatted("방 3 · 방 4: 아직 개방되지 않았습니다.");
+    ImGui::TextUnformatted("WASD 이동 / 마우스 시점 / F 가구 이용 / Esc 관리 화면 닫기");
+    if (hideoutStation) {
+        const char* names[] = {"", "의료품 탁자", "무기고 캐비넷", "옷장 (장비와 의상)"};
+        ImGui::Text("[F] %s",names[hideoutStation]);
+    }
+    if (!hideout.message.empty()) ImGui::TextWrapped("%s",hideout.message.c_str());
+    ImGui::End();
+    if (hideoutPrompt) {
+        ImGui::SetNextWindowPos({width*.5f,height*.5f},ImGuiCond_Always,{.5f,.5f});
+        ImGui::Begin("은신처 상호작용",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
+        const auto nextAppearance = hideout.appearance == PlayerAppearance::Female
+            ? PlayerAppearance::Male : PlayerAppearance::Female;
+        ImGui::TextUnformatted(hideoutPrompt==1 ? "레이드에 진입하시겠습니까?" :
+            nextAppearance == PlayerAppearance::Male ? "남캐로 캐릭터 전환 하시겠습니까?" : "여캐로 캐릭터 전환 하시겠습니까?");
+        ImGui::BeginDisabled(!Input::IsFocused());
+        if(ImGui::Button("예",{120,36})) {
+            if(hideoutPrompt==1) deployRequested=true;
+            else if(hideout.ChangeAppearance(nextAppearance)) {
+                player->appearance=hideout.appearance;
+                player->clothingMask=hideout.clothingMask;
+                playerVisual.Reset();
+                playerVisual.Init(hideout.appearance);
+            }
+            hideoutPrompt=0;
+            Input::SetCursorCaptured(true);
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("아니요",{120,36})) {
+            hideoutPrompt=0;
+            Input::SetCursorCaptured(true);
+        }
+        ImGui::EndDisabled();
+        ImGui::End();
+    }
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

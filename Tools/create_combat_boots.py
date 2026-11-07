@@ -8,7 +8,7 @@ from create_tactical_outfit import Outfit, write_mesh
 
 
 def main():
-    directory = Path('Project_Tarkov/Project_Tarkov/Assets/Models/Player/KimGawon')
+    directory = Path('Project_Tarkov/Project_Tarkov/Assets/Models/Player/여캐')
     v, t, joints = load(directory / 'character.mesh')
     # Re-running replaces only the boots and preserves all other equipment.
     keep = v['garment'] != 8

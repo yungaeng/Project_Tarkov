@@ -622,7 +622,7 @@ void RaidHud::ResetAmmoIndicator()
     reloadingPreviousFrame = false;
 }
 
-bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader)
+bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader, bool mapPanel)
 {
     if (!rendererReady) return false;
     ImGui_ImplOpenGL3_NewFrame();
@@ -668,8 +668,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::SameLine();
     ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
     if (!hideout.rifle) ImGui::TextColored(accent,"비무장 출격");
-    ImGui::BeginDisabled(!hideout.vitals.Alive());
-    const bool deploy=ImGui::Button("레이드 출격",{150,34});
+    ImGui::BeginDisabled(!mapPanel && !hideout.vitals.Alive());
+    const bool deploy=ImGui::Button(mapPanel ? "은신처로 돌아가기" : "레이드 출격",{150,34});
     ImGui::EndDisabled();
     ImGui::SameLine();
     if (ImGui::Button("저장 / 재시도",{135,34})) hideout.Save();
@@ -736,8 +736,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     auto drawCharacterPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
         int selected = hideout.appearance == PlayerAppearance::Male ? 1 : 0;
-        if (ImGui::Combo("캐릭터 변경", &selected, "김가원\0남캐\0")) {
-            if (hideout.ChangeAppearance(selected == 1 ? PlayerAppearance::Male : PlayerAppearance::KimGawon)) {
+        if (ImGui::Combo("캐릭터 변경", &selected, "여캐\0남캐\0")) {
+            if (hideout.ChangeAppearance(selected == 1 ? PlayerAppearance::Male : PlayerAppearance::Female)) {
                 character.appearance = hideout.appearance;
                 visual.Init(character.appearance);
                 inventoryPreviewVisual.reset();

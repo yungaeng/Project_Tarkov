@@ -41,6 +41,7 @@ private:
     Camera camera;
     // Free look changes only the rendered view; gameplay keeps using camera.
     Camera previewCamera;
+    bool raidPortrait = false;
     bool freeLook = false;
     bool firstPerson = false;
     LootSystem loot;
@@ -66,6 +67,13 @@ private:
     Camera beforeLootCamera;
     void CloseCorpseLoot();
     void StartRaid();
+    void EnterHideout();
+    void UpdateHideout(float dt);
+    void RenderHideoutMap(int width, int height);
+    bool hideoutPanel = false;
+    int hideoutPrompt = 0;
+    int hideoutZone = 0;
+    int hideoutStation = 0;
     void FinishRaid(RaidPhase result);
     void FollowCamera(Camera& camera) const;
 };

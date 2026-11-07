@@ -102,7 +102,7 @@ void Hideout::Load()
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
         // Retired appearance ID 1 uses the default character and its compatible equipment. 
-        next.appearance = appearanceId == static_cast<int>(PlayerAppearance::Male) ? PlayerAppearance::Male : PlayerAppearance::KimGawon;
+        next.appearance = appearanceId == static_cast<int>(PlayerAppearance::Male) ? PlayerAppearance::Male : PlayerAppearance::Female;
         valid=valid && static_cast<bool>(in >> next.clothingMask) && !(next.clothingMask & ~AllClothingMask);
         auto readInventory=[&](Inventory& inventory,bool isStorage) {
             int capacity=0,count=0;

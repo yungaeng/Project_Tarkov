@@ -10,6 +10,7 @@
 #include <utility>
 #include <limits>
 #include <fstream>
+#include <filesystem>
 #include <cstdint>
 
 namespace
@@ -459,7 +460,7 @@ bool SkeletalAnimation::LoadAppearance(const std::string& path)
         data->RefreshPose();
         return true;
     }
-    std::ifstream in(path, std::ios::binary);
+    std::ifstream in(std::filesystem::u8path(path), std::ios::binary);
     auto read = [&](auto& value) { in.read(reinterpret_cast<char*>(&value), sizeof(value)); };
     char magic[8]{};
     in.read(magic, 8);

@@ -277,6 +277,7 @@
   <ItemGroup>
     <ClInclude Include="Game\IndustrialDetails.h" />
     <ClInclude Include="Game\IndustrialGeometry.h" />
+    <ClInclude Include="Game\HideoutMap.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game\Hideout.h"></ClInclude>
