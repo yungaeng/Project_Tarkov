@@ -263,10 +263,44 @@ bool Inventory::TransferTo(StackId id, Inventory& destination, int slot)
     if (&destination == this) return Move(id, slot);
     const auto* item = Find(id);
     if (!item) return false;
+    const auto* target = destination.Covering(slot);
+    if (target && target->type == item->type && GetItemDefinition(item->type).maxStack > 1) {
+        const int amount = (std::min)(item->quantity,
+            GetItemDefinition(item->type).maxStack - target->quantity);
+        if (amount <= 0) return false;
+        auto sourceCopy = *this;
+        auto destinationCopy = destination;
+        destinationCopy.Edit(target->id)->quantity += amount;
+        if (!sourceCopy.Remove(id, amount)) return false;
+        *this = std::move(sourceCopy);
+        destination = std::move(destinationCopy);
+        return true;
+    }
     auto copy = *item;
     copy.slot = slot;
     if (!destination.TryAdd(copy)) return false;
     return Remove(id, copy.quantity);
+}
+bool Inventory::SplitStack(StackId id, int quantity)
+{
+    const auto* item = Find(id);
+    if (!item || GetItemDefinition(item->type).maxStack <= 1 ||
+        quantity <= 0 || quantity >= item->quantity) return false;
+    auto next = *this;
+    auto split = *item;
+    split.quantity = quantity;
+    split.id = 0;
+    split.slot = -100;
+    if (!next.Remove(id, quantity)) return false;
+    for (int slot = 0; slot < (next.storage ? next.slotCapacity : 30); ++slot) {
+        if (!next.CanPlace(split.type, slot)) continue;
+        split.slot = slot;
+        if (next.TryAdd(split)) {
+            *this = std::move(next);
+            return true;
+        }
+    }
+    return false;
 }
 bool Inventory::FillMagazine(StackId id, int amount, StackId ammo)
 {

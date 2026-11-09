@@ -200,6 +200,35 @@ namespace
 
 }
 
+namespace
+{
+    void DrawHideoutExitMenu(bool& open, ImVec2 displaySize)
+    {
+        if (!open) return;
+        ImGui::SetNextWindowPos({0,0},ImGuiCond_Always);
+        ImGui::SetNextWindowSize(displaySize,ImGuiCond_Always);
+        ImGui::SetNextWindowBgAlpha(0.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0,0});
+        ImGui::Begin("HideoutExitOverlay",nullptr,ImGuiWindowFlags_NoDecoration|
+            ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoBringToFrontOnFocus);
+        auto* draw=ImGui::GetWindowDrawList();
+        draw->AddRectFilled({0,0},displaySize,IM_COL32(0,0,0,170));
+        const ImVec2 panelSize(360,172);
+        const ImVec2 panelOrigin((displaySize.x-panelSize.x)*.5f,(displaySize.y-panelSize.y)*.5f);
+        draw->AddRectFilled(panelOrigin,{panelOrigin.x+panelSize.x,panelOrigin.y+panelSize.y},
+            IM_COL32(28,32,31,248),4.f);
+        ImGui::SetCursorScreenPos({panelOrigin.x+24,panelOrigin.y+24});
+        ImGui::TextUnformatted("게임 일시 정지");
+        ImGui::SetCursorScreenPos({panelOrigin.x+24,panelOrigin.y+88});
+        if (ImGui::Button("게임으로 돌아가기",{150,42})) open=false;
+        ImGui::SameLine();
+        if (ImGui::Button("게임 종료",{150,42}))
+            glfwSetWindowShouldClose(glfwGetCurrentContext(),GLFW_TRUE);
+        ImGui::End();
+        ImGui::PopStyleVar();
+    }
+}
+
 RaidHud::RaidHud() = default;
 
 RaidHud::~RaidHud() { Shutdown(); }
@@ -622,16 +651,17 @@ void RaidHud::ResetAmmoIndicator()
     reloadingPreviousFrame = false;
 }
 
-bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader, bool mapPanel)
+void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader,
+    bool mapPanel, bool* exitMenuOpen)
 {
-    if (!rendererReady) return false;
+    if (!rendererReady) return;
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     const auto& io = ImGui::GetIO();
     const ImVec4 accent(.66f,.61f,.43f,1);
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(.045f,.05f,.047f,1));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(.07f,.077f,.07f,1));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(.045f,.05f,.047f,.58f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(.07f,.077f,.07f,.58f));
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.17f,.18f,.15f,1));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.30f,.31f,.23f,1));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(.40f,.39f,.27f,1));
@@ -661,25 +691,12 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::BeginDisabled();
     for (const char* tab : {"기술","지도","임무"}) { ImGui::SmallButton(tab); ImGui::SameLine(); }
     ImGui::EndDisabled();
-    ImGui::NewLine();
+    ImGui::SameLine();
+    ImGui::TextDisabled(mapPanel ? "F 은신처로 돌아가기 | Esc 메뉴" : "Esc 메뉴");
     ImGui::Separator();
-    if (ImGui::Button("게임 종료",{110,34}))
-        glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
-    ImGui::SameLine();
-    ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
-    if (!hideout.rifle) ImGui::TextColored(accent,"비무장 출격");
-    ImGui::BeginDisabled(!mapPanel && !hideout.vitals.Alive());
-    const bool deploy=ImGui::Button(mapPanel ? "은신처로 돌아가기" : "레이드 출격",{150,34});
-    ImGui::EndDisabled();
-    ImGui::SameLine();
-    if (ImGui::Button("저장 / 재시도",{135,34})) hideout.Save();
-    ImGui::SameLine();
-    if (ImGui::Button("물 마시기",{110,34})) hideout.DrinkWater();
-    ImGui::SameLine();
-    ImGui::TextUnformatted(hideout.message.c_str());
-    ImGui::EndDisabled();
-    ImGui::Separator();
-    ImGui::BeginDisabled(!hideout.ready || !Input::IsFocused());
+    if (!hideout.message.empty()) ImGui::TextDisabled("%s",hideout.message.c_str());
+    const bool uiEnabled=hideout.ready && Input::IsFocused() && (!exitMenuOpen || !*exitMenuOpen);
+    ImGui::BeginDisabled(!uiEnabled);
 
     InventoryUi::Command command;
     const auto texture=(ImTextureID)(intptr_t)itemImages.id;
@@ -751,7 +768,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         preview.position=origin;
         preview.size={width,height};
         draw->AddRectFilledMultiColor(origin,{origin.x+width,origin.y+height},
-            IM_COL32(39,47,54,255),IM_COL32(55,54,42,255),IM_COL32(12,22,20,255),IM_COL32(14,23,23,255));
+            IM_COL32(39,47,54,150),IM_COL32(55,54,42,150),IM_COL32(12,22,20,150),IM_COL32(14,23,23,150));
         draw->AddCallback(DrawCharacterPreview,&preview);
         draw->AddCallback(ImDrawCallback_ResetRenderState,nullptr);
         auto slot=[&](int id,const char* name,int type,float x,float y,float w,float h) {
@@ -777,6 +794,8 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::SameLine();
         ImGui::TextColored({.72f,.86f,.30f,1},"체력 %.0f",hideout.vitals.Health());
         ImGui::TextColored({.39f,.71f,.85f,1},"수분 %.0f",hideout.vitals.Hydration());
+        ImGui::SameLine();
+        if (ImGui::SmallButton("물 마시기")) hideout.DrinkWater();
         ImGui::SameLine();
         ImGui::Text("스태미나 %.0f",hideout.vitals.Stamina());
         if (ImGui::CollapsingHeader("의상")) {
@@ -822,7 +841,7 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const ImVec2 modelPosition(origin.x+panelWidth*.43f,origin.y+8.f);
         const ImVec2 modelSize(panelWidth*.55f,panelHeight-24.f);
         auto* draw=ImGui::GetWindowDrawList();
-        draw->AddRectFilled(modelPosition,{modelPosition.x+modelSize.x,modelPosition.y+modelSize.y},IM_COL32(25,29,26,235),3.f);
+        draw->AddRectFilled(modelPosition,{modelPosition.x+modelSize.x,modelPosition.y+modelSize.y},IM_COL32(25,29,26,170),3.f);
         preview.position=modelPosition; preview.size=modelSize;
         draw->AddCallback(DrawCharacterPreview,&preview);
         draw->AddCallback(ImDrawCallback_ResetRenderState,nullptr);
@@ -859,10 +878,15 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     };
     auto drawStashPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        ImGui::SetNextItemWidth((std::max)(80.f,ImGui::GetContentRegionAvail().x-115.f));
+        ImGui::SetNextItemWidth((std::max)(80.f,ImGui::GetContentRegionAvail().x*.5f));
         ImGui::InputTextWithHint("##StashSearch","검색",hideoutStashSearch,sizeof(hideoutStashSearch));
         ImGui::SameLine();
         if (ImGui::SmallButton("자동정리")) hideout.AutoArrangeStash();
+        const auto balance=std::string("보유 루블: ")+std::to_string(hideout.rubles)+" RUB";
+        const float balanceWidth=ImGui::CalcTextSize(balance.c_str()).x;
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX()+(std::max)(0.f,ImGui::GetContentRegionAvail().x-balanceWidth));
+        ImGui::TextUnformatted(balance.c_str());
         const auto available=ImGui::GetContentRegionAvail();
         ImGui::BeginChild("StashGridScroll",{available.x,(std::max)(64.f,available.y)},true,
             ImGuiWindowFlags_AlwaysVerticalScrollbar|ImGuiWindowFlags_HorizontalScrollbar);
@@ -908,16 +932,31 @@ bool RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::EndTable();
     }
     ImGui::EndDisabled();
-    if (command.action!=InventoryUi::Action::None && hideout.ready && Input::IsFocused()) {
-        auto before=hideout;
-        if (!InventoryUi::Execute(command,hideout.loadout,&hideout.storage,hideout.clothingMask,hideout.vitals,hideout.appearance == PlayerAppearance::Male))
-            hideout.message="이동/사용 불가: 빈 공간, 장비 종류, 탄약을 확인하세요.";
-        else if (!hideout.Save()) { const auto failure=hideout.message; hideout=std::move(before); hideout.message=failure; }
+    if (command.action!=InventoryUi::Action::None && uiEnabled) {
+        if (command.action==InventoryUi::Action::Sell) {
+            hideout.SellStashItem(command.item.id);
+        } else {
+            auto before=hideout;
+            if (!InventoryUi::Execute(command,hideout.loadout,&hideout.storage,hideout.clothingMask,hideout.vitals,hideout.appearance == PlayerAppearance::Male))
+                hideout.message="이동/사용 불가: 빈 공간, 장비 종류, 탄약을 확인하세요.";
+            else if (!hideout.Save()) { const auto failure=hideout.message; hideout=std::move(before); hideout.message=failure; }
+        }
     }
+    if (exitMenuOpen) DrawHideoutExitMenu(*exitMenuOpen,io.DisplaySize);
     ImGui::End();
     ImGui::PopStyleVar(2); ImGui::PopStyleColor(8);
     ImGui::Render(); ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    return deploy;
+}
+
+void RaidHud::RenderHideoutPauseMenu(bool& exitMenuOpen)
+{
+    if (!rendererReady || !exitMenuOpen) return;
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    DrawHideoutExitMenu(exitMenuOpen,ImGui::GetIO().DisplaySize);
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader)

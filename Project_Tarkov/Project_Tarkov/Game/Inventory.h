@@ -75,6 +75,7 @@ public:
     ItemStack* Edit(StackId id);
     bool Move(StackId id, int slot);
     bool TransferTo(StackId id, Inventory& destination, int slot = -100);
+    bool SplitStack(StackId id, int quantity);
     bool FillMagazine(StackId id, int amount, StackId ammo = 0);
     bool UnloadMagazine(StackId id);
     bool InsertMagazine(StackId magazine, StackId weapon);

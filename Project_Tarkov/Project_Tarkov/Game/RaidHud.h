@@ -29,7 +29,9 @@ public:
         bool* takeWeapon = nullptr, bool* closeLoot = nullptr);
     void ResetAmmoIndicator();
     static float LootPanelWidth(float screenWidth) { return screenWidth * .42f < 520.f ? screenWidth * .42f : 520.f; }
-    bool RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader, bool mapPanel = false);
+    void RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader,
+        bool mapPanel = false, bool* exitMenuOpen = nullptr);
+    void RenderHideoutPauseMenu(bool& exitMenuOpen);
     void SetHideoutHealthTab(bool health) { hideoutHealthTab = health; }
     bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader);
     void Shutdown();
