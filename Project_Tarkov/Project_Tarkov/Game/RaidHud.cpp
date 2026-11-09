@@ -944,6 +944,8 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             else if (!hideout.Save()) { const auto failure=hideout.message; hideout=std::move(before); hideout.message=failure; }
         }
     }
+    if (exitMenuOpen && *exitMenuOpen)
+        DrawHideoutExitMenu(*exitMenuOpen,io.DisplaySize);
     ImGui::End();
     ImGui::PopStyleVar(2); ImGui::PopStyleColor(8);
     ImGui::Render(); ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -952,12 +954,7 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 void RaidHud::RenderHideoutPauseMenu(bool& exitMenuOpen)
 {
     if (!rendererReady || !exitMenuOpen) return;
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
     DrawHideoutExitMenu(exitMenuOpen,ImGui::GetIO().DisplaySize);
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader)

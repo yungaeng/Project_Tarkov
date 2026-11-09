@@ -480,8 +480,6 @@ void RaidScene::RenderHideoutMap(int width, int height)
     if (hideoutPanel) {
         const bool wasExitMenuOpen=hideoutExitMenu;
         hud.RenderHideout(hideout,*player,playerVisual,shader,true,&hideoutExitMenu);
-        if (hideoutExitMenu)
-            hud.RenderHideoutPauseMenu(hideoutExitMenu);
         if (wasExitMenuOpen && !hideoutExitMenu)
             Input::SetCursorCaptured(false);
         return;
@@ -529,11 +527,11 @@ void RaidScene::RenderHideoutMap(int width, int height)
         ImGui::EndDisabled();
         ImGui::End();
     }
+    const bool wasExitMenuOpen=hideoutExitMenu;
+    if (hideoutExitMenu)
+        hud.RenderHideoutPauseMenu(hideoutExitMenu);
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    if (hideoutExitMenu) {
-        hud.RenderHideoutPauseMenu(hideoutExitMenu);
-        if (!hideoutExitMenu)
-            Input::SetCursorCaptured(true);
-    }
+    if (wasExitMenuOpen && !hideoutExitMenu)
+        Input::SetCursorCaptured(true);
 }
