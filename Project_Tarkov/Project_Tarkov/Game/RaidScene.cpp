@@ -148,7 +148,7 @@ void RaidScene::Update(float dt)
         const auto* corpse=combat.Corpse(corpseTarget);
         if (!corpse) return;
         corpseInteraction=true;
-        corpse->visual->SetLootCorpseSupine(true,corpse->body);
+        corpse->visual->SetLootCorpseFlipped(true,corpse->body);
         // Keep feet and knees supported while the hands search the corpse's waist.
         const auto placementClear = [&](const glm::vec3& candidate, float height,
             const std::array<glm::vec3, 4>& supports) {
@@ -476,6 +476,8 @@ void RaidScene::EnterHideout()
     hideoutExitMenu = false;
     hideoutPrompt = hideoutZone = 0;
     hideoutPromptRoom = -1;
+    hideoutBedPoseActive=false;
+    hideoutBedTestPrompt=false;
     corpseLootPanelOpen=false;
     hideoutFurniture = -1;
     hideoutCameraInRoom = false;
@@ -514,9 +516,76 @@ void RaidScene::ConfigureHideoutSwitchNpc()
     }
 }
 
+void RaidScene::BeginHideoutBedPoseTest()
+{
+    if (!player || player->appearance!=PlayerAppearance::Male ||
+        hideoutSwitchNpcAppearance!=PlayerAppearance::Female) return;
+    hideoutBedBeforePlayerPosition=player->position;
+    hideoutBedBeforePlayerRotation=player->rotation.y;
+    hideoutBedBeforeNpcPosition=hideoutSwitchNpc.position;
+    hideoutBedBeforeNpcRotation=hideoutSwitchNpc.rotation.y;
+    hideoutBedBeforeCamera=camera;
+    const glm::vec3 bedPosition(7.1f,0.f,-4.8f);
+    hideoutSwitchNpc.position=bedPosition;
+    hideoutSwitchNpc.rotation.y=0.f;
+    hideoutSwitchNpcVisual.SetHideoutBedPose(true,.68f);
+    CharacterVisualState npcState;
+    hideoutSwitchNpcVisual.Update(0,hideoutSwitchNpc,npcState);
+
+    player->position=bedPosition+glm::vec3(1.25f,0.f,0.f);
+    player->rotation.y=-90.f;
+    player->SetLooting(true);
+    playerVisual.SetHideoutKneelPose(true);
+    playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
+    hideoutCameraInRoom=false;
+    hideoutCameraModelHidden=false;
+    hideoutCameraBlend=0.f;
+    hideoutBedPoseActive=true;
+    hideoutBedTestPrompt=false;
+    Input::SetCursorCaptured(true);
+}
+
+void RaidScene::EndHideoutBedPoseTest()
+{
+    if (!hideoutBedPoseActive || !player) return;
+    player->SetLooting(false);
+    player->position=hideoutBedBeforePlayerPosition;
+    player->rotation.y=hideoutBedBeforePlayerRotation;
+    hideoutSwitchNpc.position=hideoutBedBeforeNpcPosition;
+    hideoutSwitchNpc.rotation.y=hideoutBedBeforeNpcRotation;
+    hideoutSwitchNpcVisual.SetHideoutBedPose(false);
+    playerVisual.SetHideoutKneelPose(false);
+    CharacterVisualState npcState;
+    hideoutSwitchNpcVisual.Update(0,hideoutSwitchNpc,npcState);
+    hideoutBedPoseActive=false;
+    hideoutBedTestPrompt=false;
+    hideoutCameraInRoom=false;
+    hideoutCameraModelHidden=false;
+    hideoutCameraBlend=0.f;
+    camera=hideoutBedBeforeCamera;
+    Input::SetCursorCaptured(true);
+}
+
 void RaidScene::UpdateHideout(float dt)
 {
     dt = std::clamp(std::isfinite(dt) ? dt : 0.f, 0.f, .1f);
+    if (hideoutBedPoseActive) {
+        if (Input::GetKeyDown(GLFW_KEY_F)||Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
+            EndHideoutBedPoseTest();
+            return;
+        }
+        player->StopMovement();
+        playerVisual.Update(dt,*player,{false,false,false,false,0,0,false});
+        CharacterVisualState npcState;
+        hideoutSwitchNpcVisual.Update(dt,hideoutSwitchNpc,npcState);
+        const auto center=(player->position+hideoutSwitchNpc.position)*.5f+
+            glm::vec3(0,.45f,0);
+        camera.position=center+glm::vec3(2.4f,1.6f,3.8f);
+        camera.front=glm::normalize(center-camera.position);
+        camera.up={0,1,0};
+        camera.fieldOfView=48.f;
+        return;
+    }
     if (deployRequested) { deployRequested = false; StartRaid(); return; }
     if (hideoutExitMenu) {
         if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
@@ -642,6 +711,16 @@ void RaidScene::UpdateHideout(float dt)
             }
         }
     }
+    const float bedX=Hideout::InitialRoomCount*6.f+1.1f;
+    const float bedZ=-4.8f;
+    const float bedDx=p.x-bedX,bedDz=p.z-bedZ;
+    hideoutBedTestPrompt=player->appearance==PlayerAppearance::Male &&
+        p.x>=Hideout::InitialRoomCount*6.f && p.x<(Hideout::InitialRoomCount+1)*6.f &&
+        bedDx*bedDx+bedDz*bedDz<2.25f;
+    if (!hideoutPrompt && hideoutBedTestPrompt && Input::GetKeyDown(GLFW_KEY_F)) {
+        BeginHideoutBedPoseTest();
+        return;
+    }
     if (!hideoutPrompt && nearSwitchNpc && Input::GetKeyDown(GLFW_KEY_F)) {
         hideoutPrompt = 2;
         hideoutPromptAppearance=interactionAppearance;
@@ -688,6 +767,16 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    if (hideoutBedPoseActive||hideoutBedTestPrompt) {
+        ImGui::SetNextWindowPos({width*.5f,height*.76f},ImGuiCond_Always,{.5f,0.f});
+        ImGui::Begin("침대 자세 테스트",nullptr,ImGuiWindowFlags_NoDecoration|
+            ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|
+            ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::TextUnformatted(hideoutBedPoseActive
+            ? "[F] 자세 종료 · [Esc] 자세 종료"
+            : "[F] 방 2 침대 파밍 자세 테스트");
+        ImGui::End();
+    }
     if (hideout.HasRescuedSurvivor(Hideout::InitialRoomCount)) {
         ImGui::SetNextWindowPos({16,16},ImGuiCond_Always);
         ImGui::Begin("구조 인원 테스트",nullptr,ImGuiWindowFlags_NoDecoration|

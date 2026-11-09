@@ -32,7 +32,9 @@ public:
         const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool firstPerson = false);
     void Reset();
     void SetLootPreview(bool enabled);
-    void SetLootCorpseSupine(bool enabled, const Character& character);
+    void SetLootCorpseFlipped(bool enabled, const Character& character);
+    void SetHideoutBedPose(bool enabled, float surfaceHeight = 0.f);
+    void SetHideoutKneelPose(bool enabled);
     glm::vec3 FirstPersonCameraPosition(const Character& character) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
@@ -51,8 +53,12 @@ private:
     float poseElapsed = 0;
     float backpackClock = 0, backpackMotion = 0;
     bool lootPoseValid = false;
-    bool lootCorpseSupine = false;
-    glm::mat4 supineDeathRoot{1};
+    bool lootCorpseFlipped = false;
+    glm::mat4 flippedDeathRoot{1};
+    bool hideoutBedPose = false, hideoutBedPoseInitialized = false;
+    float hideoutBedSurfaceHeight = 0.f;
+    glm::mat4 hideoutBedRoot{1};
+    bool hideoutKneelPose = false, hideoutKneelPoseInitialized = false;
     bool lootPreview = false, lootPreviewInitialized = false;
     float lootPoseHeight = .75f;
     float lootClock = 0;

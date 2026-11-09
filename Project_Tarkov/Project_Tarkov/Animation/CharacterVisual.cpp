@@ -61,7 +61,7 @@ struct CharacterVisual::Assets
 {
     Mesh mesh, backpack, backpackDetail;
     Texture texture;
-    MotionClip deathClip, lootClip, lootSearchClip, holdClip, reloadClip, aimClip, recoilClip;
+    MotionClip deathClip, lootClip, lootSearchClip, hideoutKneelClip, holdClip, reloadClip, aimClip, recoilClip;
     MotionClip jumpClip, landClip;
     MotionClip proneClip, crawlClip;
     std::array<MotionClip, 5> stances;
@@ -97,6 +97,7 @@ void CharacterVisual::Init(PlayerAppearance appearance)
         shared->crawlClip.Load("Assets/Animations/Characters/ProneCrawl.anim");
         shared->lootClip.Load("Assets/Animations/Characters/CorpseLoot.anim");
         shared->lootSearchClip.Load("Assets/Animations/Characters/CorpseSearch.anim");
+        shared->hideoutKneelClip.Load("Assets/Animations/Characters/HideoutKneel.anim");
         shared->holdClip.Load("Assets/Animations/Characters/RifleHold.anim");
         shared->reloadClip.Load("Assets/Animations/Characters/RifleReload.anim");
         const char* names[] = {"RifleIdle", "RifleWalk", "RifleRun", "RifleCrouchIdle", "RifleCrouchWalk"};
@@ -146,10 +147,30 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     weapon.SetMagazineInserted(state.magazineInserted);
     recoilTime = state.fired ? 0 : recoilTime + dt;
     firePending |= state.fired;
+    if (hideoutBedPose) {
+        weapon.Update(dt,false,false,0,false,false,true);
+        if (!hideoutBedPoseInitialized) {
+            animation.Update(0,"idle",false,false);
+            animation.ApplyMotion(assets->deathClip,assets->deathClip.Duration(),1,true,false);
+            hideoutBedRoot=assets->deathClip.Sample("Root",assets->deathClip.Duration()).Matrix();
+            hideoutBedRoot[3].y=0.f;
+            hideoutBedRoot=glm::rotate(hideoutBedRoot,glm::radians(180.f),glm::vec3(0,1,0));
+            float minimum=0.f;
+            for (const auto& vertex : animation.Vertices()) {
+                const glm::vec3 position(vertex.position.x,vertex.position.y,vertex.position.z);
+                minimum=(std::min)(minimum,
+                    (hideoutBedRoot*glm::vec4(position*character.scale*character.GetSettings().modelScale,1)).y);
+            }
+            hideoutBedRoot[3].y=hideoutBedSurfaceHeight-minimum;
+            hideoutBedPoseInitialized=true;
+        }
+        UploadPalette();
+        return;
+    }
     if (state.dead)
     {
         weapon.Update(dt, state.equipped, false, 0, false, false, true);
-        if (!dying) { animation.CapturePose(); dying = true; deathTime = 0; lootCorpseSupine=false; }
+        if (!dying) { animation.CapturePose(); dying = true; deathTime = 0; lootCorpseFlipped=false; }
         else if (deathTime >= assets->deathClip.Duration()) return; // Preserve the corpse, no loop or idle breathing.
         deathTime = (std::min)(assets->deathClip.Duration(), deathTime + dt);
         const auto previousHand = animation.NodePosition("RightHand");
@@ -171,7 +192,15 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     }
     if (character.IsLooting()) {
         // Keep the knees planted while searching the waist pockets.
-        if (lootPreview) {
+        if (hideoutKneelPose) {
+            if (!hideoutKneelPoseInitialized) {
+                animation.Update(0,"idle",false,false);
+                animation.ApplyMotion(assets->hideoutKneelClip,0,1,true,false);
+                animation.CapturePose();
+                hideoutKneelPoseInitialized=true;
+            }
+            animation.RefreshPose();
+        } else if (lootPreview) {
             // UI previews use the authored kneel/search clips without a world corpse or collision fit.
             if (!lootPreviewInitialized) {
                 animation.Update(0,"idle",false,false);
@@ -308,8 +337,11 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     glm::mat4 model = glm::translate(glm::mat4(1), character.position);
     model = glm::rotate(model, glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
     if (dying) model *= CorpseRootMatrix();
+    else if (hideoutBedPose) model *= hideoutBedRoot;
     else if (character.IsLooting()) {
-        auto root = assets->lootClip.Sample("Root", 0);
+        auto root = hideoutKneelPose
+            ? assets->hideoutKneelClip.Sample("Root",0)
+            : assets->lootClip.Sample("Root", 0);
         model *= root.Matrix();
     }
     const glm::mat4 actor = model;
@@ -548,25 +580,44 @@ void CharacterVisual::SetLootPreview(bool enabled)
     lootPreviewInitialized=false;
 }
 
-void CharacterVisual::SetLootCorpseSupine(bool enabled,const Character& character)
+void CharacterVisual::SetHideoutBedPose(bool enabled,float surfaceHeight)
 {
-    lootCorpseSupine=enabled;
+    if (hideoutBedPose==enabled && hideoutBedSurfaceHeight==surfaceHeight) return;
+    hideoutBedPose=enabled;
+    hideoutBedSurfaceHeight=surfaceHeight;
+    hideoutBedPoseInitialized=false;
+}
+
+void CharacterVisual::SetHideoutKneelPose(bool enabled)
+{
+    if (hideoutKneelPose==enabled) return;
+    hideoutKneelPose=enabled;
+    hideoutKneelPoseInitialized=false;
+    lootPoseValid=false;
+}
+
+void CharacterVisual::SetLootCorpseFlipped(bool enabled,const Character& character)
+{
+    lootCorpseFlipped=enabled;
     if (!enabled || !assets) return;
-    supineDeathRoot=deathRoot.Matrix();
-    supineDeathRoot[3].y=0.f;
-    supineDeathRoot=glm::rotate(supineDeathRoot,glm::radians(180.f),glm::vec3(0,0,1));
+    flippedDeathRoot=deathRoot.Matrix();
+    flippedDeathRoot[3].y=0.f;
+    // Death.anim already lays the body on its back. Roll around the body's
+    // longitudinal axis so the corpse turns over instead of spinning end-for-end.
+    flippedDeathRoot=glm::rotate(flippedDeathRoot,glm::radians(180.f),glm::vec3(0,1,0));
     float minimum=0.f;
     for (const auto& vertex : animation.Vertices()) {
         const glm::vec3 position(vertex.position.x,vertex.position.y,vertex.position.z);
         minimum=(std::min)(minimum,
-            (supineDeathRoot*glm::vec4(position*character.scale*character.GetSettings().modelScale,1)).y);
+            (flippedDeathRoot*glm::vec4(position*character.scale*character.GetSettings().modelScale,1)).y);
     }
-    supineDeathRoot[3].y=-minimum+.01f;
+    flippedDeathRoot[3].y=-minimum+.01f;
 }
 
 glm::mat4 CharacterVisual::CorpseRootMatrix() const
 {
-    return lootCorpseSupine ? supineDeathRoot : deathRoot.Matrix();
+    if (hideoutBedPose) return hideoutBedRoot;
+    return lootCorpseFlipped ? flippedDeathRoot : deathRoot.Matrix();
 }
 
 void CharacterVisual::Reset()
@@ -576,8 +627,12 @@ void CharacterVisual::Reset()
     if (paletteBuffer) glDeleteBuffers(1, &paletteBuffer);
     paletteTexture = paletteBuffer = 0;
     assets.reset();
-    lootCorpseSupine=false;
-    supineDeathRoot=glm::mat4(1);
+    lootCorpseFlipped=false;
+    flippedDeathRoot=glm::mat4(1);
+    hideoutBedPose=hideoutBedPoseInitialized=false;
+    hideoutBedSurfaceHeight=0.f;
+    hideoutBedRoot=glm::mat4(1);
+    hideoutKneelPose=hideoutKneelPoseInitialized=false;
     poseElapsed = 0;
     backpackClock = backpackMotion = 0;
     lootPoseValid = false;

@@ -79,6 +79,8 @@ private:
     void StartRaid();
     void EnterHideout();
     void ConfigureHideoutSwitchNpc();
+    void BeginHideoutBedPoseTest();
+    void EndHideoutBedPoseTest();
     void UpdateHideout(float dt);
     void RenderHideoutMap(int width, int height);
     bool hideoutPanel = false;
@@ -86,6 +88,13 @@ private:
     int hideoutFurnitureRoom = 0;
     int hideoutFurniture = -1;
     bool hideoutExitMenu = false;
+    bool hideoutBedPoseActive = false;
+    bool hideoutBedTestPrompt = false;
+    glm::vec3 hideoutBedBeforePlayerPosition{0};
+    float hideoutBedBeforePlayerRotation = 0.f;
+    glm::vec3 hideoutBedBeforeNpcPosition{0};
+    float hideoutBedBeforeNpcRotation = 0.f;
+    Camera hideoutBedBeforeCamera;
     int hideoutPrompt = 0;
     int hideoutPromptRoom = -1;
     int hideoutZone = 0;
