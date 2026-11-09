@@ -26,7 +26,7 @@ inline int InventorySlotsForGear(std::uint32_t equipped) {
         ((equipped & ClothingBit(ItemType::Backpack)) ? 12 : 0);
 }
 inline constexpr std::uint32_t DefaultClothingMask = AllClothingMask & ~(1u << 6);
-struct ItemDefinition { const char* name; int maxStack; float weight; };
+struct ItemDefinition { const char* name; int maxStack; float weight; int price; };
 const ItemDefinition& GetItemDefinition(ItemType type);
 struct ItemSize { int width, height; };
 inline ItemSize ItemFootprint(ItemType type) {

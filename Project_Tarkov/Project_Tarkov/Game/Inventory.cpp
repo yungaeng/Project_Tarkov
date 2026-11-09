@@ -5,21 +5,21 @@
 
 const ItemDefinition& GetItemDefinition(ItemType type)
 {
-    static const ItemDefinition bandage{ "붕대", 5, 0.1f };
-    static const ItemDefinition water{ "물", 2, 0.6f };
-    static const ItemDefinition ammo{ "공용 탄약", 30, 0.01f };
-    static const ItemDefinition shirt{ "멀티캠 전투 상의", 1, 0.4f };
-    static const ItemDefinition trousers{ "멀티캠 전투 하의", 1, 0.6f };
-    static const ItemDefinition vest{ "멀티캠 숏 전술조끼", 1, 1.2f };
-    static const ItemDefinition helmet{ "멀티캠 방탄헬멧", 1, 1.3f };
-    static const ItemDefinition backpack{ "전술 배낭", 1, 1.5f };
-    static const ItemDefinition underShirt{ "검은 스포츠 브라", 1, 0.15f };
-    static const ItemDefinition underpants{ "검은 티팬티", 1, 0.1f };
-    static const ItemDefinition boots{ "검정색 군화", 1, 1.4f };
-    static const ItemDefinition rifle{"소총", 1, 3.5f};
-    static const ItemDefinition magazine{"소총 탄창", 1, .25f};
-    static const ItemDefinition pistol{"권총", 1, .9f};
-    static const ItemDefinition pistolMagazine{"권총 탄창", 1, .12f};
+    static const ItemDefinition bandage{ "붕대", 5, 0.1f, 2500 };
+    static const ItemDefinition water{ "물", 2, 0.6f, 6000 };
+    static const ItemDefinition ammo{ "공용 탄약", 30, 0.01f, 350 };
+    static const ItemDefinition shirt{ "멀티캠 전투 상의", 1, 0.4f, 18000 };
+    static const ItemDefinition trousers{ "멀티캠 전투 하의", 1, 0.6f, 16000 };
+    static const ItemDefinition vest{ "멀티캠 숏 전술조끼", 1, 1.2f, 45000 };
+    static const ItemDefinition helmet{ "멀티캠 방탄헬멧", 1, 1.3f, 40000 };
+    static const ItemDefinition backpack{ "전술 배낭", 1, 1.5f, 32000 };
+    static const ItemDefinition underShirt{ "검은 스포츠 브라", 1, 0.15f, 6000 };
+    static const ItemDefinition underpants{ "검은 티팬티", 1, 0.1f, 4000 };
+    static const ItemDefinition boots{ "검정색 군화", 1, 1.4f, 22000 };
+    static const ItemDefinition rifle{"소총", 1, 3.5f, 90000};
+    static const ItemDefinition magazine{"소총 탄창", 1, .25f, 12000};
+    static const ItemDefinition pistol{"권총", 1, .9f, 50000};
+    static const ItemDefinition pistolMagazine{"권총 탄창", 1, .12f, 8000};
     switch (type)
     {
     case ItemType::Bandage: return bandage;
@@ -36,7 +36,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     case ItemType::Backpack: return backpack;
     case ItemType::Boots: return boots;
     case ItemType::UnderShirt: return underShirt;
-    case ItemType::Trunks: { static const ItemDefinition trunks{"트렁크 팬티",1,0.1f}; return trunks; }
+    case ItemType::Trunks: { static const ItemDefinition trunks{"트렁크 팬티",1,0.1f,4000}; return trunks; }
     case ItemType::Underpants: return underpants;
     }
     throw std::invalid_argument("Unknown item type");

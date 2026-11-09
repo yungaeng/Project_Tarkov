@@ -32,7 +32,8 @@ inline void Target(Command& command, int destination, int slot)
         ImGui::EndDragDropTarget();
     }
 }
-inline void Cell(const ItemStack* item, int source, int slot, ImTextureID texture, Command& command, ImVec2 size, float opacity = 1.f)
+inline void Cell(const ItemStack* item, int source, int slot, ImTextureID texture, Command& command,
+    ImVec2 size, float opacity = 1.f, bool showPrice = false)
 {
     opacity *= PanelOpacity;
     ImGui::PushID(source); ImGui::PushID(slot);
@@ -50,9 +51,18 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
             ImGui::TextUnformatted(GetItemDefinition(item->type).name);
             ImGui::EndDragDropSource();
         }
-        if (hovered) ImGui::SetTooltip("%s\n수량 %d | 잔탄 %d/%d%s", GetItemDefinition(item->type).name,
-            item->quantity, item->rounds, MagazineCapacity(item->type),
-            IsWeapon(item->type) && !item->magazineInserted ? " | 탄창 없음" : "");
+        if (hovered) {
+            const auto& definition = GetItemDefinition(item->type);
+            if (showPrice)
+                ImGui::SetTooltip("%s\n수량 %d | 잔탄 %d/%d%s\n개당 가격 %d RUB | 묶음 가격 %lld RUB",
+                    definition.name, item->quantity, item->rounds, MagazineCapacity(item->type),
+                    IsWeapon(item->type) && !item->magazineInserted ? " | 탄창 없음" : "",
+                    definition.price, static_cast<long long>(definition.price) * item->quantity);
+            else
+                ImGui::SetTooltip("%s\n수량 %d | 잔탄 %d/%d%s", definition.name,
+                    item->quantity, item->rounds, MagazineCapacity(item->type),
+                    IsWeapon(item->type) && !item->magazineInserted ? " | 탄창 없음" : "");
+        }
         if (ImGui::BeginPopupContextItem("actions")) {
             if (source == 2 && ImGui::MenuItem("해제 → 휴대품")) command = {Action::Move,{source,item->id},0,-100};
             if (source != 2 && (item->type == ItemType::Water || IsClothing(item->type)))
@@ -84,7 +94,7 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
 }
 // Draw one card over the whole footprint, and keep covered tiles out of hit testing.
 inline void GridAt(const Inventory& inventory,int source,int first,int count,int columns,
-    ImTextureID texture,Command& command,ImVec2 origin,float cell,float gap=4.f,const char* search="")
+    ImTextureID texture,Command& command,ImVec2 origin,float cell,float gap=4.f,const char* search="",bool showPrices=false)
 {
     for (int i=0;i<count;++i) {
         if (inventory.Covering(first+i)) continue;
@@ -98,7 +108,8 @@ inline void GridAt(const Inventory& inventory,int source,int first,int count,int
         ImGui::SetCursorScreenPos({origin.x+(local%columns)*(cell+gap),origin.y+(local/columns)*(cell+gap)});
         const bool match=!search[0] || std::string(GetItemDefinition(item.type).name).find(search)!=std::string::npos;
         Cell(&item,source,item.slot,texture,command,
-            {footprint.width*cell+(footprint.width-1)*gap,footprint.height*cell+(footprint.height-1)*gap},match?1.f:.2f);
+            {footprint.width*cell+(footprint.width-1)*gap,footprint.height*cell+(footprint.height-1)*gap},
+            match?1.f:.2f,showPrices);
     }
     ImGui::SetCursorScreenPos(origin);
     ImGui::Dummy({columns*(cell+gap),((count+columns-1)/columns)*(cell+gap)});
