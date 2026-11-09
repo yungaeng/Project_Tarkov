@@ -480,6 +480,8 @@ void RaidScene::RenderHideoutMap(int width, int height)
     if (hideoutPanel) {
         const bool wasExitMenuOpen=hideoutExitMenu;
         hud.RenderHideout(hideout,*player,playerVisual,shader,true,&hideoutExitMenu);
+        if (hideoutExitMenu)
+            hud.RenderHideoutPauseMenu(hideoutExitMenu);
         if (wasExitMenuOpen && !hideoutExitMenu)
             Input::SetCursorCaptured(false);
         return;

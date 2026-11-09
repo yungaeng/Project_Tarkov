@@ -207,10 +207,11 @@ namespace
         if (!open) return;
         ImGui::SetNextWindowPos({0,0},ImGuiCond_Always);
         ImGui::SetNextWindowSize(displaySize,ImGuiCond_Always);
+        ImGui::SetNextWindowFocus();
         ImGui::SetNextWindowBgAlpha(0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0,0});
         ImGui::Begin("HideoutExitOverlay",nullptr,ImGuiWindowFlags_NoDecoration|
-            ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoBringToFrontOnFocus);
+            ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoMove);
         auto* draw=ImGui::GetWindowDrawList();
         draw->AddRectFilled({0,0},displaySize,IM_COL32(0,0,0,170));
         const ImVec2 panelSize(360,172);
@@ -942,7 +943,6 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             else if (!hideout.Save()) { const auto failure=hideout.message; hideout=std::move(before); hideout.message=failure; }
         }
     }
-    if (exitMenuOpen) DrawHideoutExitMenu(*exitMenuOpen,io.DisplaySize);
     ImGui::End();
     ImGui::PopStyleVar(2); ImGui::PopStyleColor(8);
     ImGui::Render(); ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
