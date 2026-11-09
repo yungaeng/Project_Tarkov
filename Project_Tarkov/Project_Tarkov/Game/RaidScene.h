@@ -79,7 +79,7 @@ private:
     void StartRaid();
     void EnterHideout();
     void ConfigureHideoutSwitchNpc();
-    void BeginHideoutBedPoseTest();
+    void BeginHideoutBedPoseTest(int room);
     void EndHideoutBedPoseTest();
     void UpdateHideout(float dt);
     void RenderHideoutMap(int width, int height);
@@ -90,6 +90,8 @@ private:
     bool hideoutExitMenu = false;
     bool hideoutBedPoseActive = false;
     bool hideoutBedTestPrompt = false;
+    int hideoutBedTestRoom = -1;
+    bool hideoutBedNpcMoved = false;
     glm::vec3 hideoutBedBeforePlayerPosition{0};
     float hideoutBedBeforePlayerRotation = 0.f;
     glm::vec3 hideoutBedBeforeNpcPosition{0};

@@ -8,10 +8,27 @@
 #include <cmath>
 #include <array>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 namespace
 {
+    struct CellKey
+    {
+        int x = 0;
+        int z = 0;
+        bool operator==(const CellKey& other) const noexcept { return x == other.x && z == other.z; }
+    };
+
+    struct CellKeyHash
+    {
+        std::size_t operator()(const CellKey& key) const noexcept
+        {
+            const std::size_t h1 = static_cast<std::size_t>(key.x >= 0 ? 2 * key.x : -2 * key.x - 1);
+            const std::size_t h2 = static_cast<std::size_t>(key.z >= 0 ? 2 * key.z : -2 * key.z - 1);
+            return h1 * 131071u + h2;
+        }
+    };
+
     void AddTriangle(std::vector<Vertex>& vertices, const glm::vec3& a,
         const glm::vec3& b, const glm::vec3& c)
     {
@@ -80,7 +97,7 @@ void CharacterVisual::Init(PlayerAppearance appearance)
         !animation.LoadClip("run", "Assets/Fast Run.fbx") ||
         !animation.LoadClip("crouch", "Assets/Crouched Walking.fbx"))
         throw std::runtime_error(animation.Error());
-    static std::map<PlayerAppearance, std::weak_ptr<Assets>> caches;
+    static std::unordered_map<PlayerAppearance, std::weak_ptr<Assets>> caches;
     auto& cache = caches[appearance];
     assets = cache.lock();
     if (!assets)
@@ -433,7 +450,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     constexpr float cell = .04f;
     constexpr float clearance = .02f;
     using Interval = std::pair<float, float>;
-    std::map<std::pair<int, int>, Interval> surface;
+    std::unordered_map<CellKey, Interval, CellKeyHash> surface;
     // Cover triangle interiors as well as vertices, including large clothing
     // triangles. Each cell stores a conservative vertical surface bound.
     auto visitSurface = [&](const SkeletalAnimation& mesh, const glm::mat4& model, auto visit) {
@@ -453,7 +470,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
                 x <= static_cast<int>(std::floor(high.x / cell)); ++x)
                 for (int z = static_cast<int>(std::floor(low.z / cell));
                     z <= static_cast<int>(std::floor(high.z / cell)); ++z)
-                    visit(std::make_pair(x, z), low.y, high.y);
+                    visit(CellKey{x, z}, low.y, high.y);
         }
     };
     visitSurface(corpseVisual.animation, corpseModel, [&](const auto& key, float bottom, float top) {
@@ -461,7 +478,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
         inserted.first->second.first = (std::min)(inserted.first->second.first, bottom);
         inserted.first->second.second = (std::max)(inserted.first->second.second, top);
     });
-    std::map<std::pair<int, int>, Interval> underside;
+    std::unordered_map<CellKey, Interval, CellKeyHash> underside;
     lootPoseHeight = .75f;
     visitSurface(animation, lootModel, [&](const auto& key, float bottom, float top) {
         lootPoseHeight = (std::max)(lootPoseHeight, top - corpse.position.y + clearance);
@@ -483,7 +500,8 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
         // Each hand grips its corresponding side of the enemy waist.
         auto target = pelvis + across * (i == 0 ? .16f : -.16f);
         target.y = pelvis.y + .10f;
-        const auto found = surface.find({static_cast<int>(std::floor(target.x / cell)),
+        const auto found = surface.find(CellKey{
+            static_cast<int>(std::floor(target.x / cell)),
             static_cast<int>(std::floor(target.z / cell))});
         if (found != surface.end()) target.y = found->second.second + .025f;
         waistTargets[i] = target;
@@ -510,7 +528,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
             if (!reachable) continue;
             bool clear = true;
             for (const auto& entry : underside) {
-                const auto found = surface.find({entry.first.first + x, entry.first.second + z});
+                const auto found = surface.find(CellKey{entry.first.x + x, entry.first.z + z});
                 // Raised enemy limbs do not occupy the empty space below them.
                 if (found != surface.end() &&
                     entry.second.first < found->second.second + clearance &&
