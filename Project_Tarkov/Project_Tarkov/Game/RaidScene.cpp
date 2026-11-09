@@ -138,12 +138,25 @@ void RaidScene::Update(float dt)
         Input::SetCursorCaptured(false);
     }
     auto beginCorpseLoot=[&]() {
-        if (!combat.Corpse(corpseTarget)) return;
+        const auto* corpse=combat.Corpse(corpseTarget);
+        if (!corpse) return;
         corpseInteraction=true;
+        corpse->visual->SetLootCorpseFlipped(false,corpse->body);
         beforeLootCamera = camera;
         beforeLootPosition = player->position;
         beforeLootRotation = player->rotation.y;
-        player->SetLooting(false);
+        const auto placementClear = [&](const glm::vec3& candidate, float height,
+            const std::array<glm::vec3, 4>& supports) {
+            for (const auto& support : supports)
+                if (!collisionWorld.IsSupported(support, .04f, .1f) ||
+                    !collisionWorld.CanOccupy(support + glm::vec3(0, .002f, 0), .06f, .15f)) return false;
+            if (!collisionWorld.CanOccupy(candidate + glm::vec3(0, .002f, 0), .35f, height)) return false;
+            return combat.LootSpaceClear(candidate, corpseTarget);
+        };
+        const auto anchor = playerVisual.FitLootPose(*player, corpse->body, *corpse->visual, placementClear);
+        player->position = anchor;
+        player->rotation.y = corpse->body.rotation.y + 180.f;
+        player->SetLooting(true);
         lootingCorpse = corpseTarget;
         corpseLootPanelOpen=true;
         freeLook = false;
