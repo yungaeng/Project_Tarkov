@@ -460,11 +460,13 @@ void RaidScene::UpdateHideout(float dt)
     }
     hideoutZone = zone;
     hideoutStation = 0;
-    if (p.x>.2f && p.x<23.8f && p.z < -4.f) {
-        hideoutStation = p.x<6.f ? 1 : p.x<12.f ? 2 : p.x<18.f ? 3 : 4;
+    if (p.x>.2f && p.x<12.f && p.z < -4.f) {
+        hideoutStation = p.x<6.f ? 1 : 2;
     }
     if (!hideoutPrompt && hideoutStation && Input::GetKeyDown(GLFW_KEY_F)) {
-        hideoutFridgePanel = hideoutStation == 4;
+        const bool atFridge = hideoutStation == 2 &&
+            std::abs(p.x-10.65f)<1.1f && p.z>-5.35f && p.z<-4.f;
+        hideoutFridgePanel = atFridge;
         hideoutPanel = !hideoutFridgePanel;
         if (hideoutPanel) hud.SetHideoutHealthTab(hideoutStation == 1);
         player->StopMovement();
@@ -503,10 +505,10 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui::Begin("은신처 안내",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::TextUnformatted("은신처 · 개방형 테라스 아파트 · 3인칭");
     ImGui::TextUnformatted("복도 왼쪽 끝: 레이드 진입 | 방 1: 의료실 | 방 2: 무기고");
-    ImGui::TextUnformatted("방 3: 옷장 | 방 4: 침실 · 물 냉장고");
+    ImGui::TextUnformatted("방 1: 의료실 · 옷장 | 방 2: 무기고 · 침실 · 물 냉장고");
     ImGui::TextUnformatted("WASD 이동 / 마우스 시점 / F 가구 이용 / Esc 일시 정지 메뉴");
     if (hideoutStation) {
-        const char* names[] = {"", "의료 테이블", "무기고", "옷장", "냉장고 · 물 보관"};
+        const char* names[] = {"", "의료 테이블", "무기고 · 냉장고"};
         ImGui::Text("[F] %s",names[hideoutStation]);
     }
     if (!hideout.message.empty()) ImGui::TextWrapped("%s",hideout.message.c_str());
