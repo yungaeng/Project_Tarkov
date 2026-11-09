@@ -35,7 +35,7 @@ inline void Target(Command& command, int destination, int slot)
 }
 inline void Cell(const ItemStack* item, int source, int slot, ImTextureID texture, Command& command,
     ImVec2 size, float opacity = 1.f, bool showPrice = false, bool male = false,
-    StorageFilter storageFilter = StorageFilter::None, int storageSource = 6)
+    StorageFilter transferFilter = StorageFilter::None, int storageSource = -1)
 {
     opacity *= PanelOpacity;
     ImGui::PushID(source); ImGui::PushID(slot);
@@ -66,8 +66,8 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
                     IsWeapon(item->type) && !item->magazineInserted ? " | 탄창 없음" : "");
         }
         if (ImGui::BeginPopupContextItem("actions")) {
-            if (storageFilter != StorageFilter::None) {
-                if (source == 0 && MatchesStorageFilter(storageFilter,item->type) &&
+            if (storageSource >= 0) {
+                if (source == 0 && MatchesStorageFilter(transferFilter,item->type) &&
                     ImGui::MenuItem("가구 보관함에 보관"))
                     command = {Action::Move,{source,item->id},storageSource};
                 if (source == storageSource && ImGui::MenuItem("휴대품으로 꺼내기"))
@@ -113,15 +113,16 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
 // Draw one card over the whole footprint, and keep covered tiles out of hit testing.
 inline void GridAt(const Inventory& inventory,int source,int first,int count,int columns,
     ImTextureID texture,Command& command,ImVec2 origin,float cell,float gap=4.f,const char* search="",
-    bool showPrices=false,bool male=false,StorageFilter storageFilter=StorageFilter::None,int storageSource=6)
+    bool showPrices=false,bool male=false,StorageFilter transferFilter=StorageFilter::None,
+    int storageSource=-1,StorageFilter displayFilter=StorageFilter::None)
 {
     for (int i=0;i<count;++i) {
         if (inventory.Covering(first+i)) continue;
         ImGui::SetCursorScreenPos({origin.x+(i%columns)*(cell+gap),origin.y+(i/columns)*(cell+gap)});
-        Cell(nullptr,source,first+i,texture,command,{cell,cell},1.f,false,false,storageFilter,storageSource);
+        Cell(nullptr,source,first+i,texture,command,{cell,cell},1.f,false,false,transferFilter,storageSource);
     }
     for (const auto& item:inventory.Items()) {
-        if (storageFilter != StorageFilter::None && !MatchesStorageFilter(storageFilter,item.type)) continue;
+        if (displayFilter != StorageFilter::None && !MatchesStorageFilter(displayFilter,item.type)) continue;
         if (item.slot<first || item.slot>=first+count) continue;
         const int local=item.slot-first;
         const auto footprint=ItemFootprint(item.type);
@@ -129,7 +130,7 @@ inline void GridAt(const Inventory& inventory,int source,int first,int count,int
         const bool match=!search[0] || std::string(GetItemDefinition(item.type).name).find(search)!=std::string::npos;
         Cell(&item,source,item.slot,texture,command,
             {footprint.width*cell+(footprint.width-1)*gap,footprint.height*cell+(footprint.height-1)*gap},
-            match?1.f:.2f,showPrices,male,storageFilter,storageSource);
+            match?1.f:.2f,showPrices,male,transferFilter,storageSource);
     }
     ImGui::SetCursorScreenPos(origin);
     ImGui::Dummy({columns*(cell+gap),((count+columns-1)/columns)*(cell+gap)});

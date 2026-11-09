@@ -498,7 +498,7 @@ void RaidScene::RenderHideoutMap(int width, int height)
     if (hideoutStoragePanel) {
         const bool wasStoragePanelOpen=hideoutStoragePanel;
         hud.RenderHideoutStorage(hideout,hideoutFurnitureRoom,hideoutFurniture,
-            hideoutStoragePanel,hideoutExitMenu);
+            *player,playerVisual,shader,hideoutStoragePanel,hideoutExitMenu);
         if (wasStoragePanelOpen&&!hideoutStoragePanel)
             Input::SetCursorCaptured(true);
         return;

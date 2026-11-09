@@ -10,7 +10,7 @@ inline bool IsMagazine(ItemType t) { return t == ItemType::Magazine || t == Item
 inline int MagazineCapacity(ItemType t) { return t == ItemType::Pistol || t == ItemType::PistolMagazine ? 15 : 30; }
 inline ItemType MagazineType(ItemType t) { return t == ItemType::Pistol ? ItemType::PistolMagazine : ItemType::Magazine; }
 enum class FireMode { Semi, Auto, Safe };
-enum class StorageFilter { None, Water, Armory, Clothing, Medical };
+enum class StorageFilter { None, Water, Armory, Clothing, Medical, Weapons, Ammunition, Consumables, Other };
 inline constexpr int ItemTypeCount = static_cast<int>(ItemType::Count);
 inline constexpr int ClothingSlotCount = 8;
 inline constexpr std::uint32_t AllClothingMask = (1u << ClothingSlotCount) - 1;
@@ -21,6 +21,12 @@ inline bool MatchesStorageFilter(StorageFilter filter, ItemType type) {
     case StorageFilter::Armory: return IsWeapon(type) || IsMagazine(type) || type == ItemType::Ammo;
     case StorageFilter::Clothing: return IsClothing(type);
     case StorageFilter::Medical: return type == ItemType::Bandage;
+    case StorageFilter::Weapons: return IsWeapon(type);
+    case StorageFilter::Ammunition: return IsMagazine(type) || type == ItemType::Ammo;
+    case StorageFilter::Consumables: return type == ItemType::Water;
+    case StorageFilter::Other:
+        return !IsWeapon(type) && !IsMagazine(type) && type != ItemType::Ammo &&
+            !IsClothing(type) && type != ItemType::Bandage && type != ItemType::Water;
     default: return false;
     }
 }

@@ -30,8 +30,9 @@ public:
     void ResetAmmoIndicator();
     static float LootPanelWidth(float screenWidth) { return screenWidth * .42f < 520.f ? screenWidth * .42f : 520.f; }
     void RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader,
-        bool mapPanel = false, bool* exitMenuOpen = nullptr);
-    void RenderHideoutStorage(Hideout& hideout, int room, int furniture, bool& panelOpen, bool& exitMenuOpen);
+        bool mapPanel = false, bool* exitMenuOpen = nullptr, int storageRoom = -1, int storageFurniture = -1);
+    void RenderHideoutStorage(Hideout& hideout, int room, int furniture, Player& character,
+        CharacterVisual& visual, Shader& shader, bool& panelOpen, bool& exitMenuOpen);
     void RenderHideoutPauseMenu(bool& exitMenuOpen);
     void SetHideoutHealthTab(bool health) { hideoutHealthTab = health; }
     bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader);
@@ -46,6 +47,7 @@ private:
     bool rendererReady = false;
     bool hideoutHealthTab = false;
     char hideoutStashSearch[128]{};
+    int hideoutStashCategory = 0;
     float hideoutPreviewRotation = 0.f;
     float reloadHoldSeconds = 0.f;
     float ammoDisplaySeconds = 0.f;
