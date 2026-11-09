@@ -394,6 +394,7 @@ void RaidScene::EnterHideout()
     // Allow walking to medical care even when the saved profile needs healing.
     playerVisual.Reset();
     playerVisual.Init(hideout.appearance);
+    ConfigureHideoutSwitchNpc();
     playerController.Reset();
     firstPerson = false;
     freeLook = false;
@@ -403,9 +404,24 @@ void RaidScene::EnterHideout()
     hideoutExitMenu = false;
     hideoutPrompt = hideoutZone = 0;
     hideoutFurniture = -1;
+    hideoutCameraBlend = 0.f;
     deployRequested = false;
     playerVisual.Update(0, *player, {false,false,false,false,0,0,false});
     FollowCamera(camera);
+}
+
+void RaidScene::ConfigureHideoutSwitchNpc()
+{
+    hideoutSwitchNpcAppearance = hideout.appearance == PlayerAppearance::Female
+        ? PlayerAppearance::Male : PlayerAppearance::Female;
+    hideoutSwitchNpc.position = {
+        hideoutSwitchNpcAppearance == PlayerAppearance::Female ? 9.f : 3.f, 0.f, -4.5f
+    };
+    hideoutSwitchNpcVisual.Reset();
+    hideoutSwitchNpcVisual.Init(hideoutSwitchNpcAppearance);
+    CharacterVisualState npcState;
+    npcState.hasWeapon = false;
+    hideoutSwitchNpcVisual.Update(0, hideoutSwitchNpc, npcState);
 }
 
 void RaidScene::UpdateHideout(float dt)
@@ -449,26 +465,39 @@ void RaidScene::UpdateHideout(float dt)
     playerController.UpdateMovement(*player, camera);
     player->Update(dt);
     playerVisual.Update(dt, *player, {false,false,false,false,0,0,false});
-    FollowCamera(camera);
+    CharacterVisualState npcState;
+    npcState.hasWeapon = false;
+    hideoutSwitchNpcVisual.Update(dt, hideoutSwitchNpc, npcState);
     const auto p = player->position;
+    const bool insideHideoutRoom = p.x > .2f && p.x < 11.8f && p.z < -.5f && p.z > -8.f;
+    const float cameraTarget = insideHideoutRoom ? 1.f : 0.f;
+    hideoutCameraBlend += std::clamp(cameraTarget - hideoutCameraBlend,
+        -dt / .7f, dt / .7f);
+    const float cameraEase = hideoutCameraBlend * hideoutCameraBlend *
+        (3.f - 2.f * hideoutCameraBlend);
+    cameraController.Follow(camera, *player);
+    camera.position = glm::mix(camera.position,
+        playerVisual.FirstPersonCameraPosition(*player), cameraEase);
     int zone = 0;
     if (p.x < -.4f && p.z > .3f) zone = 1;
-    else if (std::abs(p.x-9.f)<1.3f && std::abs(p.z)<1.6f) zone = 2;
     if (zone && zone != hideoutZone) {
         hideoutPrompt = zone;
         player->StopMovement();
         Input::SetCursorCaptured(false);
     }
     hideoutZone = zone;
+    const float npcDx = p.x - hideoutSwitchNpc.position.x;
+    const float npcDz = p.z - hideoutSwitchNpc.position.z;
+    const bool nearSwitchNpc = npcDx*npcDx + npcDz*npcDz < 2.25f;
     hideoutFurniture = -1;
     float nearestFurniture = 1.7f * 1.7f;
-    if (p.x>.2f && p.x<12.f && p.z < -4.f) {
+    if (!nearSwitchNpc && p.x>.2f && p.x<12.f && p.z < -4.f) {
         hideoutFurnitureRoom = p.x<6.f ? 0 : 1;
         const float roomX=hideoutFurnitureRoom*6.f;
         const float furnitureX[]{
-            roomX+4.55f, roomX+2.65f, roomX+4.5f, roomX+1.2f
+            roomX+5.1f, roomX+2.8f, roomX+4.9f, roomX+1.2f
         };
-        const float furnitureZ[]{-4.85f,-7.15f,-6.8f,-6.1f};
+        const float furnitureZ[]{-4.8f,-7.f,-6.8f,-2.5f};
         for (int kind=0;kind<Hideout::FurnitureCount;++kind) {
             const float dx=p.x-furnitureX[kind],dz=p.z-furnitureZ[kind];
             const float distance=dx*dx+dz*dz;
@@ -478,7 +507,11 @@ void RaidScene::UpdateHideout(float dt)
             }
         }
     }
-    if (!hideoutPrompt && hideoutFurniture>=0 && Input::GetKeyDown(GLFW_KEY_F)) {
+    if (!hideoutPrompt && nearSwitchNpc && Input::GetKeyDown(GLFW_KEY_F)) {
+        hideoutPrompt = 2;
+        player->StopMovement();
+        Input::SetCursorCaptured(false);
+    } else if (!hideoutPrompt && hideoutFurniture>=0 && Input::GetKeyDown(GLFW_KEY_F)) {
         hideoutStoragePanel = true;
         hideoutPanel = false;
         player->StopMovement();
@@ -494,7 +527,9 @@ void RaidScene::RenderHideoutMap(int width, int height)
         if (!Renderer::IsVisible(batch.low,batch.high,glm::mat4(1))) continue;
         Renderer::Draw(shader,batch.mesh,camera,glm::mat4(1),float(width),float(height),batch.color);
     }
-    playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
+    playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),
+        hideoutCameraBlend >= .98f);
+    hideoutSwitchNpcVisual.Render(hideoutSwitchNpc,shader,camera,float(width),float(height),glm::vec3(1),false);
     if (hideoutStoragePanel) {
         const bool wasStoragePanelOpen=hideoutStoragePanel;
         hud.RenderHideoutStorage(hideout,hideoutFurnitureRoom,hideoutFurniture,
@@ -524,13 +559,19 @@ void RaidScene::RenderHideoutMap(int width, int height)
         const char* names[]{"냉장고","무기고","옷장","의료품 탁자"};
         ImGui::Text("[F] %s 보관함",names[hideoutFurniture]);
     }
+    const auto p = player->position;
+    const float npcDx = p.x - hideoutSwitchNpc.position.x;
+    const float npcDz = p.z - hideoutSwitchNpc.position.z;
+    if (npcDx*npcDx + npcDz*npcDz < 2.25f) {
+        ImGui::Text("[F] 방 가운데의 %s와 상호작용하여 캐릭터 변경",
+            hideoutSwitchNpcAppearance == PlayerAppearance::Female ? "여캐" : "남캐");
+    }
     if (!hideout.message.empty()) ImGui::TextWrapped("%s",hideout.message.c_str());
     ImGui::End();
     if (hideoutPrompt) {
         ImGui::SetNextWindowPos({width*.5f,height*.5f},ImGuiCond_Always,{.5f,.5f});
         ImGui::Begin("은신처 상호작용",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
-        const auto nextAppearance = hideout.appearance == PlayerAppearance::Female
-            ? PlayerAppearance::Male : PlayerAppearance::Female;
+        const auto nextAppearance = hideoutSwitchNpcAppearance;
         ImGui::TextUnformatted(hideoutPrompt==1 ? "레이드에 진입하시겠습니까?" :
             nextAppearance == PlayerAppearance::Male ? "남캐로 캐릭터 전환 하시겠습니까?" : "여캐로 캐릭터 전환 하시겠습니까?");
         ImGui::BeginDisabled(!Input::IsFocused());
@@ -541,6 +582,7 @@ void RaidScene::RenderHideoutMap(int width, int height)
                 player->clothingMask=hideout.clothingMask;
                 playerVisual.Reset();
                 playerVisual.Init(hideout.appearance);
+                ConfigureHideoutSwitchNpc();
             }
             hideoutPrompt=0;
             Input::SetCursorCaptured(true);

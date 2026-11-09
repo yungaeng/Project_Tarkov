@@ -36,6 +36,9 @@ private:
     PlayerController playerController;
     ThirdPersonCameraController cameraController;
     CharacterVisual playerVisual;
+    Character hideoutSwitchNpc;
+    CharacterVisual hideoutSwitchNpcVisual;
+    PlayerAppearance hideoutSwitchNpcAppearance = PlayerAppearance::Male;
     Shader shader;
     Mesh cubeMesh;
     Camera camera;
@@ -68,6 +71,7 @@ private:
     void CloseCorpseLoot();
     void StartRaid();
     void EnterHideout();
+    void ConfigureHideoutSwitchNpc();
     void UpdateHideout(float dt);
     void RenderHideoutMap(int width, int height);
     bool hideoutPanel = false;
@@ -77,6 +81,7 @@ private:
     bool hideoutExitMenu = false;
     int hideoutPrompt = 0;
     int hideoutZone = 0;
+    float hideoutCameraBlend = 0.f;
     void FinishRaid(RaidPhase result);
     void FollowCamera(Camera& camera) const;
 };

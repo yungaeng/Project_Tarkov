@@ -138,12 +138,12 @@ inline void Build(CollisionWorld& world, std::vector<IndustrialZone::Batch>& bat
     };
     for(int room=0;room<2;++room) {
         const float left=room*6.f;
-        medicalTable(left+1.2f,-6.1f);
-        weaponRack(left+2.65f,-7.15f);
-        wardrobe(left+4.5f,-6.8f);
-        refrigerator(left+4.55f,-4.85f);
-        bed(left+2.8f,-4.95f);
-        chair(left+3.5f,-5.3f);
+        medicalTable(left+1.2f,-2.5f);
+        weaponRack(left+2.8f,-7.f);
+        wardrobe(left+4.9f,-6.8f);
+        refrigerator(left+5.1f,-4.8f);
+        bed(left+1.1f,-4.8f);
+        chair(left+3.3f,-3.1f);
     }
 
     // Torn wallpaper and dust collect along the wall joints and beneath the furniture.
