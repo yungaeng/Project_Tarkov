@@ -80,6 +80,7 @@ private:
     void EnterHideout();
     void ConfigureHideoutSwitchNpc();
     void BeginHideoutBedPoseTest(int room);
+    void BeginHideoutBedLooting();
     void EndHideoutBedPoseTest();
     void UpdateHideout(float dt);
     void RenderHideoutMap(int width, int height);
@@ -89,6 +90,9 @@ private:
     int hideoutFurniture = -1;
     bool hideoutExitMenu = false;
     bool hideoutBedPoseActive = false;
+    bool hideoutBedPoseLooting = false;
+    bool hideoutBedCorpseAligned = false;
+    float hideoutBedPoseElapsed = 0.f;
     bool hideoutBedTestPrompt = false;
     int hideoutBedTestRoom = -1;
     bool hideoutBedNpcMoved = false;

@@ -42,6 +42,8 @@ public:
         const CharacterVisual& corpseVisual,
         const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear,
         float approachYaw = 180.f, float supportHeight = -1.f);
+    void AlignDeathPosePelvis(Character& character, const glm::vec3& worldPosition) const;
+    void AlignLootPosePelvis(Character& character, const glm::vec3& worldPosition) const;
     float FittedLootYaw() const { return lootPoseYaw; }
     bool LootPoseValid() const { return lootPoseValid; }
     float LootPoseHeight() const { return lootPoseHeight; }

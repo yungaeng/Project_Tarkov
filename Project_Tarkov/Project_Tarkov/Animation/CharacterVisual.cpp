@@ -186,15 +186,16 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
             hideoutBedYaw=bedYaw;
             hideoutBedRoot=glm::rotate(hideoutBedRoot,glm::radians(bedYaw),glm::vec3(0,1,0));
             const auto localHead=glm::vec3(hideoutBedRoot*glm::vec4(head,1));
-            hideoutBedRoot[3].x=hideoutBedCenter.x-localHead.x;
-            hideoutBedRoot[3].z=hideoutBedCenter.z-.78f-localHead.z;
+            const glm::vec3 modelScale=character.scale*character.GetSettings().modelScale;
+            hideoutBedRoot[3].x=(hideoutBedCenter.x-character.position.x)/modelScale.x-localHead.x;
+            hideoutBedRoot[3].z=(hideoutBedCenter.z-character.position.z-.78f)/modelScale.z-localHead.z;
             float minimum=(std::numeric_limits<float>::max)();
             for (const auto& vertex : animation.Vertices()) {
                 const glm::vec3 position(vertex.position.x,vertex.position.y,vertex.position.z);
                 minimum=(std::min)(minimum,
-                    (hideoutBedRoot*glm::vec4(position*character.scale*character.GetSettings().modelScale,1)).y);
+                    (hideoutBedRoot*glm::vec4(position*modelScale,1)).y);
             }
-            hideoutBedRoot[3].y=hideoutBedSurfaceHeight-minimum;
+            hideoutBedRoot[3].y=(hideoutBedSurfaceHeight-character.position.y-minimum)/modelScale.y;
             hideoutBedPoseInitialized=true;
         }
         UploadPalette();
@@ -382,7 +383,8 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     // Bone envelopes conservatively enclose the current skinned pose.
     // Padding also covers the attached rifle, magazine and muzzle flash.
     const float weaponPadding = 2.0f;
-    if (!Renderer::IsVisible(animation.BoundsMin(), animation.BoundsMax(), model, weaponPadding)) return;
+    if (!hideoutBedPose && !character.IsLooting() &&
+        !Renderer::IsVisible(animation.BoundsMin(), animation.BoundsMax(), model, weaponPadding)) return;
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_BUFFER, paletteTexture);
     glActiveTexture(GL_TEXTURE0);
@@ -594,6 +596,27 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     return anchor + offset;
 }
 
+void CharacterVisual::AlignDeathPosePelvis(Character& character,const glm::vec3& worldPosition) const
+{
+    const auto modelScale=character.scale*character.GetSettings().modelScale;
+    const auto local=glm::vec3(CorpseRootMatrix()*
+        glm::vec4(animation.NodePosition("Hips")*modelScale,1));
+    const auto rotation=glm::rotate(glm::mat4(1),glm::radians(character.rotation.y),
+        glm::vec3(0,1,0));
+    character.position=worldPosition-glm::vec3(rotation*glm::vec4(local,0));
+}
+
+void CharacterVisual::AlignLootPosePelvis(Character& character,const glm::vec3& worldPosition) const
+{
+    const auto modelScale=character.scale*character.GetSettings().modelScale;
+    const auto root=assets->lootClip.Sample("Root",0).Matrix();
+    const auto local=glm::vec3(root*
+        glm::vec4(animation.NodePosition("Hips")*modelScale,1));
+    const auto rotation=glm::rotate(glm::mat4(1),glm::radians(character.rotation.y),
+        glm::vec3(0,1,0));
+    character.position=worldPosition-glm::vec3(rotation*glm::vec4(local,0));
+}
+
 void CharacterVisual::AnimateLootSearch(float dt)
 {
     if (!lootPoseValid) return;
@@ -627,7 +650,11 @@ void CharacterVisual::SetHideoutBedPose(bool enabled,float surfaceHeight,const g
     hideoutBedPose=enabled;
     hideoutBedSurfaceHeight=surfaceHeight;
     hideoutBedCenter=bedCenter;
-    if (!enabled) hideoutBedYaw=0.f;
+    if (enabled) {
+        dying=false;
+        deathTime=0.f;
+        lootCorpseFlipped=false;
+    } else hideoutBedYaw=0.f;
     hideoutBedPoseInitialized=false;
 }
 
