@@ -102,8 +102,9 @@ inline void Build(CollisionWorld& world, std::vector<IndustrialZone::Batch>& bat
         propDetail({x,1.15f,z-.3f},{.16f,.18f,.16f},{.63f,.72f,.61f},IndustrialZone::Shape::Cylinder);
         propDetail({x+.34f,1.15f,z-.28f},{.22f,.16f,.16f},{.75f,.70f,.57f});
         propDetail({x,2.12f,-7.82f},{.72f,.72f,.07f},{.83f,.79f,.67f});
-        propDetail({x,2.12f,-7.77f},{.16f,.52f,.035f},{.76f,.08f,.06f});
-        propDetail({x,2.12f,-7.75f},{.52f,.16f,.04f},{.76f,.08f,.06f});
+        propDetail({x-.16f,2.12f,-7.77f},{.12f,.52f,.035f},{.76f,.08f,.06f});
+        propDetail({x+.16f,2.12f,-7.77f},{.12f,.52f,.035f},{.76f,.08f,.06f});
+        propDetail({x,2.12f,-7.75f},{.32f,.12f,.04f},{.76f,.08f,.06f});
     };
     auto wardrobe=[&](float x,float z) {
         propBox({x,.12f,z},{1.35f,.24f,.65f},{.30f,.25f,.20f});

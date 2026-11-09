@@ -9,6 +9,7 @@
 #include <array>
 #include <vector>
 #include <unordered_map>
+#include <limits>
 
 namespace
 {
@@ -170,9 +171,24 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
             animation.Update(0,"idle",false,false);
             animation.ApplyMotion(assets->deathClip,assets->deathClip.Duration(),1,true,false);
             hideoutBedRoot=assets->deathClip.Sample("Root",assets->deathClip.Duration()).Matrix();
+            hideoutBedRoot[3].x=0.f;
             hideoutBedRoot[3].y=0.f;
-            hideoutBedRoot=glm::rotate(hideoutBedRoot,glm::radians(180.f),glm::vec3(0,1,0));
-            float minimum=0.f;
+            hideoutBedRoot[3].z=0.f;
+            const auto head=animation.NodePosition("Head");
+            const auto feet=(animation.NodePosition("RightFoot")+animation.NodePosition("LeftFoot"))*.5f;
+            auto pointsHeadToPillow=[&](float yaw) {
+                const auto candidate=glm::rotate(hideoutBedRoot,glm::radians(yaw),glm::vec3(0,1,0));
+                const auto candidateHead=glm::vec3(candidate*glm::vec4(head,1));
+                const auto candidateFeet=glm::vec3(candidate*glm::vec4(feet,1));
+                return candidateHead.z<candidateFeet.z;
+            };
+            const float bedYaw=pointsHeadToPillow(0.f)?0.f:180.f;
+            hideoutBedYaw=bedYaw;
+            hideoutBedRoot=glm::rotate(hideoutBedRoot,glm::radians(bedYaw),glm::vec3(0,1,0));
+            const auto localHead=glm::vec3(hideoutBedRoot*glm::vec4(head,1));
+            hideoutBedRoot[3].x=hideoutBedCenter.x-localHead.x;
+            hideoutBedRoot[3].z=hideoutBedCenter.z-.78f-localHead.z;
+            float minimum=(std::numeric_limits<float>::max)();
             for (const auto& vertex : animation.Vertices()) {
                 const glm::vec3 position(vertex.position.x,vertex.position.y,vertex.position.z);
                 minimum=(std::min)(minimum,
@@ -432,7 +448,9 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     corpseModel = glm::rotate(corpseModel, glm::radians(corpse.rotation.y), glm::vec3(0, 1, 0));
     corpseModel *= corpseVisual.CorpseRootMatrix();
     corpseModel = glm::scale(corpseModel, corpse.scale * corpse.GetSettings().modelScale);
-    auto lootModel = glm::rotate(glm::mat4(1), glm::radians(corpse.rotation.y + 180.f), glm::vec3(0, 1, 0));
+    const float corpseYaw=corpse.rotation.y+
+        (corpseVisual.hideoutBedPose?corpseVisual.hideoutBedYaw:0.f);
+    auto lootModel = glm::rotate(glm::mat4(1), glm::radians(corpseYaw + 180.f), glm::vec3(0, 1, 0));
     lootModel *= assets->lootClip.Sample("Root", 0).Matrix();
     lootModel = glm::scale(lootModel, character.scale * character.GetSettings().modelScale);
     const auto pelvis = glm::vec3(corpseModel * glm::vec4(corpseVisual.animation.NodePosition("Hips"), 1));
@@ -492,7 +510,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
         baseSupports[i] = glm::vec3(lootModel * glm::vec4(animation.NodePosition(supports[i]), 1));
         baseSupports[i].y = corpse.position.y;
     }
-    const float yaw = glm::radians(corpse.rotation.y);
+    const float yaw = glm::radians(corpseYaw);
     const glm::vec3 across(std::cos(yaw), 0, -std::sin(yaw));
     std::array<glm::vec3, 2> waistTargets{};
     for (size_t i = 0; i < waistTargets.size(); ++i) {
@@ -598,11 +616,14 @@ void CharacterVisual::SetLootPreview(bool enabled)
     lootPreviewInitialized=false;
 }
 
-void CharacterVisual::SetHideoutBedPose(bool enabled,float surfaceHeight)
+void CharacterVisual::SetHideoutBedPose(bool enabled,float surfaceHeight,const glm::vec3& bedCenter)
 {
-    if (hideoutBedPose==enabled && hideoutBedSurfaceHeight==surfaceHeight) return;
+    if (hideoutBedPose==enabled && hideoutBedSurfaceHeight==surfaceHeight &&
+        hideoutBedCenter==bedCenter) return;
     hideoutBedPose=enabled;
     hideoutBedSurfaceHeight=surfaceHeight;
+    hideoutBedCenter=bedCenter;
+    if (!enabled) hideoutBedYaw=0.f;
     hideoutBedPoseInitialized=false;
 }
 
@@ -649,6 +670,8 @@ void CharacterVisual::Reset()
     flippedDeathRoot=glm::mat4(1);
     hideoutBedPose=hideoutBedPoseInitialized=false;
     hideoutBedSurfaceHeight=0.f;
+    hideoutBedYaw=0.f;
+    hideoutBedCenter=glm::vec3(0);
     hideoutBedRoot=glm::mat4(1);
     hideoutKneelPose=hideoutKneelPoseInitialized=false;
     poseElapsed = 0;

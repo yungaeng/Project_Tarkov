@@ -33,7 +33,9 @@ public:
     void Reset();
     void SetLootPreview(bool enabled);
     void SetLootCorpseFlipped(bool enabled, const Character& character);
-    void SetHideoutBedPose(bool enabled, float surfaceHeight = 0.f);
+    void SetHideoutBedPose(bool enabled, float surfaceHeight = 0.f,
+        const glm::vec3& bedCenter = glm::vec3(0));
+    float HideoutBedYaw() const { return hideoutBedYaw; }
     void SetHideoutKneelPose(bool enabled);
     glm::vec3 FirstPersonCameraPosition(const Character& character) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
@@ -57,6 +59,8 @@ private:
     glm::mat4 flippedDeathRoot{1};
     bool hideoutBedPose = false, hideoutBedPoseInitialized = false;
     float hideoutBedSurfaceHeight = 0.f;
+    float hideoutBedYaw = 0.f;
+    glm::vec3 hideoutBedCenter{0};
     glm::mat4 hideoutBedRoot{1};
     bool hideoutKneelPose = false, hideoutKneelPoseInitialized = false;
     bool lootPreview = false, lootPreviewInitialized = false;

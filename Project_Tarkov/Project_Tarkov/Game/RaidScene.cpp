@@ -523,11 +523,20 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
         hideoutSwitchNpcVisual.Update(0,hideoutSwitchNpc,npcState);
     }
 
-    player->position=bedPosition+glm::vec3(1.25f,0.f,0.f);
-    player->rotation.y=-90.f;
+    playerVisual.SetLootPreview(false);
+    playerVisual.SetHideoutKneelPose(false);
+    const auto placementClear=[&](const glm::vec3& candidate,float height,
+        const std::array<glm::vec3,4>& supports) {
+        for (const auto& support:supports)
+            if (!collisionWorld.IsSupported(support,.04f,.1f) ||
+                !collisionWorld.CanOccupy(support+glm::vec3(0,.002f,0),.06f,.15f)) return false;
+        return collisionWorld.CanOccupy(candidate+glm::vec3(0,.002f,0),.35f,height);
+    };
+    player->position=playerVisual.FitLootPose(*player,hideoutSwitchNpc,
+        hideoutSwitchNpcVisual,placementClear);
+    player->rotation.y=hideoutSwitchNpc.rotation.y+
+        hideoutSwitchNpcVisual.HideoutBedYaw()+180.f;
     player->SetLooting(true);
-    playerVisual.SetLootPreview(room==0);
-    playerVisual.SetHideoutKneelPose(room==1);
     playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
     hideoutCameraInRoom=false;
     hideoutCameraModelHidden=false;
@@ -575,12 +584,14 @@ void RaidScene::UpdateHideout(float dt)
         playerVisual.Update(dt,*player,{false,false,false,false,0,0,false});
         CharacterVisualState npcState;
         hideoutSwitchNpcVisual.Update(dt,hideoutSwitchNpc,npcState);
-        const auto center=(player->position+hideoutSwitchNpc.position)*.5f+
-            glm::vec3(0,.45f,0);
-        camera.position=center+glm::vec3(2.4f,1.6f,3.8f);
+        const float yaw=glm::radians(player->rotation.y);
+        const glm::vec3 forward(std::sin(yaw),0,std::cos(yaw));
+        const glm::vec3 side(std::cos(yaw),0,-std::sin(yaw));
+        const auto center=player->position+forward*.35f+glm::vec3(0,.7f,0);
+        camera.position=center-forward*3.6f+side*2.4f+glm::vec3(0,1.2f,0);
         camera.front=glm::normalize(center-camera.position);
         camera.up={0,1,0};
-        camera.fieldOfView=48.f;
+        camera.fieldOfView=58.f;
         return;
     }
     if (deployRequested) { deployRequested = false; StartRaid(); return; }
@@ -776,9 +787,7 @@ void RaidScene::RenderHideoutMap(int width, int height)
             ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::TextUnformatted(hideoutBedPoseActive
             ? "[F] 자세 종료 · [Esc] 자세 종료"
-            : hideoutBedTestRoom==0
-                ? "[F] 방 1 침대 기본 파밍 자세"
-                : "[F] 방 2 침대 추가 파밍 자세");
+            : "[F] 레이드 파밍 자세 테스트");
         ImGui::End();
     }
     if (hideout.HasRescuedSurvivor(Hideout::InitialRoomCount)) {

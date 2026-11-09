@@ -996,9 +996,15 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             bool executed=false;
             if (furnitureMode && command.item.source==furnitureSource) {
                 auto localCommand=command;
-                localCommand.item.source=0;
-                executed=InventoryUi::Execute(localCommand,shownStorage,nullptr,hideout.clothingMask,
-                    hideout.vitals,hideout.appearance==PlayerAppearance::Male);
+                if (command.action==InventoryUi::Action::Use || command.destination==2) {
+                    localCommand.item.source=1;
+                    executed=InventoryUi::Execute(localCommand,hideout.loadout,&shownStorage,
+                        hideout.clothingMask,hideout.vitals,hideout.appearance==PlayerAppearance::Male);
+                } else {
+                    localCommand.item.source=0;
+                    executed=InventoryUi::Execute(localCommand,shownStorage,nullptr,hideout.clothingMask,
+                        hideout.vitals,hideout.appearance==PlayerAppearance::Male);
+                }
             } else {
                 executed=InventoryUi::Execute(command,hideout.loadout,&hideout.storage,hideout.clothingMask,
                     hideout.vitals,hideout.appearance==PlayerAppearance::Male);

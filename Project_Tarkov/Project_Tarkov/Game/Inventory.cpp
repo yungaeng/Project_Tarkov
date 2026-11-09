@@ -150,9 +150,13 @@ bool Inventory::EquipClothing(StackId id, std::uint32_t& equipped)
     const auto* stack = Find(id);
     if (!stack || !IsClothing(stack->type)) return false;
     const auto bit = ClothingBit(stack->type);
-    if ((equipped & bit) || !Remove(id, 1)) return false;
-    equipped |= bit;
-    SetSlotCapacity(InventorySlotsForGear(equipped));
+    if (equipped & bit) return false;
+    auto next = *this;
+    if (!next.Remove(id, 1)) return false;
+    const auto updated = equipped | bit;
+    if (!next.ConfigureGear(updated)) return false;
+    *this = std::move(next);
+    equipped = updated;
     return true;
 }
 

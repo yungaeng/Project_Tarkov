@@ -86,7 +86,9 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
             if (source != 2 && (item->type == ItemType::Water || item->type == ItemType::Food ||
                 IsClothing(item->type)) && !(source == 1 && showPrice) &&
                 (storageSource < 0 || source == 0 || item->type == ItemType::Water ||
-                item->type == ItemType::Food) && ImGui::MenuItem(IsClothing(item->type) ? "착용" : "사용"))
+                item->type == ItemType::Food ||
+                (source == storageSource && transferFilter == StorageFilter::Clothing)) &&
+                ImGui::MenuItem(IsClothing(item->type) ? "착용" : "사용"))
                 command = {Action::Use,{source,item->id}};
             if (item->type == ItemType::Bandage && ImGui::BeginMenu("치료 부위")) {
                 for (int part=0; part<BodyPartCount; ++part)
