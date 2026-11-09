@@ -951,9 +951,16 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::Render(); ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void RaidHud::RenderHideoutFridge(Hideout& hideout, bool& panelOpen, bool& exitMenuOpen)
+void RaidHud::RenderHideoutStorage(Hideout& hideout, int room, int furniture, bool& panelOpen, bool& exitMenuOpen)
 {
-    if (!rendererReady || !panelOpen) return;
+    if (!rendererReady || !panelOpen || room<0 || room>=Hideout::HideoutRoomCount ||
+        furniture<0 || furniture>=Hideout::FurnitureCount) return;
+    const auto kind=static_cast<HideoutFurniture>(furniture);
+    const auto filter=Hideout::FilterFor(kind);
+    auto& storage=hideout.FurnitureStorageAt(room,kind);
+    const int storageSource=Hideout::FurnitureStorageSource(room,kind);
+    const char* furnitureNames[]{"냉장고","무기고","옷장","의료품 탁자"};
+    const char* itemNames[]{"물","무기·탄약","의류","의료품"};
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -963,11 +970,11 @@ void RaidHud::RenderHideoutFridge(Hideout& hideout, bool& panelOpen, bool& exitM
     ImGui::SetNextWindowSize(io.DisplaySize,ImGuiCond_Always);
     ImGui::PushStyleColor(ImGuiCol_WindowBg,ImVec4(.045f,.05f,.047f,.92f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,ImVec2(20,18));
-    ImGui::Begin("냉장고 보관함",nullptr,ImGuiWindowFlags_NoDecoration|
+    ImGui::Begin("가구 보관함",nullptr,ImGuiWindowFlags_NoDecoration|
         ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoMove);
-    ImGui::TextColored({.78f,.76f,.60f,1},"냉장고 · 물 전용");
+    ImGui::TextColored({.78f,.76f,.60f,1},"방 %d · %s 보관함",room+1,furnitureNames[furniture]);
     ImGui::SameLine();
-    ImGui::TextDisabled("아이템을 끌어 옮기거나 우클릭하세요.");
+    ImGui::TextDisabled("%s만 보관 · 아이템을 끌어 옮기거나 우클릭하세요.",itemNames[furniture]);
     ImGui::SameLine();
     ImGui::SetCursorPosX((std::max)(ImGui::GetCursorPosX(),io.DisplaySize.x-100.f));
     if (ImGui::Button("닫기")) panelOpen=false;
@@ -975,9 +982,9 @@ void RaidHud::RenderHideoutFridge(Hideout& hideout, bool& panelOpen, bool& exitM
     if (!hideout.message.empty()) ImGui::TextDisabled("%s",hideout.message.c_str());
     ImGui::BeginDisabled(!hideout.ready||!Input::IsFocused()||exitMenuOpen);
     InventoryUi::Command command;
-    if (ImGui::BeginTable("FridgeStorageLayout",2,ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
-        ImGui::TableSetupColumn("휴대품",ImGuiTableColumnFlags_WidthStretch,1.3f);
-        ImGui::TableSetupColumn("냉장고 · 물",ImGuiTableColumnFlags_WidthStretch,1.f);
+    if (ImGui::BeginTable("FurnitureStorageLayout",2,ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
+        ImGui::TableSetupColumn("휴대품",ImGuiTableColumnFlags_WidthStretch,1.2f);
+        ImGui::TableSetupColumn(itemNames[furniture],ImGuiTableColumnFlags_WidthStretch,1.f);
         ImGui::TableNextColumn();
         ImGui::Text("휴대품 %d / %d",hideout.loadout.StorageUsed(),hideout.loadout.SlotCapacity());
         const float gap=4.f;
@@ -985,14 +992,14 @@ void RaidHud::RenderHideoutFridge(Hideout& hideout, bool& panelOpen, bool& exitM
         const float pocketCell=(std::max)(26.f,(width-gap*5)/6);
         const auto textureId=(ImTextureID)(intptr_t)itemImages.id;
         InventoryUi::GridAt(hideout.loadout,0,0,12,6,textureId,command,
-            ImGui::GetCursorScreenPos(),pocketCell,gap,"",false,false,true);
+            ImGui::GetCursorScreenPos(),pocketCell,gap,"",false,false,filter,storageSource);
         ImGui::SetCursorScreenPos({ImGui::GetCursorScreenPos().x,
             ImGui::GetCursorScreenPos().y+10});
         if (hideout.clothingMask&ClothingBit(ItemType::Vest)) {
             ImGui::TextUnformatted("조끼");
             const float cell=(std::max)(26.f,(width-gap*2)/3);
             InventoryUi::GridAt(hideout.loadout,0,12,6,3,textureId,command,
-                ImGui::GetCursorScreenPos(),cell,gap,"",false,false,true);
+                ImGui::GetCursorScreenPos(),cell,gap,"",false,false,filter,storageSource);
             ImGui::SetCursorScreenPos({ImGui::GetCursorScreenPos().x,
                 ImGui::GetCursorScreenPos().y+8});
         }
@@ -1000,21 +1007,22 @@ void RaidHud::RenderHideoutFridge(Hideout& hideout, bool& panelOpen, bool& exitM
             ImGui::TextUnformatted("배낭");
             const float cell=(std::max)(26.f,(width-gap*3)/4);
             InventoryUi::GridAt(hideout.loadout,0,18,12,4,textureId,command,
-                ImGui::GetCursorScreenPos(),cell,gap,"",false,false,true);
+                ImGui::GetCursorScreenPos(),cell,gap,"",false,false,filter,storageSource);
         }
         ImGui::TableNextColumn();
-        ImGui::Text("물 %d개",hideout.fridgeStorage.Count(ItemType::Water));
-        const float fridgeWidth=ImGui::GetContentRegionAvail().x;
-        const float fridgeCell=(std::max)(30.f,(std::min)((fridgeWidth-gap*5)/6,80.f));
-        InventoryUi::GridAt(hideout.fridgeStorage,6,0,BaseInventorySlots,6,texture,command,
-            ImGui::GetCursorScreenPos(),fridgeCell,gap,"",false,false,true);
+        ImGui::Text("%s · %d / %d",itemNames[furniture],storage.StorageUsed(),storage.SlotCapacity());
+        const float storageWidth=ImGui::GetContentRegionAvail().x;
+        const float storageCell=(std::max)(28.f,(std::min)((storageWidth-gap*9)/10,64.f));
+        InventoryUi::GridAt(storage,storageSource,0,storage.SlotCapacity(),10,texture,command,
+            ImGui::GetCursorScreenPos(),storageCell,gap,"",false,false,filter,storageSource);
         ImGui::EndTable();
     }
     ImGui::EndDisabled();
     if (command.action==InventoryUi::Action::Move) {
-        const bool storing=command.item.source==0&&command.destination==6;
-        const bool retrieving=command.item.source==6&&command.destination==0;
-        if (storing||retrieving) hideout.TransferFridgeWater(command.item.id,storing,command.slot);
+        const bool storing=command.item.source==0&&command.destination==storageSource;
+        const bool retrieving=command.item.source==storageSource&&command.destination==0;
+        if (storing||retrieving)
+            hideout.TransferFurnitureItem(room,kind,command.item.id,storing,command.slot);
     }
     ImGui::End();
     ImGui::PopStyleVar();

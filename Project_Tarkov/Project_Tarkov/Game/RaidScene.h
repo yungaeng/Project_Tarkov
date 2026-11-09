@@ -71,11 +71,12 @@ private:
     void UpdateHideout(float dt);
     void RenderHideoutMap(int width, int height);
     bool hideoutPanel = false;
-    bool hideoutFridgePanel = false;
+    bool hideoutStoragePanel = false;
+    int hideoutFurnitureRoom = 0;
+    int hideoutFurniture = -1;
     bool hideoutExitMenu = false;
     int hideoutPrompt = 0;
     int hideoutZone = 0;
-    int hideoutStation = 0;
     void FinishRaid(RaidPhase result);
     void FollowCamera(Camera& camera) const;
 };

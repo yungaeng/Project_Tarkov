@@ -41,15 +41,22 @@ bool Hideout::SellStashItem(StackId id)
     return true;
 }
 
-bool Hideout::TransferFridgeWater(StackId id, bool store, int slot)
+bool Hideout::TransferFurnitureItem(int room, HideoutFurniture furniture, StackId id, bool store, int slot)
 {
     if (!ready) return false;
+    if (room < 0 || room >= HideoutRoomCount ||
+        static_cast<int>(furniture) < 0 || furniture >= HideoutFurniture::Count) {
+        message = "가구 보관함을 찾을 수 없습니다.";
+        return false;
+    }
     auto updated = *this;
-    auto& source = store ? updated.loadout : updated.fridgeStorage;
-    auto& destination = store ? updated.fridgeStorage : updated.loadout;
+    auto& storage = updated.FurnitureStorageAt(room, furniture);
+    auto& source = store ? updated.loadout : storage;
+    auto& destination = store ? storage : updated.loadout;
     const auto* item = source.Find(id);
-    if (!item || item->type != ItemType::Water || !source.TransferTo(id,destination,slot)) {
-        message = store ? "냉장고에는 물만 보관할 수 있습니다." : "꺼낼 물이 없거나 휴대 공간이 부족합니다.";
+    if (!item || !MatchesStorageFilter(FilterFor(furniture),item->type) ||
+        !source.TransferTo(id,destination,slot)) {
+        message = store ? "이 가구에는 해당 종류의 아이템만 보관할 수 있습니다." : "꺼낼 아이템이 없거나 휴대 공간이 부족합니다.";
         return false;
     }
     if (!updated.Save()) { message = updated.message; return false; }
@@ -66,7 +73,7 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 15\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' ' << rubles << '\n';
+    out << "HIDEOUT 16\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' ' << rubles << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
         for (const auto& item : inventory.Items())
@@ -75,7 +82,7 @@ bool Hideout::Save(bool requireStashSpace)
     };
     writeInventory(storage);
     writeInventory(loadout);
-    writeInventory(fridgeStorage);
+    for (const auto& furniture : furnitureStorage) writeInventory(furniture);
     for (float value : vitals.BodyHealth()) out << value << ' ';
     out << vitals.Hydration() << ' ' << vitals.Stamina() << '\n';
     out << "END\n";
@@ -123,8 +130,9 @@ void Hideout::Load()
     if (!exists) {
         loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
         storage.SetSlotCapacity(80);
+        for (auto& furniture : furnitureStorage) furniture.SetSlotCapacity(80);
         for (int type=0; type<11; ++type) if (stash[type]) {
-            if (static_cast<ItemType>(type)==ItemType::Water) fridgeStorage.TryAdd({ItemType::Water,stash[type]});
+            if (static_cast<ItemType>(type)==ItemType::Water) furnitureStorage[0].TryAdd({ItemType::Water,stash[type]});
             else storage.TryAdd({static_cast<ItemType>(type),stash[type]});
         }
         storage.TryAdd({ItemType::Trunks,1});
@@ -139,7 +147,7 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=15)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=16)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
@@ -180,11 +188,23 @@ void Hideout::Load()
             return true;
         };
         valid=valid && readInventory(next.storage,true) && readInventory(next.loadout,false);
-        if (savedVersion >= 15) {
+        if (savedVersion >= 16) {
+            for (int i=0; valid && i<static_cast<int>(furnitureStorage.size()); ++i) {
+                auto& furniture=next.furnitureStorage[i];
+                valid=readInventory(furniture,true);
+                const auto kind=static_cast<HideoutFurniture>(i%FurnitureCount);
+                for (const auto& item : furniture.Items())
+                    valid=valid && MatchesStorageFilter(FilterFor(kind),item.type);
+            }
+        } else {
+            for (auto& furniture : next.furnitureStorage)
+                valid=valid && static_cast<bool>(furniture.SetSlotCapacity(80));
+        }
+        if (savedVersion == 15) {
             int capacity=0,count=0;
             valid=valid && static_cast<bool>(in >> capacity >> count) && capacity==BaseInventorySlots &&
                 count>=0 && count<=BaseInventorySlots &&
-                static_cast<bool>(next.fridgeStorage.ConfigureGear(0));
+                static_cast<bool>(next.furnitureStorage[0].SetSlotCapacity(80));
             for (int i=0; valid && i<count; ++i) {
                 int type=-1,inserted=0,mode=0;
                 ItemStack item{ItemType::Bandage,0};
@@ -196,9 +216,12 @@ void Hideout::Load()
                     item.type=ItemType::Water;
                     item.magazineInserted=false;
                     item.fireMode=static_cast<FireMode>(mode);
-                    valid=!next.fridgeStorage.Covering(item.slot) && next.fridgeStorage.TryAdd(item);
+                    valid=!next.furnitureStorage[0].Covering(item.slot) && next.furnitureStorage[0].TryAdd(item);
                 }
             }
+        } else if (savedVersion < 16) {
+            for (auto& furniture : next.furnitureStorage)
+                valid=valid && static_cast<bool>(furniture.SetSlotCapacity(80));
         }
         std::array<float,BodyPartCount> body{};
         float hydration=0,stamina=0;
@@ -220,7 +243,7 @@ void Hideout::Load()
             const auto priorStorage=next.storage.Items();
             for (auto item : priorStorage) {
                 if (item.type==ItemType::Water) item.slot=-100;
-                if (item.type==ItemType::Water && next.fridgeStorage.TryAdd(item))
+                if (item.type==ItemType::Water && next.furnitureStorage[0].TryAdd(item))
                     next.storage.Remove(item.id,item.quantity);
             }
             in.close();
@@ -300,6 +323,7 @@ void Hideout::Load()
     next.rifle = equipped != 0;
     // Preserve legacy overflow stock instead of silently discarding it.
     next.storage.SetSlotCapacity(80);
+    for (auto& furniture : next.furnitureStorage) furniture.SetSlotCapacity(80);
     auto preserve=[&](ItemStack item) {
         while (!next.storage.TryAdd(item))
             if (!next.storage.SetSlotCapacity(next.storage.SlotCapacity()+10)) return false;
@@ -311,7 +335,7 @@ void Hideout::Load()
     const auto priorStorage=next.storage.Items();
     for (auto item : priorStorage) {
         if (item.type==ItemType::Water) item.slot=-100;
-        if (item.type==ItemType::Water && next.fridgeStorage.TryAdd(item))
+        if (item.type==ItemType::Water && next.furnitureStorage[0].TryAdd(item))
             next.storage.Remove(item.id,item.quantity);
     }
     if (!preserve({ItemType::Trunks,1})) return;
@@ -339,9 +363,18 @@ bool Hideout::DrinkWater(StackId id, bool fromStash)
     auto before = *this;
     Inventory* source = &loadout;
     if (fromStash) {
-        if (id && fridgeStorage.Find(id)) source = &fridgeStorage;
-        else if (id && storage.Find(id)) source = &storage;
-        else if (!id && fridgeStorage.Count(ItemType::Water)) source = &fridgeStorage;
+        if (id) {
+            bool found=false;
+            for (int room=0; room<HideoutRoomCount; ++room) {
+                auto& fridge=FurnitureStorageAt(room,HideoutFurniture::Refrigerator);
+                if (fridge.Find(id)) { source=&fridge; found=true; break; }
+            }
+            if (!found && storage.Find(id)) source=&storage;
+        }
+        else if (FurnitureStorageAt(0,HideoutFurniture::Refrigerator).Count(ItemType::Water))
+            source=&FurnitureStorageAt(0,HideoutFurniture::Refrigerator);
+        else if (FurnitureStorageAt(1,HideoutFurniture::Refrigerator).Count(ItemType::Water))
+            source=&FurnitureStorageAt(1,HideoutFurniture::Refrigerator);
         else if (!id && storage.Count(ItemType::Water)) source = &storage;
     }
     if (!id) for (const auto& entry : source->Items()) if (entry.type == ItemType::Water) { id = entry.id; break; }
