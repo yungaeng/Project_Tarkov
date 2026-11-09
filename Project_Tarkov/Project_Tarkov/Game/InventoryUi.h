@@ -20,6 +20,16 @@ struct Command {
 };
 inline void Picture(ImDrawList* draw, ImTextureID texture, ItemType type, ImVec2 p, ImVec2 size, float opacity = 1.f)
 {
+    if (type == ItemType::Food) {
+        const auto color=IM_COL32(173,146,91,static_cast<int>(255*opacity));
+        draw->AddRectFilled({p.x+size.x*.3f,p.y+size.y*.18f},
+            {p.x+size.x*.7f,p.y+size.y*.84f},color,3.f);
+        draw->AddRectFilled({p.x+size.x*.29f,p.y+size.y*.15f},
+            {p.x+size.x*.71f,p.y+size.y*.24f},IM_COL32(198,190,159,static_cast<int>(255*opacity)),2.f);
+        draw->AddText({p.x+size.x*.35f,p.y+size.y*.43f},
+            IM_COL32(30,33,29,static_cast<int>(255*opacity)),"식량");
+        return;
+    }
     const int cell = static_cast<int>(type);
     const ImVec2 uv0((cell % 4) * .25f, (cell / 4) * .25f);
     const ImVec2 uv1(uv0.x + .25f, uv0.y + .25f);
@@ -66,38 +76,47 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
                     IsWeapon(item->type) && !item->magazineInserted ? " | 탄창 없음" : "");
         }
         if (ImGui::BeginPopupContextItem("actions")) {
+            if (source == 1 && showPrice) {
+                if (IsClothing(item->type) && CanWear(item->type,male) &&
+                    ImGui::MenuItem("착용하기"))
+                    command = {Action::Use,{source,item->id}};
+            }
+            if (source == 2 && ImGui::MenuItem("해제 → 휴대품"))
+                command = {Action::Move,{source,item->id},0,-100};
+            if (source != 2 && (item->type == ItemType::Water || item->type == ItemType::Food ||
+                IsClothing(item->type)) && !(source == 1 && showPrice) &&
+                (storageSource < 0 || source == 0 || item->type == ItemType::Water ||
+                item->type == ItemType::Food) && ImGui::MenuItem(IsClothing(item->type) ? "착용" : "사용"))
+                command = {Action::Use,{source,item->id}};
+            if (item->type == ItemType::Bandage && ImGui::BeginMenu("치료 부위")) {
+                for (int part=0; part<BodyPartCount; ++part)
+                    if (ImGui::MenuItem(BodyPartNames[part])) command={Action::Heal,{source,item->id},0,part};
+                ImGui::EndMenu();
+            }
+            if (IsMagazine(item->type)) {
+                if (ImGui::MenuItem("1발만 채우기")) command = {Action::FillOne,{source,item->id}};
+                if (ImGui::MenuItem("전부 채우기")) command = {Action::FillAll,{source,item->id}};
+                if (ImGui::MenuItem("전부 빼내기")) command = {Action::Unload,{source,item->id}};
+            }
+            if (IsWeapon(item->type) && item->magazineInserted && ImGui::MenuItem("탄창 분리"))
+                command={Action::Eject,{source,item->id}};
+            if ((source == 1 && showPrice) || source >= 10)
+                if (ImGui::MenuItem("판매")) command = {Action::Sell,{source,item->id}};
+            if ((source == 0 || (source == 1 && showPrice) || source >= 10) &&
+                item->quantity > 1 && GetItemDefinition(item->type).maxStack > 1 &&
+                ImGui::MenuItem("분할 (절반)"))
+                command = {Action::Split,{source,item->id},0,-100,item->quantity/2};
             if (storageSource >= 0) {
                 if (source == 0 && MatchesStorageFilter(transferFilter,item->type) &&
                     ImGui::MenuItem("가구 보관함에 보관"))
                     command = {Action::Move,{source,item->id},storageSource};
                 if (source == storageSource && ImGui::MenuItem("휴대품으로 꺼내기"))
                     command = {Action::Move,{source,item->id},0};
-            } else if (source == 1 && showPrice) {
-                if (IsClothing(item->type) && CanWear(item->type,male) &&
-                    ImGui::MenuItem("착용하기"))
-                    command = {Action::Use,{source,item->id}};
-                if (ImGui::MenuItem("판매")) command = {Action::Sell,{source,item->id}};
-                if (item->quantity > 1 && GetItemDefinition(item->type).maxStack > 1 &&
-                    ImGui::MenuItem("분할 (절반)"))
-                    command = {Action::Split,{source,item->id},0,-100,item->quantity/2};
             } else {
-                if (source == 2 && ImGui::MenuItem("해제 → 휴대품")) command = {Action::Move,{source,item->id},0,-100};
-                if (source != 2 && (item->type == ItemType::Water || IsClothing(item->type)))
-                    if (ImGui::MenuItem(IsClothing(item->type) ? "착용" : "사용")) command = {Action::Use,{source,item->id}};
-                if (item->type == ItemType::Bandage && ImGui::BeginMenu("치료 부위")) {
-                    for (int part=0; part<BodyPartCount; ++part)
-                        if (ImGui::MenuItem(BodyPartNames[part])) command={Action::Heal,{source,item->id},0,part};
-                    ImGui::EndMenu();
-                }
-                if (IsMagazine(item->type)) {
-                    if (ImGui::MenuItem("1발만 채우기")) command = {Action::FillOne,{source,item->id}};
-                    if (ImGui::MenuItem("전부 채우기")) command = {Action::FillAll,{source,item->id}};
-                    if (ImGui::MenuItem("전부 빼내기")) command = {Action::Unload,{source,item->id}};
-                }
-                if (IsWeapon(item->type) && item->magazineInserted && ImGui::MenuItem("탄창 분리"))
-                    command={Action::Eject,{source,item->id}};
-                if (source == 0 && ImGui::MenuItem("바닥 / 창고로 이동")) command = {Action::Move,{source,item->id},1,-100};
-                if ((source == 1 || source == 5) && ImGui::MenuItem("휴대품으로 이동")) command = {Action::Move,{source,item->id},0,-100};
+                if (source == 0 && ImGui::MenuItem("바닥 / 창고로 이동"))
+                    command = {Action::Move,{source,item->id},1,-100};
+                if ((source == 1 || source == 5) && ImGui::MenuItem("휴대품으로 이동"))
+                    command = {Action::Move,{source,item->id},0,-100};
             }
             ImGui::EndPopup();
         }
@@ -203,6 +222,7 @@ inline bool Execute(Command command, Inventory& carried, Inventory* external, st
     if (command.action == Action::Eject) return source->EjectMagazine(item->id);
     if (command.action == Action::Use) {
         if (item->type == ItemType::Water) { if (!vitals.Drink()) return false; return source->Remove(item->id,1); }
+        if (item->type == ItemType::Food) { if (!vitals.Eat()) return false; return source->Remove(item->id,1); }
         if (!CanWear(item->type,male) || !IsClothing(item->type)) return false;
         if (source == &carried) return carried.EquipClothing(item->id,clothing);
         auto next = carried;

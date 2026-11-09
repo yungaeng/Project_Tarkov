@@ -7,6 +7,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
 {
     static const ItemDefinition bandage{ "붕대", 5, 0.1f, 2500 };
     static const ItemDefinition water{ "물", 2, 0.6f, 6000 };
+    static const ItemDefinition food{ "전투식량", 5, 0.4f, 4500 };
     static const ItemDefinition ammo{ "공용 탄약", 30, 0.01f, 350 };
     static const ItemDefinition shirt{ "멀티캠 전투 상의", 1, 0.4f, 18000 };
     static const ItemDefinition trousers{ "멀티캠 전투 하의", 1, 0.6f, 16000 };
@@ -24,6 +25,7 @@ const ItemDefinition& GetItemDefinition(ItemType type)
     {
     case ItemType::Bandage: return bandage;
     case ItemType::Water: return water;
+    case ItemType::Food: return food;
     case ItemType::Ammo: return ammo;
     case ItemType::Rifle: return rifle;
     case ItemType::Magazine: return magazine;

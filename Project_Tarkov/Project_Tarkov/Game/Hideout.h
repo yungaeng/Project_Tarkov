@@ -16,8 +16,7 @@ class Hideout
 public:
     static constexpr int StashColumns = 10;
     static constexpr int StashRows = 8;
-    // Starter totals include worn clothing and the loaded rifle; no duplicates.
-    // Bandage, water, ammo, shirt, trousers, underwear, vest, helmet, backpack, boots.
+    // Legacy item counts used when converting pre-v10 save files.
     std::array<int, ItemTypeCount> stash{{10, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0}};
     PlayerAppearance appearance = PlayerAppearance::Female;
     PlayerVitals vitals;
@@ -37,7 +36,7 @@ public:
     }
     static constexpr StorageFilter FilterFor(HideoutFurniture furniture) {
         switch (furniture) {
-        case HideoutFurniture::Refrigerator: return StorageFilter::Water;
+        case HideoutFurniture::Refrigerator: return StorageFilter::Consumables;
         case HideoutFurniture::Armory: return StorageFilter::Armory;
         case HideoutFurniture::Wardrobe: return StorageFilter::Clothing;
         case HideoutFurniture::MedicalTable: return StorageFilter::Medical;
@@ -51,6 +50,7 @@ public:
         return furnitureStorage[FurnitureStorageIndex(room, furniture)];
     }
     bool TransferFurnitureItem(int room, HideoutFurniture furniture, StackId id, bool store, int slot = -100);
+    bool SellFurnitureItem(int room, HideoutFurniture furniture, StackId id);
     bool DrinkWater(StackId id = 0, bool fromStash = true);
     void RefreshWeapons();
     bool rifle = true;
@@ -66,4 +66,6 @@ public:
     bool SellStashItem(StackId id);
     bool Depart();
     void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
+private:
+    static bool SeedStarterSupplies(Hideout& hideout);
 };

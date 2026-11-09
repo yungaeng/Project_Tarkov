@@ -81,6 +81,8 @@ private:
     bool hideoutExitMenu = false;
     int hideoutPrompt = 0;
     int hideoutZone = 0;
+    bool hideoutCameraInRoom = false;
+    bool hideoutCameraModelHidden = false;
     float hideoutCameraBlend = 0.f;
     void FinishRaid(RaidPhase result);
     void FollowCamera(Camera& camera) const;

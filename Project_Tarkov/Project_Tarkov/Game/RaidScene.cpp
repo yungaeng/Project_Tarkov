@@ -404,6 +404,8 @@ void RaidScene::EnterHideout()
     hideoutExitMenu = false;
     hideoutPrompt = hideoutZone = 0;
     hideoutFurniture = -1;
+    hideoutCameraInRoom = false;
+    hideoutCameraModelHidden = false;
     hideoutCameraBlend = 0.f;
     deployRequested = false;
     playerVisual.Update(0, *player, {false,false,false,false,0,0,false});
@@ -469,15 +471,30 @@ void RaidScene::UpdateHideout(float dt)
     npcState.hasWeapon = false;
     hideoutSwitchNpcVisual.Update(dt, hideoutSwitchNpc, npcState);
     const auto p = player->position;
-    const bool insideHideoutRoom = p.x > .2f && p.x < 11.8f && p.z < -.5f && p.z > -8.f;
-    const float cameraTarget = insideHideoutRoom ? 1.f : 0.f;
+    if (!hideoutCameraInRoom && p.x > .2f && p.x < 11.8f && p.z < -.65f && p.z > -7.5f)
+        hideoutCameraInRoom = true;
+    else if (hideoutCameraInRoom &&
+        (p.x < -.2f || p.x > 12.2f || p.z > .15f || p.z < -7.8f))
+        hideoutCameraInRoom = false;
+    const float cameraTarget = hideoutCameraInRoom ? 1.f : 0.f;
     hideoutCameraBlend += std::clamp(cameraTarget - hideoutCameraBlend,
         -dt / .7f, dt / .7f);
     const float cameraEase = hideoutCameraBlend * hideoutCameraBlend *
         (3.f - 2.f * hideoutCameraBlend);
+    const auto previousCameraPosition = camera.position;
     cameraController.Follow(camera, *player);
-    camera.position = glm::mix(camera.position,
+    const auto thirdPersonCameraPosition = camera.position;
+    const auto desiredCameraPosition = glm::mix(thirdPersonCameraPosition,
         playerVisual.FirstPersonCameraPosition(*player), cameraEase);
+    if (hideoutCameraBlend == 0.f)
+        camera.position = thirdPersonCameraPosition;
+    else
+        camera.position = glm::mix(previousCameraPosition, desiredCameraPosition,
+            1.f - std::exp(-dt * 10.f));
+    if (!hideoutCameraModelHidden && hideoutCameraBlend >= .98f)
+        hideoutCameraModelHidden = true;
+    else if (hideoutCameraModelHidden && hideoutCameraBlend <= .02f)
+        hideoutCameraModelHidden = false;
     int zone = 0;
     if (p.x < -.4f && p.z > .3f) zone = 1;
     if (zone && zone != hideoutZone) {
@@ -491,7 +508,7 @@ void RaidScene::UpdateHideout(float dt)
     const bool nearSwitchNpc = npcDx*npcDx + npcDz*npcDz < 2.25f;
     hideoutFurniture = -1;
     float nearestFurniture = 1.7f * 1.7f;
-    if (!nearSwitchNpc && p.x>.2f && p.x<12.f && p.z < -4.f) {
+    if (!nearSwitchNpc && p.x>.2f && p.x<12.f && p.z < .25f && p.z > -8.f) {
         hideoutFurnitureRoom = p.x<6.f ? 0 : 1;
         const float roomX=hideoutFurnitureRoom*6.f;
         const float furnitureX[]{
@@ -527,8 +544,8 @@ void RaidScene::RenderHideoutMap(int width, int height)
         if (!Renderer::IsVisible(batch.low,batch.high,glm::mat4(1))) continue;
         Renderer::Draw(shader,batch.mesh,camera,glm::mat4(1),float(width),float(height),batch.color);
     }
-    playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),
-        hideoutCameraBlend >= .98f);
+    if (!hideoutCameraModelHidden)
+        playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
     hideoutSwitchNpcVisual.Render(hideoutSwitchNpc,shader,camera,float(width),float(height),glm::vec3(1),false);
     if (hideoutStoragePanel) {
         const bool wasStoragePanelOpen=hideoutStoragePanel;
@@ -548,26 +565,6 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGui::SetNextWindowPos({20,20});
-    ImGui::SetNextWindowBgAlpha(.8f);
-    ImGui::Begin("은신처 안내",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
-    ImGui::TextUnformatted("은신처 · 개방형 테라스 아파트 · 3인칭");
-    ImGui::TextUnformatted("방 1·2: 냉장고 · 침대 · 무기고 · 옷장 · 의료품 탁자 · 의자");
-    ImGui::TextUnformatted("3·4번 방은 닫혀 있습니다. 가구 가까이에서 F: 전용 보관함 열기");
-    ImGui::TextUnformatted("WASD 이동 / 마우스 시점 / Esc 일시 정지 메뉴");
-    if (hideoutFurniture>=0) {
-        const char* names[]{"냉장고","무기고","옷장","의료품 탁자"};
-        ImGui::Text("[F] %s 보관함",names[hideoutFurniture]);
-    }
-    const auto p = player->position;
-    const float npcDx = p.x - hideoutSwitchNpc.position.x;
-    const float npcDz = p.z - hideoutSwitchNpc.position.z;
-    if (npcDx*npcDx + npcDz*npcDz < 2.25f) {
-        ImGui::Text("[F] 방 가운데의 %s와 상호작용하여 캐릭터 변경",
-            hideoutSwitchNpcAppearance == PlayerAppearance::Female ? "여캐" : "남캐");
-    }
-    if (!hideout.message.empty()) ImGui::TextWrapped("%s",hideout.message.c_str());
-    ImGui::End();
     if (hideoutPrompt) {
         ImGui::SetNextWindowPos({width*.5f,height*.5f},ImGuiCond_Always,{.5f,.5f});
         ImGui::Begin("은신처 상호작용",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);

@@ -47,6 +47,14 @@ public:
         return true;
     }
     bool Drink() { if (!Alive() || hydration >= 100) return false; hydration = (std::min)(100.0f, hydration + 30); return true; }
+    bool Eat()
+    {
+        if (!Alive() || (stamina >= 100 && hydration >= 100)) return false;
+        stamina = (std::min)(100.0f, stamina + 35);
+        hydration = (std::min)(100.0f, hydration + 5);
+        if (stamina >= 20) exhausted = false;
+        return true;
+    }
     bool Restore(const std::array<float, BodyPartCount>& body, float water, float energy)
     {
         if (!std::isfinite(water) || !std::isfinite(energy) || water < 0 || water > 100 || energy < 0 || energy > 100)

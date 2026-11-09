@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // Keep existing numeric IDs for saved inventories (the former skirt slot is trousers).
-enum class ItemType { Bandage, Water, Ammo, Shirt, Trousers, UnderShirt, Underpants, Vest, Helmet, Backpack, Boots, Rifle, Magazine, Pistol, PistolMagazine, Trunks, Count };
+enum class ItemType { Bandage, Water, Ammo, Shirt, Trousers, UnderShirt, Underpants, Vest, Helmet, Backpack, Boots, Rifle, Magazine, Pistol, PistolMagazine, Trunks, Food, Count };
 inline bool IsWeapon(ItemType t) { return t == ItemType::Rifle || t == ItemType::Pistol; }
 inline bool IsMagazine(ItemType t) { return t == ItemType::Magazine || t == ItemType::PistolMagazine; }
 inline int MagazineCapacity(ItemType t) { return t == ItemType::Pistol || t == ItemType::PistolMagazine ? 15 : 30; }
@@ -23,10 +23,11 @@ inline bool MatchesStorageFilter(StorageFilter filter, ItemType type) {
     case StorageFilter::Medical: return type == ItemType::Bandage;
     case StorageFilter::Weapons: return IsWeapon(type);
     case StorageFilter::Ammunition: return IsMagazine(type) || type == ItemType::Ammo;
-    case StorageFilter::Consumables: return type == ItemType::Water;
+    case StorageFilter::Consumables: return type == ItemType::Water || type == ItemType::Food;
     case StorageFilter::Other:
         return !IsWeapon(type) && !IsMagazine(type) && type != ItemType::Ammo &&
-            !IsClothing(type) && type != ItemType::Bandage && type != ItemType::Water;
+            !IsClothing(type) && type != ItemType::Bandage && type != ItemType::Water &&
+            type != ItemType::Food;
     default: return false;
     }
 }
@@ -47,7 +48,7 @@ const ItemDefinition& GetItemDefinition(ItemType type);
 struct ItemSize { int width, height; };
 inline ItemSize ItemFootprint(ItemType type) {
     switch (type) {
-    case ItemType::Water: case ItemType::Shirt: case ItemType::Trousers:
+    case ItemType::Water: case ItemType::Food: case ItemType::Shirt: case ItemType::Trousers:
     case ItemType::UnderShirt: case ItemType::Trunks: case ItemType::Underpants: case ItemType::Magazine: return {1,2};
     case ItemType::Ammo: case ItemType::Pistol: return {2,1};
     case ItemType::Vest: case ItemType::Helmet: case ItemType::Boots: return {2,2};

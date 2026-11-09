@@ -54,9 +54,10 @@ void InventoryActions::Update(Player& player, LootSystem& loot, const Camera& ca
                 return;
             }
             auto next = player.vitals;
-            const bool applied = stack->type == ItemType::Water ? next.Drink() : false;
+            const bool applied = stack->type == ItemType::Water ? next.Drink() :
+                stack->type == ItemType::Food ? next.Eat() : false;
             if (applied && inventory.Remove(target, 1)) { player.vitals = next; loot.Notify("아이템을 사용했습니다"); }
-            else loot.Notify("사용 불가: 회복할 필요가 없거나 탄약 아이템입니다");
+            else loot.Notify("사용 불가: 회복할 필요가 없거나 소모품이 아닙니다");
         }
         else if (action == InventoryAction::DropOne || action == InventoryAction::DropAll)
             loot.Drop(player, target, action == InventoryAction::DropAll, camera, world);

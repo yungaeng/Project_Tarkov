@@ -890,7 +890,7 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     auto drawStashPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
         const char* storageNames[]{"냉장고","무기고","옷장","의료품 탁자"};
-        const char* storageItemNames[]{"물","무기·탄약","의류","의료품"};
+        const char* storageItemNames[]{"음식·물","무기·탄약","의류","의료품"};
         if (furnitureMode)
             ImGui::Text("%s · %s",storageNames[storageFurniture],storageItemNames[storageFurniture]);
         ImGui::SetNextItemWidth((std::max)(80.f,ImGui::GetContentRegionAvail().x*.5f));
@@ -906,7 +906,7 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         }
         StorageFilter displayFilter=furnitureFilter;
         if (!furnitureMode) {
-            const char* categories[]{"전체","무기","탄약·탄창","의류","의료품","물","기타"};
+            const char* categories[]{"전체","무기","탄약·탄창","의류","의료품","음식·물","기타"};
             const StorageFilter filters[]{StorageFilter::None,StorageFilter::Weapons,
                 StorageFilter::Ammunition,StorageFilter::Clothing,StorageFilter::Medical,
                 StorageFilter::Consumables,StorageFilter::Other};
@@ -976,10 +976,23 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             hideout.TransferFurnitureItem(storageRoom,furnitureKind,command.item.id,
                 command.item.source==0,command.slot);
         } else if (command.action==InventoryUi::Action::Sell) {
-            hideout.SellStashItem(command.item.id);
+            if (furnitureMode && command.item.source==furnitureSource)
+                hideout.SellFurnitureItem(storageRoom,furnitureKind,command.item.id);
+            else
+                hideout.SellStashItem(command.item.id);
         } else {
             auto before=hideout;
-            if (!InventoryUi::Execute(command,hideout.loadout,&hideout.storage,hideout.clothingMask,hideout.vitals,hideout.appearance == PlayerAppearance::Male))
+            bool executed=false;
+            if (furnitureMode && command.item.source==furnitureSource) {
+                auto localCommand=command;
+                localCommand.item.source=0;
+                executed=InventoryUi::Execute(localCommand,shownStorage,nullptr,hideout.clothingMask,
+                    hideout.vitals,hideout.appearance==PlayerAppearance::Male);
+            } else {
+                executed=InventoryUi::Execute(command,hideout.loadout,&hideout.storage,hideout.clothingMask,
+                    hideout.vitals,hideout.appearance==PlayerAppearance::Male);
+            }
+            if (!executed)
                 hideout.message="이동/사용 불가: 빈 공간, 장비 종류, 탄약을 확인하세요.";
             else if (!hideout.Save()) { const auto failure=hideout.message; hideout=std::move(before); hideout.message=failure; }
         }
