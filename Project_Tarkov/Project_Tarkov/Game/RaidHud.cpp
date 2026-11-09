@@ -701,8 +701,14 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     for (const char* tab : {"기술","지도","임무"}) { ImGui::SmallButton(tab); ImGui::SameLine(); }
     ImGui::EndDisabled();
     ImGui::SameLine();
+    ImGui::SetCursorPosX((std::max)(ImGui::GetCursorPosX(),io.DisplaySize.x*.55f));
     ImGui::TextDisabled(furnitureMode ? "F 보관함 닫기 | Esc 메뉴" :
         mapPanel ? "F 은신처로 돌아가기 | Esc 메뉴" : "Esc 메뉴");
+    const auto balance=std::string("보유 루블: ")+std::to_string(hideout.rubles)+" RUB";
+    const float balanceWidth=ImGui::CalcTextSize(balance.c_str()).x;
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(io.DisplaySize.x-20.f-balanceWidth);
+    ImGui::TextColored(accent,"%s",balance.c_str());
     ImGui::Separator();
     if (!hideout.message.empty()) ImGui::TextDisabled("%s",hideout.message.c_str());
     const bool uiEnabled=hideout.ready && Input::IsFocused() && (!exitMenuOpen || !*exitMenuOpen);
@@ -762,14 +768,6 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     };
     auto drawCharacterPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
-        int selected = hideout.appearance == PlayerAppearance::Male ? 1 : 0;
-        if (ImGui::Combo("캐릭터 변경", &selected, "여캐\0남캐\0")) {
-            if (hideout.ChangeAppearance(selected == 1 ? PlayerAppearance::Male : PlayerAppearance::Female)) {
-                character.appearance = hideout.appearance;
-                visual.Init(character.appearance);
-                inventoryPreviewVisual.reset();
-                        }
-        }
         const ImVec2 origin=ImGui::GetCursorScreenPos();
         const float width=ImGui::GetContentRegionAvail().x;
         const float scale=width/500.f;
@@ -898,11 +896,6 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         if (!furnitureMode) {
             ImGui::SameLine();
             if (ImGui::SmallButton("자동정리")) hideout.AutoArrangeStash();
-            const auto balance=std::string("보유 루블: ")+std::to_string(hideout.rubles)+" RUB";
-            const float balanceWidth=ImGui::CalcTextSize(balance.c_str()).x;
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX()+(std::max)(0.f,ImGui::GetContentRegionAvail().x-balanceWidth));
-            ImGui::TextUnformatted(balance.c_str());
         }
         StorageFilter displayFilter=furnitureFilter;
         if (!furnitureMode) {
