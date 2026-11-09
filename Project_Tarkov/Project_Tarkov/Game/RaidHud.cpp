@@ -23,6 +23,7 @@
 #include <stdexcept>
 #include <filesystem>
 #include <array>
+#include <vector>
 
 namespace
 {
@@ -1056,6 +1057,8 @@ bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& charac
     ImGui::Separator();
 
     ImGui::BeginChild("결과 캐릭터", {0, io.DisplaySize.y * 0.43f}, true);
+    std::vector<CharacterPreview> previews;
+    previews.reserve(2);
     auto drawPreview=[&](const char* childId,const char* label,Character& model,
         CharacterVisual& modelVisual,bool hasRifle,float childWidth=0.f) {
         ImGui::BeginChild(childId,{childWidth,0},false);
@@ -1066,8 +1069,9 @@ bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& charac
         auto* draw=ImGui::GetWindowDrawList();
         draw->AddRectFilled(modelPosition,{modelPosition.x+modelSize.x,modelPosition.y+modelSize.y},
             IM_COL32(25,29,26,235),3.f);
-        CharacterPreview preview{&modelVisual,&model,&shader,{},modelPosition,modelSize,
-            io.DisplayFramebufferScale,hasRifle};
+        previews.push_back({&modelVisual,&model,&shader,{},modelPosition,modelSize,
+            io.DisplayFramebufferScale,hasRifle});
+        auto& preview=previews.back();
         preview.camera.position={0,1.f,3.4f};
         preview.camera.front={0,0,-1};
         preview.camera.up={0,1,0};

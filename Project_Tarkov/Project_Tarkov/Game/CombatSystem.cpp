@@ -243,10 +243,17 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
     }
 
     if (rescue.available && rescue.health>0) {
+        const bool wasRunning=rescue.body.IsSprinting();
         rescue.body.StopMovement();
+        rescue.body.SetSprinting(false);
+        bool rescueRunning=false;
         if (rescue.recruited) {
             const float yaw=glm::radians(player.rotation.y);
             rescue.target=player.position-glm::vec3(std::sin(yaw),0,std::cos(yaw))*1.8f;
+            const float distance=glm::length(glm::vec2(
+                player.position.x-rescue.body.position.x,
+                player.position.z-rescue.body.position.z));
+            rescueRunning=distance>(wasRunning?3.f:4.f);
         } else {
             rescue.moveTimer-=dt;
             if (rescue.moveTimer<=0 ||
@@ -280,6 +287,10 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 else direction=glm::vec3(0);
             }
             rescue.body.SetMovement(direction,rescue.recruited?2.8f:1.35f);
+            if (rescue.recruited) {
+                rescue.body.SetSprinting(rescueRunning);
+                if (rescueRunning) rescue.body.SetMovement(direction,rescue.body.GetSettings().runSpeed);
+            }
         }
         rescue.body.Update(dt);
     }
