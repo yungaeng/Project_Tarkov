@@ -100,8 +100,8 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 18\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
-        << rubles << ' ' << rescuedSurvivors << '\n';
+    out << "HIDEOUT 19\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
+        << rubles << ' ' << rescuedSurvivors << ' ' << rescuedRoomMask << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
         for (const auto& item : inventory.Items())
@@ -162,8 +162,14 @@ bool Hideout::SeedRoomSupplies(Hideout& hideout, int room)
         if (!wardrobe.TryAdd({type,1})) return false;
     return true;
 }
-bool Hideout::ChangeAppearance(PlayerAppearance next)
+bool Hideout::ChangeAppearance(PlayerAppearance next, int releasedSurvivorRoom)
 {
+    if (releasedSurvivorRoom >= 0 &&
+        (releasedSurvivorRoom < InitialRoomCount ||
+         !HasRescuedSurvivor(releasedSurvivorRoom))) {
+        message = "해당 방에 내보낼 구조 인원이 없습니다.";
+        return false;
+    }
     auto updated = *this;
     bool male = appearance == PlayerAppearance::Male;
     if (male != (next == PlayerAppearance::Male)) {
@@ -174,6 +180,10 @@ bool Hideout::ChangeAppearance(PlayerAppearance next)
         }
     }
     updated.appearance = next;
+    if (releasedSurvivorRoom >= 0) {
+        updated.rescuedRoomMask &= ~(1u << (releasedSurvivorRoom-InitialRoomCount));
+        --updated.rescuedSurvivors;
+    }
     if (!updated.Save()) { message=updated.message; return false; }
     *this=std::move(updated);
     return true;
@@ -208,7 +218,7 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=18)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=19)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
@@ -220,6 +230,17 @@ void Hideout::Load()
         if (savedVersion>=18)
             valid=valid && static_cast<bool>(in >> next.rescuedSurvivors) &&
                 next.rescuedSurvivors>=0 && next.rescuedSurvivors<=MaxRescuedSurvivors;
+        if (savedVersion>=19) {
+            valid=valid && static_cast<bool>(in >> next.rescuedRoomMask) &&
+                (next.rescuedRoomMask & ~((1u<<MaxRescuedSurvivors)-1u))==0;
+            int occupied=0;
+            for (int room=0;room<MaxRescuedSurvivors;++room)
+                occupied+=(next.rescuedRoomMask>>room)&1u;
+            valid=valid && occupied==next.rescuedSurvivors;
+        } else {
+            if (next.rescuedSurvivors>=0 && next.rescuedSurvivors<=MaxRescuedSurvivors)
+                next.rescuedRoomMask=(1u<<next.rescuedSurvivors)-1u;
+        }
         auto readInventory=[&](Inventory& inventory,bool isStorage) {
             int capacity=0,count=0;
             if (!(in >> capacity >> count) || count<0 || count>1000000) return false;
@@ -493,11 +514,17 @@ bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint
     updated.clothingMask=clothing&AllClothingMask;
     updated.loadout.ConfigureGear(updated.clothingMask);
     if (rescuedSurvivor && updated.rescuedSurvivors<MaxRescuedSurvivors) {
-        const int room=InitialRoomCount+updated.rescuedSurvivors;
+        int room=InitialRoomCount;
+        while (room<HideoutRoomCount && updated.HasRescuedSurvivor(room)) ++room;
+        if (room>=HideoutRoomCount) {
+            message="새 은신처 방을 찾을 수 없습니다.";
+            return false;
+        }
         if (!SeedRoomSupplies(updated,room)) {
             message="새 은신처 방의 기본 물자를 배치하지 못했습니다.";
             return false;
         }
+        updated.rescuedRoomMask|=1u<<(room-InitialRoomCount);
         ++updated.rescuedSurvivors;
     }
     if (!updated.Save()) {

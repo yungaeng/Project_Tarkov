@@ -29,6 +29,7 @@ public:
     static constexpr int InitialRoomCount = 2;
     static constexpr int MaxRescuedSurvivors = HideoutRoomCount-InitialRoomCount;
     int rescuedSurvivors = 0;
+    std::uint32_t rescuedRoomMask = 0;
     static constexpr int FurnitureCount = static_cast<int>(HideoutFurniture::Count);
     std::array<Inventory, HideoutRoomCount * FurnitureCount> furnitureStorage;
     static constexpr int FurnitureStorageIndex(int room, HideoutFurniture furniture) {
@@ -52,6 +53,16 @@ public:
     const Inventory& FurnitureStorageAt(int room, HideoutFurniture furniture) const {
         return furnitureStorage[FurnitureStorageIndex(room, furniture)];
     }
+    bool HasRescuedSurvivor(int room) const {
+        return room >= InitialRoomCount && room < HideoutRoomCount &&
+            (rescuedRoomMask & (1u << (room-InitialRoomCount))) != 0;
+    }
+    int AvailableRoomCount() const {
+        int count=InitialRoomCount;
+        for (int room=InitialRoomCount;room<HideoutRoomCount;++room)
+            if (HasRescuedSurvivor(room)) count=room+1;
+        return count;
+    }
     bool TransferFurnitureItem(int room, HideoutFurniture furniture, StackId id, bool store, int slot = -100);
     bool SellFurnitureItem(int room, HideoutFurniture furniture, StackId id);
     bool DrinkWater(StackId id = 0, bool fromStash = true);
@@ -62,7 +73,7 @@ public:
     bool ready = false;
     std::string message;
     void Load();
-    bool ChangeAppearance(PlayerAppearance next);
+    bool ChangeAppearance(PlayerAppearance next, int releasedSurvivorRoom = -1);
     bool Save(bool requireStashSpace = false);
     bool HealBodyPart(BodyPart part);
     bool AutoArrangeStash();

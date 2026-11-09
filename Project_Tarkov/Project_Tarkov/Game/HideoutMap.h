@@ -1,12 +1,18 @@
 #pragma once
+#include "Hideout.h"
 #include "IndustrialGeometry.h"
 #include "IndustrialDetails.h"
 #include <algorithm>
 
 namespace HideoutMap {
 inline void Build(CollisionWorld& world, std::vector<IndustrialZone::Batch>& batches,
-    int availableRoomCount = 2) {
+    int availableRoomCount = 2, std::uint32_t rescuedRoomMask = 0) {
     availableRoomCount=std::clamp(availableRoomCount,2,4);
+    if (rescuedRoomMask==0 && availableRoomCount>Hideout::InitialRoomCount)
+        rescuedRoomMask=(1u<<(availableRoomCount-Hideout::InitialRoomCount))-1u;
+    for (int room=Hideout::InitialRoomCount;room<Hideout::HideoutRoomCount;++room)
+        if (rescuedRoomMask&(1u<<(room-Hideout::InitialRoomCount)))
+            availableRoomCount=(std::max)(availableRoomCount,room+1);
     world.Clear();
     std::vector<IndustrialZone::Block> blocks;
     // The terrace overlooks the raid map below; scenery has no hideout collision.
@@ -72,7 +78,9 @@ inline void Build(CollisionWorld& world, std::vector<IndustrialZone::Batch>& bat
         box({x+1,1.6f,0},{2,3.2f,.2f},wall);
         box({x+5,1.6f,0},{2,3.2f,.2f},wall);
         box({x+3,2.85f,0},{2,.7f,.2f},wall);
-        if(i>=availableRoomCount) {
+        const bool roomUnlocked=i<Hideout::InitialRoomCount ||
+            (rescuedRoomMask&(1u<<(i-Hideout::InitialRoomCount)));
+        if(!roomUnlocked) {
             box({x+3.f,1.25f,0},{1.86f,2.5f,.16f},{.30f,.24f,.18f});
             detail({x+2.18f,1.25f,-.1f},{.12f,2.58f,.08f},trim);
             detail({x+3.82f,1.25f,-.1f},{.12f,2.58f,.08f},trim);
@@ -140,6 +148,8 @@ inline void Build(CollisionWorld& world, std::vector<IndustrialZone::Batch>& bat
         propDetail({x,.94f,z-.2f},{.55f,.72f,.08f},{.32f,.29f,.24f});
     };
     for(int room=0;room<availableRoomCount;++room) {
+        if(room>=Hideout::InitialRoomCount &&
+            !(rescuedRoomMask&(1u<<(room-Hideout::InitialRoomCount))) ) continue;
         const float left=room*6.f;
         medicalTable(left+1.2f,-2.5f);
         weaponRack(left+2.8f,-7.f);
@@ -151,6 +161,8 @@ inline void Build(CollisionWorld& world, std::vector<IndustrialZone::Batch>& bat
 
     // Torn wallpaper and dust collect along the wall joints and beneath the furniture.
     for(int room=0;room<availableRoomCount;++room) {
+        if(room>=Hideout::InitialRoomCount &&
+            !(rescuedRoomMask&(1u<<(room-Hideout::InitialRoomCount))) ) continue;
         const float left=room*6.f;
         for(int strip=0;strip<3;++strip) {
             const float x=left+.45f+strip*.48f;

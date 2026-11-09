@@ -51,7 +51,6 @@ void RaidScene::Init()
     if (!shader.LoadFromFile("Assets/Shaders/cube.vs", "Assets/Shaders/cube.fs"))
         throw std::runtime_error("Shader load failed");
     cubeMesh.CreateCube();
-    playerVisual.Init(hideout.appearance);
     loot.Init();
     combat.Init(collisionWorld);
     actions.Cancel();
@@ -76,8 +75,6 @@ void RaidScene::Update(float dt)
                 {true, false, false, false, 0, 0, combat.HasRifle()});
         }
         if (raid.returnToHideout) {
-            playerVisual.Reset();
-            playerVisual.Init(hideout.appearance);
             raid.phase = RaidPhase::Hideout;
             raid.returnToHideout = false;
             raid.remaining = RaidConfig::RaidDuration;
@@ -460,7 +457,7 @@ void RaidScene::CloseCorpseLoot()
 void RaidScene::EnterHideout()
 {
     HideoutMap::Build(collisionWorld,mapBatches,
-        Hideout::InitialRoomCount+hideout.rescuedSurvivors);
+        hideout.AvailableRoomCount(),hideout.rescuedRoomMask);
     player = std::make_unique<Player>();
     player->SetCollisionWorld(&collisionWorld);
     player->position = {3,0,2};
@@ -478,6 +475,7 @@ void RaidScene::EnterHideout()
     hideoutStoragePanel = false;
     hideoutExitMenu = false;
     hideoutPrompt = hideoutZone = 0;
+    hideoutPromptRoom = -1;
     corpseLootPanelOpen=false;
     hideoutFurniture = -1;
     hideoutCameraInRoom = false;
@@ -502,14 +500,17 @@ void RaidScene::ConfigureHideoutSwitchNpc()
     hideoutSwitchNpcVisual.Update(0, hideoutSwitchNpc, npcState);
     hideoutResidentNpcs.clear();
     hideoutResidentVisuals.clear();
-    for (int i=0;i<hideout.rescuedSurvivors;++i) {
+    hideoutResidentRooms.clear();
+    for (int room=Hideout::InitialRoomCount;room<Hideout::HideoutRoomCount;++room) {
+        if (!hideout.HasRescuedSurvivor(room)) continue;
         auto resident=std::make_unique<Character>();
-        resident->position={(Hideout::InitialRoomCount+i)*6.f+3.f,0.f,-4.5f};
+        resident->position={room*6.f+3.f,0.f,-4.5f};
         auto visual=std::make_unique<CharacterVisual>();
         visual->Init(PlayerAppearance::Female);
         visual->Update(0,*resident,npcState);
         hideoutResidentNpcs.push_back(std::move(resident));
         hideoutResidentVisuals.push_back(std::move(visual));
+        hideoutResidentRooms.push_back(room);
     }
 }
 
@@ -550,6 +551,14 @@ void RaidScene::UpdateHideout(float dt)
         Input::SetCursorCaptured(false);
         return;
     }
+    if (Input::GetKeyDown(GLFW_KEY_Y) &&
+        hideout.HasRescuedSurvivor(Hideout::InitialRoomCount) &&
+        hideout.ChangeAppearance(hideout.appearance,Hideout::InitialRoomCount)) {
+        HideoutMap::Build(collisionWorld,mapBatches,
+            hideout.AvailableRoomCount(),hideout.rescuedRoomMask);
+        ConfigureHideoutSwitchNpc();
+        return;
+    }
     if (Input::IsFocused()) cameraController.Rotate(camera, Input::GetMouseDelta());
     playerController.UpdateMovement(*player, camera);
     player->Update(dt);
@@ -560,7 +569,7 @@ void RaidScene::UpdateHideout(float dt)
     for (std::size_t i=0;i<hideoutResidentNpcs.size();++i)
         hideoutResidentVisuals[i]->Update(dt,*hideoutResidentNpcs[i],npcState);
     const auto p = player->position;
-    const float roomRight=Hideout::InitialRoomCount*6.f+hideout.rescuedSurvivors*6.f;
+    const float roomRight=hideout.AvailableRoomCount()*6.f;
     if (!hideoutCameraInRoom && p.x > .2f && p.x < roomRight-.2f && p.z < -.65f && p.z > -7.5f)
         hideoutCameraInRoom = true;
     else if (hideoutCameraInRoom &&
@@ -596,19 +605,22 @@ void RaidScene::UpdateHideout(float dt)
     float nearestNpcDistance=2.25f;
     bool nearSwitchNpc=false;
     PlayerAppearance interactionAppearance=hideoutSwitchNpcAppearance;
+    int interactionRoom=-1;
     const float npcDx=p.x-hideoutSwitchNpc.position.x,npcDz=p.z-hideoutSwitchNpc.position.z;
     const float baseNpcDistance=npcDx*npcDx+npcDz*npcDz;
     if (baseNpcDistance<nearestNpcDistance) {
         nearestNpcDistance=baseNpcDistance;
         nearSwitchNpc=true;
     }
-    for (const auto& resident : hideoutResidentNpcs) {
+    for (std::size_t i=0;i<hideoutResidentNpcs.size();++i) {
+        const auto& resident=hideoutResidentNpcs[i];
         const float dx=p.x-resident->position.x,dz=p.z-resident->position.z;
         const float distance=dx*dx+dz*dz;
         if (distance<nearestNpcDistance) {
             nearestNpcDistance=distance;
             nearSwitchNpc=true;
             interactionAppearance=PlayerAppearance::Female;
+            interactionRoom=hideoutResidentRooms[i];
         }
     }
     hideoutFurniture = -1;
@@ -633,6 +645,7 @@ void RaidScene::UpdateHideout(float dt)
     if (!hideoutPrompt && nearSwitchNpc && Input::GetKeyDown(GLFW_KEY_F)) {
         hideoutPrompt = 2;
         hideoutPromptAppearance=interactionAppearance;
+        hideoutPromptRoom=interactionRoom;
         player->StopMovement();
         Input::SetCursorCaptured(false);
     } else if (!hideoutPrompt && hideoutFurniture>=0 && Input::GetKeyDown(GLFW_KEY_F)) {
@@ -675,6 +688,14 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    if (hideout.HasRescuedSurvivor(Hideout::InitialRoomCount)) {
+        ImGui::SetNextWindowPos({16,16},ImGuiCond_Always);
+        ImGui::Begin("구조 인원 테스트",nullptr,ImGuiWindowFlags_NoDecoration|
+            ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|
+            ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::TextUnformatted("[Y] 3번 방 구조 인원 내보내기");
+        ImGui::End();
+    }
     if (hideoutPrompt) {
         ImGui::SetNextWindowPos({width*.5f,height*.5f},ImGuiCond_Always,{.5f,.5f});
         ImGui::Begin("은신처 상호작용",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
@@ -684,19 +705,25 @@ void RaidScene::RenderHideoutMap(int width, int height)
         ImGui::BeginDisabled(!Input::IsFocused());
         if(ImGui::Button("예",{120,36})) {
             if(hideoutPrompt==1) deployRequested=true;
-            else if(hideout.ChangeAppearance(nextAppearance)) {
+            else if(hideout.ChangeAppearance(nextAppearance,hideoutPromptRoom)) {
                 player->appearance=hideout.appearance;
                 player->clothingMask=hideout.clothingMask;
                 playerVisual.Reset();
                 playerVisual.Init(hideout.appearance);
+                if (hideoutPromptRoom>=Hideout::InitialRoomCount) {
+                    HideoutMap::Build(collisionWorld,mapBatches,
+                        hideout.AvailableRoomCount(),hideout.rescuedRoomMask);
+                }
                 ConfigureHideoutSwitchNpc();
             }
             hideoutPrompt=0;
+            hideoutPromptRoom=-1;
             Input::SetCursorCaptured(true);
         }
         ImGui::SameLine();
         if(ImGui::Button("아니요",{120,36})) {
             hideoutPrompt=0;
+            hideoutPromptRoom=-1;
             Input::SetCursorCaptured(true);
         }
         ImGui::EndDisabled();

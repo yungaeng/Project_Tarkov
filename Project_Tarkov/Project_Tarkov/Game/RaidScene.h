@@ -40,6 +40,7 @@ private:
     CharacterVisual hideoutSwitchNpcVisual;
     std::vector<std::unique_ptr<Character>> hideoutResidentNpcs;
     std::vector<std::unique_ptr<CharacterVisual>> hideoutResidentVisuals;
+    std::vector<int> hideoutResidentRooms;
     PlayerAppearance hideoutSwitchNpcAppearance = PlayerAppearance::Male;
     PlayerAppearance hideoutPromptAppearance = PlayerAppearance::Male;
     Shader shader;
@@ -86,6 +87,7 @@ private:
     int hideoutFurniture = -1;
     bool hideoutExitMenu = false;
     int hideoutPrompt = 0;
+    int hideoutPromptRoom = -1;
     int hideoutZone = 0;
     bool hideoutCameraInRoom = false;
     bool hideoutCameraModelHidden = false;
