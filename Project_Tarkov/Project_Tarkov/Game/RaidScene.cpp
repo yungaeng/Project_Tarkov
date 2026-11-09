@@ -525,15 +525,19 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
 
     playerVisual.SetLootPreview(false);
     playerVisual.SetHideoutKneelPose(false);
-    const auto placementClear=[&](const glm::vec3& candidate,float height,
+    const auto placementClear=[&](const glm::vec3& candidate,float,
         const std::array<glm::vec3,4>& supports) {
+        const float bedLeft=bedPosition.x-.69f,bedRight=bedPosition.x+.69f;
+        const float bedFront=bedPosition.z-1.03f,bedBack=bedPosition.z+1.03f;
+        if (candidate.x<bedLeft||candidate.x>bedRight||
+            candidate.z<bedFront||candidate.z>bedBack) return false;
         for (const auto& support:supports)
-            if (!collisionWorld.IsSupported(support,.04f,.1f) ||
-                !collisionWorld.CanOccupy(support+glm::vec3(0,.002f,0),.06f,.15f)) return false;
-        return collisionWorld.CanOccupy(candidate+glm::vec3(0,.002f,0),.35f,height);
+            if (support.x<bedLeft||support.x>bedRight||
+                support.z<bedFront||support.z>bedBack) return false;
+        return true;
     };
     player->position=playerVisual.FitLootPose(*player,hideoutSwitchNpc,
-        hideoutSwitchNpcVisual,placementClear,90.f);
+        hideoutSwitchNpcVisual,placementClear,90.f,.68f);
     player->rotation.y=playerVisual.FittedLootYaw();
     player->SetLooting(true);
     playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
@@ -583,14 +587,11 @@ void RaidScene::UpdateHideout(float dt)
         playerVisual.Update(dt,*player,{false,false,false,false,0,0,false});
         CharacterVisualState npcState;
         hideoutSwitchNpcVisual.Update(dt,hideoutSwitchNpc,npcState);
-        const float yaw=glm::radians(player->rotation.y);
-        const glm::vec3 forward(std::sin(yaw),0,std::cos(yaw));
-        const glm::vec3 side(std::cos(yaw),0,-std::sin(yaw));
-        const auto center=player->position+forward*.35f+glm::vec3(0,.7f,0);
-        camera.position=center-forward*3.6f+side*2.4f+glm::vec3(0,1.2f,0);
+        const glm::vec3 center(hideoutBedTestRoom*6.f+1.1f,.72f,-4.8f);
+        camera.position=center+glm::vec3(2.8f,3.2f,4.2f);
         camera.front=glm::normalize(center-camera.position);
         camera.up={0,1,0};
-        camera.fieldOfView=58.f;
+        camera.fieldOfView=48.f;
         return;
     }
     if (deployRequested) { deployRequested = false; StartRaid(); return; }

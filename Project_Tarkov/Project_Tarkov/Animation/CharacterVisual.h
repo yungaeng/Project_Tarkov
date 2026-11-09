@@ -41,7 +41,7 @@ public:
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
         const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear,
-        float approachYaw = 180.f);
+        float approachYaw = 180.f, float supportHeight = -1.f);
     float FittedLootYaw() const { return lootPoseYaw; }
     bool LootPoseValid() const { return lootPoseValid; }
     float LootPoseHeight() const { return lootPoseHeight; }

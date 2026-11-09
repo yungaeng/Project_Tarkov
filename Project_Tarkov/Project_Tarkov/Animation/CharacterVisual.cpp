@@ -440,7 +440,7 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
 glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Character& corpse,
     const CharacterVisual& corpseVisual,
     const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear,
-    float approachYaw)
+    float approachYaw,float supportHeight)
 {
     animation.Update(0, "idle", false, false);
     animation.ApplyMotion(assets->lootClip, 0, 1, true, false, true);
@@ -453,6 +453,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     corpseModel = glm::scale(corpseModel, corpse.scale * corpse.GetSettings().modelScale);
     const float corpseYaw=corpse.rotation.y+
         (corpseVisual.hideoutBedPose?corpseVisual.hideoutBedYaw:0.f);
+    const float groundHeight=supportHeight>=0.f?supportHeight:corpse.position.y;
     auto lootModel = glm::rotate(glm::mat4(1), glm::radians(lootPoseYaw), glm::vec3(0, 1, 0));
     lootModel *= assets->lootClip.Sample("Root", 0).Matrix();
     lootModel = glm::scale(lootModel, character.scale * character.GetSettings().modelScale);
@@ -462,7 +463,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     // Pelvis alignment put the looter directly on top of the corpse.
     const auto handCenter = (animation.NodePosition("RightHand") + animation.NodePosition("LeftHand")) * .5f;
     const auto localHands = glm::vec3(lootModel * glm::vec4(handCenter, 1));
-    const glm::vec3 anchor(pelvis.x - localHands.x, corpse.position.y, pelvis.z - localHands.z);
+    const glm::vec3 anchor(pelvis.x - localHands.x, groundHeight, pelvis.z - localHands.z);
     lootModel = glm::translate(glm::mat4(1), anchor) * lootModel;
     // Preserve the authored folded shins instead of rotating each thigh alone.
 
@@ -502,7 +503,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     std::unordered_map<CellKey, Interval, CellKeyHash> underside;
     lootPoseHeight = .75f;
     visitSurface(animation, lootModel, [&](const auto& key, float bottom, float top) {
-        lootPoseHeight = (std::max)(lootPoseHeight, top - corpse.position.y + clearance);
+        lootPoseHeight = (std::max)(lootPoseHeight, top - groundHeight + clearance);
         auto inserted = underside.emplace(key, Interval{bottom, top});
         inserted.first->second.first = (std::min)(inserted.first->second.first, bottom);
         inserted.first->second.second = (std::max)(inserted.first->second.second, top);
@@ -511,7 +512,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     std::array<glm::vec3, 4> baseSupports{};
     for (size_t i = 0; i < baseSupports.size(); ++i) {
         baseSupports[i] = glm::vec3(lootModel * glm::vec4(animation.NodePosition(supports[i]), 1));
-        baseSupports[i].y = corpse.position.y;
+        baseSupports[i].y = groundHeight;
     }
     const float yaw = glm::radians(corpseYaw);
     const glm::vec3 across(std::cos(yaw), 0, -std::sin(yaw));
