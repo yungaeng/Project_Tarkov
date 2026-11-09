@@ -38,7 +38,10 @@ private:
     CharacterVisual playerVisual;
     Character hideoutSwitchNpc;
     CharacterVisual hideoutSwitchNpcVisual;
+    std::vector<std::unique_ptr<Character>> hideoutResidentNpcs;
+    std::vector<std::unique_ptr<CharacterVisual>> hideoutResidentVisuals;
     PlayerAppearance hideoutSwitchNpcAppearance = PlayerAppearance::Male;
+    PlayerAppearance hideoutPromptAppearance = PlayerAppearance::Male;
     Shader shader;
     Mesh cubeMesh;
     Camera camera;
@@ -63,6 +66,8 @@ private:
     RaidSummary summary;
     int lootingCorpse = -1, corpseTarget = -1;
     bool closeLootRequested = false;
+    bool rescuePromptOpen = false;
+    bool rescueRequested = false;
     StackId takeCorpseStack = 0;
     bool takeCorpseWeapon = false;
     glm::vec3 beforeLootPosition{0};

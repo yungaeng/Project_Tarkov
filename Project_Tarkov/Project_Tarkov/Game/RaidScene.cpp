@@ -95,6 +95,22 @@ void RaidScene::Update(float dt)
         UpdateHideout(dt);
         return;
     }
+    if (rescueRequested) {
+        rescueRequested=false;
+        if (combat.RecruitRescue()) {
+            loot.Notify("여성이 동행합니다. 적의 공격으로부터 보호하며 함께 탈출하세요.");
+            Input::SetCursorCaptured(true);
+        }
+    }
+    if (rescuePromptOpen) {
+        if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
+            rescuePromptOpen=false;
+            Input::SetCursorCaptured(true);
+        } else {
+            player->StopMovement();
+            return;
+        }
+    }
     const float elapsed = std::isfinite(dt) ? (std::max)(0.0f, dt) : 0.0f;
     raid.remaining = (std::max)(0.0f, raid.remaining - elapsed);
     // Timeout wins over extraction on the same frame.
@@ -112,6 +128,15 @@ void RaidScene::Update(float dt)
     if (lootingCorpse < 0 && !corpseInteraction) playerController.UpdateInterface();
     corpseTarget = playerController.IsGameplayInputEnabled() && lootingCorpse < 0 ?
         combat.FindCorpse(*player, collisionWorld) : -1;
+    if (playerController.IsGameplayInputEnabled() && !corpseInteraction &&
+        lootingCorpse<0 && corpseTarget<0 &&
+        Input::GetKeyDown(GLFW_KEY_F) && combat.CanInteractWithRescue(*player,collisionWorld)) {
+        rescuePromptOpen=true;
+        player->StopMovement();
+        actions.Cancel();
+        combat.CancelInput();
+        Input::SetCursorCaptured(false);
+    }
     if (!corpseInteraction && corpseTarget >= 0 && Input::GetKeyDown(GLFW_KEY_F)) {
         corpseInteraction = true;
         const auto* corpse = combat.Corpse(corpseTarget);
@@ -174,7 +199,9 @@ void RaidScene::Update(float dt)
     if (player->vitals.Alive() && combat.Equipped() && lootingCorpse < 0)
         player->rotation.y = glm::degrees(std::atan2(camera.front.x, camera.front.z));
     FollowCamera(camera);
-    loot.Update(dt, *player, camera, collisionWorld, canLook && corpseTarget < 0 && !corpseInteraction, Input::GetKeyDown(GLFW_KEY_F));
+    loot.Update(dt,*player,camera,collisionWorld,
+        canLook&&corpseTarget<0&&!corpseInteraction&&!rescuePromptOpen,
+        Input::GetKeyDown(GLFW_KEY_F)&&!rescuePromptOpen);
     CharacterVisualState visualState{!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
         combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasWeapon()};
     visualState.magazineInserted = combat.ActiveWeapon() && combat.ActiveWeapon()->magazineInserted;
@@ -186,7 +213,14 @@ void RaidScene::Update(float dt)
     if (!player->vitals.Alive()) { FinishRaid(RaidPhase::Dead); return; }
     const auto offset = player->position - IndustrialZone::Exits[raid.assignedExit].position;
     raid.exitDistance = glm::length(glm::vec2(offset.x, offset.z));
-    if (lootingCorpse < 0 && std::abs(offset.x) <= RaidConfig::ExtractRadius && std::abs(offset.z) <= RaidConfig::ExtractRadius &&
+    const auto* rescuedBody=combat.RescueBody();
+    const bool rescuedAtExit=!combat.HasRecruitedRescue() ||
+        (rescuedBody &&
+         std::abs(rescuedBody->position.x-IndustrialZone::Exits[raid.assignedExit].position.x)<=RaidConfig::ExtractRadius &&
+         std::abs(rescuedBody->position.z-IndustrialZone::Exits[raid.assignedExit].position.z)<=RaidConfig::ExtractRadius &&
+         std::abs(rescuedBody->position.y)<2.f);
+    if (lootingCorpse < 0 && rescuedAtExit &&
+        std::abs(offset.x) <= RaidConfig::ExtractRadius && std::abs(offset.z) <= RaidConfig::ExtractRadius &&
         std::abs(offset.y) < 2.0f)
         raid.extraction += elapsed;
     else raid.extraction = 0;
@@ -231,7 +265,7 @@ void RaidScene::Render()
     combat.Render(shader, viewCamera, static_cast<float>(sceneWidth), static_cast<float>(height));
     glViewport(0, 0, width, height);
     hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid, collisionWorld, shader, combat.EditableCorpse(lootingCorpse), corpseTarget,
-        &takeCorpseStack, &takeCorpseWeapon, &closeLootRequested);
+        &takeCorpseStack, &takeCorpseWeapon, &closeLootRequested,&rescuePromptOpen,&rescueRequested);
 }
 
 void RaidScene::FinishRaid(RaidPhase result)
@@ -249,7 +283,11 @@ void RaidScene::FinishRaid(RaidPhase result)
     if (result == RaidPhase::Extracted) {
         raid.recovered = player->GetInventory();
         raid.recoveredClothing = player->clothingMask;
-        hideout.Recover(raid.recovered, combat.HasRifle(), combat.Magazine(), player->clothingMask);
+        const bool rescueAttempted=combat.HasRecruitedRescue();
+        const int rescuedBefore=hideout.rescuedSurvivors;
+        hideout.Recover(raid.recovered,combat.HasRifle(),combat.Magazine(),
+            player->clothingMask,rescueAttempted);
+        const bool rescuedFemale=rescueAttempted&&hideout.rescuedSurvivors>rescuedBefore;
         raid.saveMessage = "탈출 성공: 보급품을 은신처로 반입했습니다.";
 
         summary = RaidSummary{};
@@ -257,6 +295,8 @@ void RaidScene::FinishRaid(RaidPhase result)
         summary.kills = combat.KillRecords();
         summary.recoveredClothing = player->clothingMask;
         summary.recoveredRifle = combat.HasRifle();
+        summary.rescuedFemale=rescuedFemale;
+        if (rescuedFemale) summary.acquiredEquipment.push_back("여캐 (합류함)");
         for (int type = 0; type < ItemTypeCount; ++type) {
             const auto itemType = static_cast<ItemType>(type);
             const auto bit = CanWear(itemType,player->appearance == PlayerAppearance::Male) ? ClothingBit(itemType) : 0u;
@@ -321,6 +361,10 @@ void RaidScene::StartRaid()
     loot.Init();
     combat.Init(collisionWorld);
     combat.SetLoadout(player->GetInventory());
+    rescuePromptOpen=false;
+    rescueRequested=false;
+    if (hideout.rescuedSurvivors<Hideout::MaxRescuedSurvivors)
+        combat.SpawnRescueSurvivor(player->position,collisionWorld);
     summary = RaidSummary{};
     playerVisual.Reset();
     playerVisual.Init(hideout.appearance);
@@ -385,7 +429,8 @@ void RaidScene::CloseCorpseLoot()
 
 void RaidScene::EnterHideout()
 {
-    HideoutMap::Build(collisionWorld, mapBatches);
+    HideoutMap::Build(collisionWorld,mapBatches,
+        Hideout::InitialRoomCount+hideout.rescuedSurvivors);
     player = std::make_unique<Player>();
     player->SetCollisionWorld(&collisionWorld);
     player->position = {3,0,2};
@@ -424,6 +469,17 @@ void RaidScene::ConfigureHideoutSwitchNpc()
     CharacterVisualState npcState;
     npcState.hasWeapon = false;
     hideoutSwitchNpcVisual.Update(0, hideoutSwitchNpc, npcState);
+    hideoutResidentNpcs.clear();
+    hideoutResidentVisuals.clear();
+    for (int i=0;i<hideout.rescuedSurvivors;++i) {
+        auto resident=std::make_unique<Character>();
+        resident->position={(Hideout::InitialRoomCount+i)*6.f+3.f,0.f,-4.5f};
+        auto visual=std::make_unique<CharacterVisual>();
+        visual->Init(PlayerAppearance::Female);
+        visual->Update(0,*resident,npcState);
+        hideoutResidentNpcs.push_back(std::move(resident));
+        hideoutResidentVisuals.push_back(std::move(visual));
+    }
 }
 
 void RaidScene::UpdateHideout(float dt)
@@ -470,11 +526,14 @@ void RaidScene::UpdateHideout(float dt)
     CharacterVisualState npcState;
     npcState.hasWeapon = false;
     hideoutSwitchNpcVisual.Update(dt, hideoutSwitchNpc, npcState);
+    for (std::size_t i=0;i<hideoutResidentNpcs.size();++i)
+        hideoutResidentVisuals[i]->Update(dt,*hideoutResidentNpcs[i],npcState);
     const auto p = player->position;
-    if (!hideoutCameraInRoom && p.x > .2f && p.x < 11.8f && p.z < -.65f && p.z > -7.5f)
+    const float roomRight=Hideout::InitialRoomCount*6.f+hideout.rescuedSurvivors*6.f;
+    if (!hideoutCameraInRoom && p.x > .2f && p.x < roomRight-.2f && p.z < -.65f && p.z > -7.5f)
         hideoutCameraInRoom = true;
     else if (hideoutCameraInRoom &&
-        (p.x < -.2f || p.x > 12.2f || p.z > .15f || p.z < -7.8f))
+        (p.x < -.2f || p.x > roomRight+.2f || p.z > .15f || p.z < -7.8f))
         hideoutCameraInRoom = false;
     const float cameraTarget = hideoutCameraInRoom ? 1.f : 0.f;
     hideoutCameraBlend += std::clamp(cameraTarget - hideoutCameraBlend,
@@ -503,13 +562,29 @@ void RaidScene::UpdateHideout(float dt)
         Input::SetCursorCaptured(false);
     }
     hideoutZone = zone;
-    const float npcDx = p.x - hideoutSwitchNpc.position.x;
-    const float npcDz = p.z - hideoutSwitchNpc.position.z;
-    const bool nearSwitchNpc = npcDx*npcDx + npcDz*npcDz < 2.25f;
+    float nearestNpcDistance=2.25f;
+    bool nearSwitchNpc=false;
+    PlayerAppearance interactionAppearance=hideoutSwitchNpcAppearance;
+    const float npcDx=p.x-hideoutSwitchNpc.position.x,npcDz=p.z-hideoutSwitchNpc.position.z;
+    const float baseNpcDistance=npcDx*npcDx+npcDz*npcDz;
+    if (baseNpcDistance<nearestNpcDistance) {
+        nearestNpcDistance=baseNpcDistance;
+        nearSwitchNpc=true;
+    }
+    for (const auto& resident : hideoutResidentNpcs) {
+        const float dx=p.x-resident->position.x,dz=p.z-resident->position.z;
+        const float distance=dx*dx+dz*dz;
+        if (distance<nearestNpcDistance) {
+            nearestNpcDistance=distance;
+            nearSwitchNpc=true;
+            interactionAppearance=PlayerAppearance::Female;
+        }
+    }
     hideoutFurniture = -1;
     float nearestFurniture = 1.7f * 1.7f;
-    if (!nearSwitchNpc && p.x>.2f && p.x<12.f && p.z < .25f && p.z > -8.f) {
-        hideoutFurnitureRoom = p.x<6.f ? 0 : 1;
+    if (!nearSwitchNpc && p.x>.2f && p.x<roomRight && p.z < .25f && p.z > -8.f) {
+        hideoutFurnitureRoom = (std::min)(Hideout::HideoutRoomCount-1,
+            static_cast<int>(p.x/6.f));
         const float roomX=hideoutFurnitureRoom*6.f;
         const float furnitureX[]{
             roomX+5.1f, roomX+2.8f, roomX+4.9f, roomX+1.2f
@@ -526,6 +601,7 @@ void RaidScene::UpdateHideout(float dt)
     }
     if (!hideoutPrompt && nearSwitchNpc && Input::GetKeyDown(GLFW_KEY_F)) {
         hideoutPrompt = 2;
+        hideoutPromptAppearance=interactionAppearance;
         player->StopMovement();
         Input::SetCursorCaptured(false);
     } else if (!hideoutPrompt && hideoutFurniture>=0 && Input::GetKeyDown(GLFW_KEY_F)) {
@@ -547,6 +623,9 @@ void RaidScene::RenderHideoutMap(int width, int height)
     if (!hideoutCameraModelHidden)
         playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
     hideoutSwitchNpcVisual.Render(hideoutSwitchNpc,shader,camera,float(width),float(height),glm::vec3(1),false);
+    for (std::size_t i=0;i<hideoutResidentNpcs.size();++i)
+        hideoutResidentVisuals[i]->Render(*hideoutResidentNpcs[i],shader,camera,
+            float(width),float(height),glm::vec3(1),false);
     if (hideoutStoragePanel) {
         const bool wasStoragePanelOpen=hideoutStoragePanel;
         hud.RenderHideoutStorage(hideout,hideoutFurnitureRoom,hideoutFurniture,
@@ -568,7 +647,7 @@ void RaidScene::RenderHideoutMap(int width, int height)
     if (hideoutPrompt) {
         ImGui::SetNextWindowPos({width*.5f,height*.5f},ImGuiCond_Always,{.5f,.5f});
         ImGui::Begin("은신처 상호작용",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
-        const auto nextAppearance = hideoutSwitchNpcAppearance;
+        const auto nextAppearance = hideoutPromptAppearance;
         ImGui::TextUnformatted(hideoutPrompt==1 ? "레이드에 진입하시겠습니까?" :
             nextAppearance == PlayerAppearance::Male ? "남캐로 캐릭터 전환 하시겠습니까?" : "여캐로 캐릭터 전환 하시겠습니까?");
         ImGui::BeginDisabled(!Input::IsFocused());

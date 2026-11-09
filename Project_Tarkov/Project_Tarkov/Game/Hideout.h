@@ -25,7 +25,10 @@ public:
     int rifles = 0;
     Inventory loadout;
     Inventory storage;
-    static constexpr int HideoutRoomCount = 2;
+    static constexpr int HideoutRoomCount = 4;
+    static constexpr int InitialRoomCount = 2;
+    static constexpr int MaxRescuedSurvivors = HideoutRoomCount-InitialRoomCount;
+    int rescuedSurvivors = 0;
     static constexpr int FurnitureCount = static_cast<int>(HideoutFurniture::Count);
     std::array<Inventory, HideoutRoomCount * FurnitureCount> furnitureStorage;
     static constexpr int FurnitureStorageIndex(int room, HideoutFurniture furniture) {
@@ -65,7 +68,9 @@ public:
     bool AutoArrangeStash();
     bool SellStashItem(StackId id);
     bool Depart();
-    void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
+    bool Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing,
+        bool rescuedSurvivor = false);
 private:
     static bool SeedStarterSupplies(Hideout& hideout);
+    static bool SeedRoomSupplies(Hideout& hideout, int room);
 };

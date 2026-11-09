@@ -266,7 +266,8 @@ void RaidHud::Init(GLFWwindow* window)
 }
 
 void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid,
-    const CollisionWorld& world, Shader& shader, Enemy* corpse, int corpseTarget, StackId* takeStack, bool* takeWeapon, bool* closeLoot)
+    const CollisionWorld& world, Shader& shader, Enemy* corpse, int corpseTarget, StackId* takeStack,
+    bool* takeWeapon, bool* closeLoot, bool* rescuePromptOpen, bool* rescueRequested)
 {
     if (!rendererReady) return;
     auto& inventory = player.GetInventory();
@@ -629,6 +630,23 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
             }
             if (!ok) loot.Notify("이동/사용 불가: 공간, 장비 종류 또는 탄약을 확인하세요.");
         }
+    }
+    if (rescuePromptOpen && *rescuePromptOpen) {
+        ImGui::SetNextWindowPos({io.DisplaySize.x*.5f,io.DisplaySize.y*.5f},
+            ImGuiCond_Always,{.5f,.5f});
+        ImGui::Begin("생존자 구조",nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoSavedSettings);
+        ImGui::TextUnformatted("이 여성을 은신처로 데려가시겠습니까?");
+        if (ImGui::Button("데려간다",{140,40})) {
+            if (rescueRequested) *rescueRequested=true;
+            *rescuePromptOpen=false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("두고간다",{140,40})) {
+            *rescuePromptOpen=false;
+            Input::SetCursorCaptured(true);
+        }
+        ImGui::End();
     }
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -1011,7 +1029,9 @@ void RaidHud::RenderHideoutPauseMenu(bool& exitMenuOpen)
     DrawHideoutExitMenu(exitMenuOpen,ImGui::GetIO().DisplaySize);
 }
 
-bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader)
+bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& character,
+    CharacterVisual& visual, Shader& shader, Character* rescuedCharacter,
+    CharacterVisual* rescuedVisual)
 {
     if (!rendererReady) return false;
     ImGui_ImplOpenGL3_NewFrame();
@@ -1030,23 +1050,36 @@ bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& charac
     ImGui::Separator();
 
     ImGui::BeginChild("결과 캐릭터", {0, io.DisplaySize.y * 0.43f}, true);
-    const ImVec2 modelPosition = ImGui::GetCursorScreenPos();
-    const float modelWidth = ImGui::GetContentRegionAvail().x;
-    const float modelHeight = (std::max)(180.0f, ImGui::GetContentRegionAvail().y - 8.0f);
-    const ImVec2 modelSize(modelWidth, modelHeight);
-    auto* draw = ImGui::GetWindowDrawList();
-    draw->AddRectFilled(modelPosition,
-        {modelPosition.x + modelSize.x, modelPosition.y + modelSize.y},
-        IM_COL32(25, 29, 26, 235), 3.0f);
-
-    CharacterPreview preview{&visual, &character, &shader, {}, modelPosition, modelSize, io.DisplayFramebufferScale, summary.recoveredRifle};
-    preview.camera.position = {0, 1.0f, 3.4f};
-    preview.camera.front = {0, 0, -1};
-    preview.camera.up = {0, 1, 0};
-    preview.camera.fieldOfView = 38.0f;
-    draw->AddCallback(DrawCharacterPreview, &preview);
-    draw->AddCallback(ImDrawCallback_ResetRenderState, nullptr);
-    ImGui::Dummy(modelSize);
+    auto drawPreview=[&](const char* childId,const char* label,Character& model,
+        CharacterVisual& modelVisual,bool hasRifle,float childWidth=0.f) {
+        ImGui::BeginChild(childId,{childWidth,0},false);
+        ImGui::TextUnformatted(label);
+        const ImVec2 modelPosition=ImGui::GetCursorScreenPos();
+        const ImVec2 modelSize(ImGui::GetContentRegionAvail().x,
+            (std::max)(180.f,ImGui::GetContentRegionAvail().y-4.f));
+        auto* draw=ImGui::GetWindowDrawList();
+        draw->AddRectFilled(modelPosition,{modelPosition.x+modelSize.x,modelPosition.y+modelSize.y},
+            IM_COL32(25,29,26,235),3.f);
+        CharacterPreview preview{&modelVisual,&model,&shader,{},modelPosition,modelSize,
+            io.DisplayFramebufferScale,hasRifle};
+        preview.camera.position={0,1.f,3.4f};
+        preview.camera.front={0,0,-1};
+        preview.camera.up={0,1,0};
+        preview.camera.fieldOfView=38.f;
+        draw->AddCallback(DrawCharacterPreview,&preview);
+        draw->AddCallback(ImDrawCallback_ResetRenderState,nullptr);
+        ImGui::Dummy(modelSize);
+        ImGui::EndChild();
+    };
+    if (summary.rescuedFemale && rescuedCharacter && rescuedVisual) {
+        const float modelColumn=ImGui::GetContentRegionAvail().x*.5f-4.f;
+        drawPreview("플레이어 모델","플레이어",character,visual,summary.recoveredRifle,modelColumn);
+        ImGui::SameLine();
+        drawPreview("합류한 여캐 모델","여캐 (합류함)",*rescuedCharacter,
+            *rescuedVisual,false,modelColumn);
+    } else {
+        drawPreview("플레이어 모델","플레이어",character,visual,summary.recoveredRifle);
+    }
     ImGui::EndChild();
 
     ImGui::TextColored(accent, "소요 시간");

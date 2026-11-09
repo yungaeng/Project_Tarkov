@@ -17,6 +17,7 @@ struct RaidSummary
     int durationSeconds = 0;
     std::uint32_t recoveredClothing = 0;
     bool recoveredRifle = false;
+    bool rescuedFemale = false;
     std::vector<std::string> acquiredEquipment;
     std::vector<KillRecord> kills;
 };

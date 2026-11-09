@@ -4,6 +4,7 @@
 #include "../Graphics/Texture.h"
 struct GLFWwindow;
 class Player;
+class Character;
 class CombatSystem;
 class InventoryActions;
 class LootSystem;
@@ -26,7 +27,8 @@ public:
     void Init(GLFWwindow* window);
     void Render(Player& player, LootSystem& loot, CombatSystem& combat, InventoryActions& actions, bool inventoryOpen, RaidStatus& raid,
         const CollisionWorld& world, Shader& shader, Enemy* corpse = nullptr, int corpseTarget = -1, StackId* takeStack = nullptr,
-        bool* takeWeapon = nullptr, bool* closeLoot = nullptr);
+        bool* takeWeapon = nullptr, bool* closeLoot = nullptr, bool* rescuePromptOpen = nullptr,
+        bool* rescueRequested = nullptr);
     void ResetAmmoIndicator();
     static float LootPanelWidth(float screenWidth) { return screenWidth * .42f < 520.f ? screenWidth * .42f : 520.f; }
     void RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader,
@@ -35,7 +37,8 @@ public:
         CharacterVisual& visual, Shader& shader, bool& panelOpen, bool& exitMenuOpen);
     void RenderHideoutPauseMenu(bool& exitMenuOpen);
     void SetHideoutHealthTab(bool health) { hideoutHealthTab = health; }
-    bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader);
+    bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader,
+        Character* rescuedCharacter = nullptr, CharacterVisual* rescuedVisual = nullptr);
     void Shutdown();
 private:
     Texture itemImages;

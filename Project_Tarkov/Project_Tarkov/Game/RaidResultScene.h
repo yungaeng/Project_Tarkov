@@ -25,6 +25,8 @@ private:
     RaidSummary summary;
     Player character;
     CharacterVisual visual;
+    Character rescuedCharacter;
+    CharacterVisual rescuedVisual;
     Shader shader;
     RaidHud hud;
     bool returnRequested = false;

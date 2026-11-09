@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
+#include <random>
 #include <sstream>
 
 namespace
@@ -52,6 +53,7 @@ void CombatSystem::Init(const CollisionWorld& world)
     gunshotAudio.Init();
     enemies.clear();
     kills.clear();
+    rescue = RescueSurvivor{};
     for (const glm::vec3 position : IndustrialZone::Enemies)
     {
         Enemy enemy;
@@ -76,6 +78,43 @@ void CombatSystem::Init(const CollisionWorld& world)
     fired = false;
     cooldown = reload = messageTime = elapsedSeconds = 0;
     message.clear();
+}
+
+bool CombatSystem::SpawnRescueSurvivor(const glm::vec3& playerSpawn, const CollisionWorld& world)
+{
+    static std::mt19937 randomEngine(std::random_device{}());
+    std::uniform_real_distribution<float> coordinate(-220.f,220.f);
+    for (int attempt=0;attempt<256;++attempt) {
+        const glm::vec3 candidate{coordinate(randomEngine),0,coordinate(randomEngine)};
+        if (glm::length(glm::vec2(candidate.x-playerSpawn.x,candidate.z-playerSpawn.z))<35.f ||
+            !world.CanOccupy(candidate,.35f,1.8f))
+            continue;
+        bool nearEnemy=false;
+        for (const auto& enemy : enemies)
+            if (glm::length(glm::vec2(candidate.x-enemy.body.position.x,
+                candidate.z-enemy.body.position.z))<26.f) { nearEnemy=true; break; }
+        if (nearEnemy) continue;
+        rescue = RescueSurvivor{};
+        rescue.available = true;
+        rescue.body.SetCollisionWorld(&world);
+        rescue.body.position = rescue.target = candidate;
+        rescue.body.clothingMask = 0;
+        rescue.visual = std::make_unique<CharacterVisual>();
+        rescue.visual->Init(PlayerAppearance::Female);
+        rescue.visual->Update(0,rescue.body,{false,false,false,false,0,0,false});
+        rescue.moveTimer = 1.f;
+        return true;
+    }
+    return false;
+}
+
+bool CombatSystem::CanInteractWithRescue(const Player& player, const CollisionWorld& world) const
+{
+    if (!rescue.available || rescue.recruited || rescue.health<=0 || !player.vitals.Alive())
+        return false;
+    const float distance=glm::length(glm::vec2(
+        player.position.x-rescue.body.position.x,player.position.z-rescue.body.position.z));
+    return distance<2.8f && Visible(world,Eye(player),Eye(rescue.body));
 }
 
 int CombatSystem::LivingEnemies() const
@@ -147,6 +186,8 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 if (RayBox(camera.position, camera.front, box.min, box.max, nearest, hit)) nearest = hit;
             for (const auto& enemy : enemies)
                 if (enemy.health > 0 && HitBody(enemy.body, camera.position, camera.front, nearest, hit)) nearest = hit;
+            if (rescue.available && rescue.health>0 &&
+                HitBody(rescue.body,camera.position,camera.front,nearest,hit)) nearest=hit;
             const auto origin = Eye(player);
             const auto delta = camera.position + camera.front * nearest - origin;
             const float length = glm::length(delta);
@@ -158,6 +199,9 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
                 nearest = length + 0.01f;
                 for (const auto& box : world.GetBoxes())
                     if (RayBox(origin, direction, box.min, box.max, nearest, hit)) nearest = hit;
+                if (rescue.available && rescue.health>0 &&
+                    HitBody(rescue.body,origin,direction,nearest,hit) && hit<nearest)
+                    nearest=hit;
                 for (std::size_t i = 0; i < enemies.size(); ++i)
                     if (enemies[i].health > 0 && HitBody(enemies[i].body, origin, direction, nearest, hit) && hit < nearest)
                     { nearest = hit; victim = static_cast<int>(i); impactPosition = origin + direction * hit; }
@@ -198,6 +242,48 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         }
     }
 
+    if (rescue.available && rescue.health>0) {
+        rescue.body.StopMovement();
+        if (rescue.recruited) {
+            const float yaw=glm::radians(player.rotation.y);
+            rescue.target=player.position-glm::vec3(std::sin(yaw),0,std::cos(yaw))*1.8f;
+        } else {
+            rescue.moveTimer-=dt;
+            if (rescue.moveTimer<=0 ||
+                glm::length(glm::vec2(rescue.target.x-rescue.body.position.x,
+                    rescue.target.z-rescue.body.position.z))<.8f) {
+                static std::mt19937 randomEngine(std::random_device{}());
+                std::uniform_real_distribution<float> angle(0.f,6.2831853f);
+                std::uniform_real_distribution<float> radius(3.f,10.f);
+                rescue.moveTimer=5.f;
+                for (int attempt=0;attempt<12;++attempt) {
+                    const float heading=angle(randomEngine),distance=radius(randomEngine);
+                    const glm::vec3 candidate=rescue.body.position+
+                        glm::vec3(std::sin(heading)*distance,0,std::cos(heading)*distance);
+                    if (world.CanOccupy(candidate,.35f,rescue.body.GetBodyHeight())) {
+                        rescue.target=candidate;
+                        break;
+                    }
+                }
+            }
+        }
+        glm::vec3 direction=rescue.target-rescue.body.position;
+        direction.y=0;
+        if (glm::length(direction)>.65f) {
+            direction=glm::normalize(direction);
+            rescue.body.rotation.y=glm::degrees(std::atan2(direction.x,direction.z));
+            const float step=.8f;
+            if (!world.CanOccupy(rescue.body.position+direction*step,.35f,rescue.body.GetBodyHeight())) {
+                const glm::vec3 side(-direction.z,0,direction.x);
+                if (world.CanOccupy(rescue.body.position+side*step,.35f,rescue.body.GetBodyHeight())) direction=side;
+                else if (world.CanOccupy(rescue.body.position-side*step,.35f,rescue.body.GetBodyHeight())) direction=-side;
+                else direction=glm::vec3(0);
+            }
+            rescue.body.SetMovement(direction,rescue.recruited?2.8f:1.35f);
+        }
+        rescue.body.Update(dt);
+    }
+
     for (std::size_t enemyIndex = 0; enemyIndex < enemies.size(); ++enemyIndex)
     {
         auto& enemy = enemies[enemyIndex];
@@ -212,12 +298,25 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             enemy.deadTime += dt;
             continue;
         }
-        const float distance = glm::length(player.position - enemy.body.position);
-        const bool seesPlayer = player.vitals.Alive() && distance < 18 && Visible(world, Eye(enemy.body), Eye(player));
+        const Character* targetBody=&player;
+        bool targetingRescue=false;
+        float distance=glm::length(player.position-enemy.body.position);
+        bool seesTarget=player.vitals.Alive() && distance<18 &&
+            Visible(world,Eye(enemy.body),Eye(player));
+        if (rescue.recruited && rescue.health>0) {
+            const float rescueDistance=glm::length(rescue.body.position-enemy.body.position);
+            if (rescueDistance<18 && rescueDistance<distance &&
+                Visible(world,Eye(enemy.body),Eye(rescue.body))) {
+                targetBody=&rescue.body;
+                targetingRescue=true;
+                distance=rescueDistance;
+                seesTarget=true;
+            }
+        }
         enemy.attackTimer = (std::max)(0.0f, enemy.attackTimer - dt);
-        if (seesPlayer)
+        if (seesTarget)
         {
-            enemy.lastSeen = player.position;
+            enemy.lastSeen = targetBody->position;
             enemy.searchTimer = 5;
             enemy.state = distance < 11 ? EnemyState::Attack : EnemyState::Chase;
         }
@@ -229,10 +328,13 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         }
         if (enemy.state == EnemyState::Attack)
         {
-            if (enemy.attackTimer == 0 && seesPlayer)
+            if (enemy.attackTimer == 0 && seesTarget)
             {
                 const int hitPart = (static_cast<int>(enemyIndex) + static_cast<int>(elapsedSeconds)) % BodyPartCount;
-                player.vitals.Damage(static_cast<BodyPart>(hitPart), 40);
+                if (targetingRescue)
+                    rescue.health=(std::max)(0.f,rescue.health-40.f);
+                else
+                    player.vitals.Damage(static_cast<BodyPart>(hitPart), 40);
                 enemy.fired = true;
                 if (Input::IsFocused()) {
                     const auto offset = Eye(enemy.body) - camera.position;
@@ -272,9 +374,9 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             }
         }
         enemy.body.Update(dt);
-        if (seesPlayer)
+        if (seesTarget)
         {
-            const auto direction = Eye(player) - Eye(enemy.body);
+            const auto direction = Eye(*targetBody) - Eye(enemy.body);
             enemy.body.rotation.y = glm::degrees(std::atan2(direction.x, direction.z));
             enemy.aimPitch = glm::degrees(std::atan2(direction.y, glm::length(glm::vec2(direction.x, direction.z))));
         }
@@ -305,12 +407,21 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             auto& enemy = enemies[i];
             if (enemy.health > 0) {
                 separate(enemy.body, player, false);
+                if (rescue.available && rescue.health>0)
+                    separate(enemy.body,rescue.body,false);
                 for (std::size_t j = 0; j < enemies.size(); ++j)
                     if (i != j) separate(enemy.body, enemies[j].body, enemies[j].health <= 0);
             }
             if (!player.IsLooting() && player.vitals.Alive())
                 separate(player, enemy.body, enemy.health <= 0);
         }
+    }
+    if (rescue.available && rescue.health>0) {
+        if (player.vitals.Alive()) separate(rescue.body,player,false);
+        for (const auto& enemy : enemies)
+            separate(rescue.body,enemy.body,enemy.health<=0);
+        rescue.visual->Update(dt,rescue.body,
+            {rescue.health<=0,false,false,false,0,0,false});
     }
     for (auto& enemy : enemies)
     {
@@ -327,6 +438,8 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
 
 void CombatSystem::Render(Shader& shader, Camera& camera, float width, float height)
 {
+    if (rescue.available && rescue.health>0)
+        rescue.visual->Render(rescue.body,shader,camera,width,height,glm::vec3(.78f,.72f,.55f));
     for (auto& enemy : enemies)
     {
         enemy.visual->Render(enemy.body, shader, camera, width, height, glm::vec3(0.72f, 0.43f, 0.28f));

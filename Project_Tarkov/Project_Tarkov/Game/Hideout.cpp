@@ -100,7 +100,8 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 17\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' ' << rubles << '\n';
+    out << "HIDEOUT 18\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
+        << rubles << ' ' << rescuedSurvivors << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
         for (const auto& item : inventory.Items())
@@ -134,28 +135,33 @@ static bool StoreGarment(Inventory& storage, ItemType type)
 
 bool Hideout::SeedStarterSupplies(Hideout& hideout)
 {
-    for (int room = 0; room < HideoutRoomCount; ++room) {
-        auto& fridge = hideout.FurnitureStorageAt(room,HideoutFurniture::Refrigerator);
-        auto& armory = hideout.FurnitureStorageAt(room,HideoutFurniture::Armory);
-        auto& wardrobe = hideout.FurnitureStorageAt(room,HideoutFurniture::Wardrobe);
-        auto& medical = hideout.FurnitureStorageAt(room,HideoutFurniture::MedicalTable);
-        if (!fridge.TryAdd({ItemType::Water,4}) ||
-            !armory.TryAdd({ItemType::Rifle,1,0,30,true,-100}) ||
-            !armory.TryAdd({ItemType::Pistol,1,0,15,true,-100}) ||
-            !armory.TryAdd({ItemType::Magazine,2,0,30,false,-100}) ||
-            !armory.TryAdd({ItemType::PistolMagazine,2,0,15,false,-100}) ||
-            !armory.TryAdd({ItemType::Ammo,60}) ||
-            !fridge.TryAdd({ItemType::Food,4}) ||
-            !medical.TryAdd({ItemType::Bandage,5}))
-            return false;
-        for (auto type : {ItemType::Shirt,ItemType::Trousers,ItemType::UnderShirt,
-            ItemType::Underpants,ItemType::Trunks,ItemType::Vest,ItemType::Helmet,
-            ItemType::Backpack,ItemType::Boots})
-            if (!wardrobe.TryAdd({type,1})) return false;
-    }
+    for (int room=0;room<InitialRoomCount;++room)
+        if (!SeedRoomSupplies(hideout,room)) return false;
     return true;
 }
 
+bool Hideout::SeedRoomSupplies(Hideout& hideout, int room)
+{
+    if (room<0 || room>=HideoutRoomCount) return false;
+    auto& fridge=hideout.FurnitureStorageAt(room,HideoutFurniture::Refrigerator);
+    auto& armory=hideout.FurnitureStorageAt(room,HideoutFurniture::Armory);
+    auto& wardrobe=hideout.FurnitureStorageAt(room,HideoutFurniture::Wardrobe);
+    auto& medical=hideout.FurnitureStorageAt(room,HideoutFurniture::MedicalTable);
+    if (!fridge.TryAdd({ItemType::Water,4}) ||
+        !armory.TryAdd({ItemType::Rifle,1,0,30,true,-100}) ||
+        !armory.TryAdd({ItemType::Pistol,1,0,15,true,-100}) ||
+        !armory.TryAdd({ItemType::Magazine,2,0,30,false,-100}) ||
+        !armory.TryAdd({ItemType::PistolMagazine,2,0,15,false,-100}) ||
+        !armory.TryAdd({ItemType::Ammo,60}) ||
+        !fridge.TryAdd({ItemType::Food,4}) ||
+        !medical.TryAdd({ItemType::Bandage,5}))
+        return false;
+    for (auto type : {ItemType::Shirt,ItemType::Trousers,ItemType::UnderShirt,
+        ItemType::Underpants,ItemType::Trunks,ItemType::Vest,ItemType::Helmet,
+        ItemType::Backpack,ItemType::Boots})
+        if (!wardrobe.TryAdd({type,1})) return false;
+    return true;
+}
 bool Hideout::ChangeAppearance(PlayerAppearance next)
 {
     auto updated = *this;
@@ -202,7 +208,7 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=17)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=18)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
@@ -211,6 +217,9 @@ void Hideout::Load()
         valid=valid && static_cast<bool>(in >> next.clothingMask) && !(next.clothingMask & ~AllClothingMask);
         if (savedVersion>=14)
             valid=valid && static_cast<bool>(in >> next.rubles) && next.rubles>=0;
+        if (savedVersion>=18)
+            valid=valid && static_cast<bool>(in >> next.rescuedSurvivors) &&
+                next.rescuedSurvivors>=0 && next.rescuedSurvivors<=MaxRescuedSurvivors;
         auto readInventory=[&](Inventory& inventory,bool isStorage) {
             int capacity=0,count=0;
             if (!(in >> capacity >> count) || count<0 || count>1000000) return false;
@@ -245,13 +254,17 @@ void Hideout::Load()
         };
         valid=valid && readInventory(next.storage,true) && readInventory(next.loadout,false);
         if (savedVersion >= 16) {
-            for (int i=0; valid && i<static_cast<int>(furnitureStorage.size()); ++i) {
+            const int savedFurnitureCount=savedVersion>=18
+                ? static_cast<int>(furnitureStorage.size()) : InitialRoomCount*FurnitureCount;
+            for (int i=0; valid && i<savedFurnitureCount; ++i) {
                 auto& furniture=next.furnitureStorage[i];
                 valid=readInventory(furniture,true);
                 const auto kind=static_cast<HideoutFurniture>(i%FurnitureCount);
                 for (const auto& item : furniture.Items())
                     valid=valid && MatchesStorageFilter(FilterFor(kind),item.type);
             }
+            for (int i=savedFurnitureCount;valid && i<static_cast<int>(furnitureStorage.size());++i)
+                valid=static_cast<bool>(next.furnitureStorage[i].SetSlotCapacity(80));
         } else {
             for (auto& furniture : next.furnitureStorage)
                 valid=valid && static_cast<bool>(furniture.SetSlotCapacity(80));
@@ -309,7 +322,7 @@ void Hideout::Load()
             return;
         }
         in.close();
-        if (savedVersion < 17 && !next.Save()) {
+        if (savedVersion < 18 && !next.Save()) {
             message=next.message;
             return;
         }
@@ -471,12 +484,28 @@ bool Hideout::Depart()
     return true;
 }
 
-void Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing)
+bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing,
+    bool rescuedSurvivor)
 {
     (void)weapon; (void)rounds;
-    loadout = items;
-    clothingMask = clothing & AllClothingMask;
-    loadout.ConfigureGear(clothingMask);
-    RefreshWeapons();
-    Save();
+    auto updated=*this;
+    updated.loadout=items;
+    updated.clothingMask=clothing&AllClothingMask;
+    updated.loadout.ConfigureGear(updated.clothingMask);
+    if (rescuedSurvivor && updated.rescuedSurvivors<MaxRescuedSurvivors) {
+        const int room=InitialRoomCount+updated.rescuedSurvivors;
+        if (!SeedRoomSupplies(updated,room)) {
+            message="새 은신처 방의 기본 물자를 배치하지 못했습니다.";
+            return false;
+        }
+        ++updated.rescuedSurvivors;
+    }
+    if (!updated.Save()) {
+        const auto failure=updated.message;
+        *this=std::move(updated);
+        message=failure;
+        return false;
+    }
+    *this=std::move(updated);
+    return true;
 }
