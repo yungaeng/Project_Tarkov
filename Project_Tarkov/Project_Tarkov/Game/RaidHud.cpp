@@ -399,9 +399,7 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         if (corpseTarget >= 0 && player.vitals.Alive() && Input::IsFocused()) {
             ImGui::SetNextWindowPos(ImVec2(center.x, center.y + 28), ImGuiCond_Always, ImVec2(.5f, 0));
             ImGui::Begin("시체 상호작용", nullptr, overlay);
-            ImGui::TextUnformatted(player.IsLooting()
-                ? "[I] 파밍 · [F] 자세 해제"
-                : "[F] 파밍 자세");
+            ImGui::TextUnformatted("[F] 파밍");
             ImGui::End();
         }
         // Target() already requires a center-screen ray hit, reach and clear line of sight.

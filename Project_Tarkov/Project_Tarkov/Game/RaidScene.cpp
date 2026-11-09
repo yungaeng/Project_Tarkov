@@ -122,12 +122,6 @@ void RaidScene::Update(float dt)
     } else if (lootingCorpse>=0 && corpseLootPanelOpen &&
         (closeLootRequested || !Input::IsFocused() || Input::GetKeyDown(GLFW_KEY_ESCAPE) ||
          Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_I))) {
-        corpseLootPanelOpen=false;
-        closeLootRequested=false;
-        Input::SetCursorCaptured(true);
-        corpseInteraction=true;
-    } else if (lootingCorpse>=0 && !corpseLootPanelOpen &&
-        Input::GetKeyDown(GLFW_KEY_F)) {
         CloseCorpseLoot();
         corpseInteraction=true;
     }
@@ -144,40 +138,22 @@ void RaidScene::Update(float dt)
         Input::SetCursorCaptured(false);
     }
     auto beginCorpseLoot=[&]() {
-        const auto* corpse=combat.Corpse(corpseTarget);
-        if (!corpse) return;
+        if (!combat.Corpse(corpseTarget)) return;
         corpseInteraction=true;
-        corpse->visual->SetLootCorpseFlipped(false,corpse->body);
-        // Keep feet and knees supported while the hands search the corpse's waist.
-        const auto placementClear = [&](const glm::vec3& candidate, float height,
-            const std::array<glm::vec3, 4>& supports) {
-            for (const auto& support : supports)
-                if (!collisionWorld.IsSupported(support, .04f, .1f) ||
-                    !collisionWorld.CanOccupy(support + glm::vec3(0, .002f, 0), .06f, .15f)) return false;
-            if (!collisionWorld.CanOccupy(candidate + glm::vec3(0, .002f, 0), .35f, height)) return false;
-            return combat.LootSpaceClear(candidate, corpseTarget);
-        };
-        const auto anchor = playerVisual.FitLootPose(*player, corpse->body, *corpse->visual, placementClear);
         beforeLootCamera = camera;
         beforeLootPosition = player->position;
         beforeLootRotation = player->rotation.y;
-        player->position = anchor;
-        player->rotation.y = corpse->body.rotation.y + 180.f;
-        player->SetLooting(true);
+        player->SetLooting(false);
         lootingCorpse = corpseTarget;
-        corpseLootPanelOpen=false;
+        corpseLootPanelOpen=true;
         freeLook = false;
         actions.Cancel();
         combat.CancelInput();
-        Input::SetCursorCaptured(true);
+        Input::SetCursorCaptured(false);
     };
     if (!corpseInteraction && lootingCorpse<0 && corpseTarget>=0 &&
         Input::GetKeyDown(GLFW_KEY_F)) {
         beginCorpseLoot();
-    } else if (!corpseInteraction && lootingCorpse>=0 && !corpseLootPanelOpen &&
-        Input::GetKeyDown(GLFW_KEY_I)) {
-        corpseLootPanelOpen=true;
-        Input::SetCursorCaptured(false);
     }
     if (lootingCorpse >= 0 && corpseLootPanelOpen) {
         if (takeCorpseStack) {
