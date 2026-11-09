@@ -32,6 +32,7 @@ public:
         const glm::vec3& color = glm::vec3(0.3f, 0.8f, 0.4f), bool firstPerson = false);
     void Reset();
     void SetLootPreview(bool enabled);
+    void SetLootCorpseSupine(bool enabled, const Character& character);
     glm::vec3 FirstPersonCameraPosition(const Character& character) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
@@ -43,12 +44,15 @@ public:
 private:
     void UploadPalette();
     void AnimateLootSearch(float dt);
+    glm::mat4 CorpseRootMatrix() const;
     struct Assets;
     std::shared_ptr<Assets> assets;
     GLuint paletteBuffer = 0, paletteTexture = 0;
     float poseElapsed = 0;
     float backpackClock = 0, backpackMotion = 0;
     bool lootPoseValid = false;
+    bool lootCorpseSupine = false;
+    glm::mat4 supineDeathRoot{1};
     bool lootPreview = false, lootPreviewInitialized = false;
     float lootPoseHeight = .75f;
     float lootClock = 0;

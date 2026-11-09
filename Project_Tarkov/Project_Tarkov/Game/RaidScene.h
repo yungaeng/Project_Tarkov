@@ -65,6 +65,7 @@ private:
     std::uint32_t startingClothingMask = 0;
     RaidSummary summary;
     int lootingCorpse = -1, corpseTarget = -1;
+    bool corpseLootPanelOpen = false;
     bool closeLootRequested = false;
     bool rescuePromptOpen = false;
     bool rescueRequested = false;

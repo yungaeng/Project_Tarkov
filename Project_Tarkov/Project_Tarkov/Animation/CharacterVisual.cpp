@@ -149,7 +149,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (state.dead)
     {
         weapon.Update(dt, state.equipped, false, 0, false, false, true);
-        if (!dying) { animation.CapturePose(); dying = true; deathTime = 0; }
+        if (!dying) { animation.CapturePose(); dying = true; deathTime = 0; lootCorpseSupine=false; }
         else if (deathTime >= assets->deathClip.Duration()) return; // Preserve the corpse, no loop or idle breathing.
         deathTime = (std::min)(assets->deathClip.Duration(), deathTime + dt);
         const auto previousHand = animation.NodePosition("RightHand");
@@ -307,7 +307,7 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     if (!assets) return;
     glm::mat4 model = glm::translate(glm::mat4(1), character.position);
     model = glm::rotate(model, glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
-    if (dying) model *= deathRoot.Matrix();
+    if (dying) model *= CorpseRootMatrix();
     else if (character.IsLooting()) {
         auto root = assets->lootClip.Sample("Root", 0);
         model *= root.Matrix();
@@ -381,7 +381,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     lootPoseValid = false;
     auto corpseModel = glm::translate(glm::mat4(1), corpse.position);
     corpseModel = glm::rotate(corpseModel, glm::radians(corpse.rotation.y), glm::vec3(0, 1, 0));
-    corpseModel *= corpseVisual.deathRoot.Matrix();
+    corpseModel *= corpseVisual.CorpseRootMatrix();
     corpseModel = glm::scale(corpseModel, corpse.scale * corpse.GetSettings().modelScale);
     auto lootModel = glm::rotate(glm::mat4(1), glm::radians(corpse.rotation.y + 180.f), glm::vec3(0, 1, 0));
     lootModel *= assets->lootClip.Sample("Root", 0).Matrix();
@@ -548,6 +548,27 @@ void CharacterVisual::SetLootPreview(bool enabled)
     lootPreviewInitialized=false;
 }
 
+void CharacterVisual::SetLootCorpseSupine(bool enabled,const Character& character)
+{
+    lootCorpseSupine=enabled;
+    if (!enabled || !assets) return;
+    supineDeathRoot=deathRoot.Matrix();
+    supineDeathRoot[3].y=0.f;
+    supineDeathRoot=glm::rotate(supineDeathRoot,glm::radians(180.f),glm::vec3(0,0,1));
+    float minimum=0.f;
+    for (const auto& vertex : animation.Vertices()) {
+        const glm::vec3 position(vertex.position.x,vertex.position.y,vertex.position.z);
+        minimum=(std::min)(minimum,
+            (supineDeathRoot*glm::vec4(position*character.scale*character.GetSettings().modelScale,1)).y);
+    }
+    supineDeathRoot[3].y=-minimum+.01f;
+}
+
+glm::mat4 CharacterVisual::CorpseRootMatrix() const
+{
+    return lootCorpseSupine ? supineDeathRoot : deathRoot.Matrix();
+}
+
 void CharacterVisual::Reset()
 {
     lootPreview=lootPreviewInitialized=false;
@@ -555,6 +576,8 @@ void CharacterVisual::Reset()
     if (paletteBuffer) glDeleteBuffers(1, &paletteBuffer);
     paletteTexture = paletteBuffer = 0;
     assets.reset();
+    lootCorpseSupine=false;
+    supineDeathRoot=glm::mat4(1);
     poseElapsed = 0;
     backpackClock = backpackMotion = 0;
     lootPoseValid = false;

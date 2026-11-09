@@ -119,16 +119,26 @@ void RaidScene::Update(float dt)
     if (focusGeneration != Input::FocusGeneration()) { actions.Cancel(); combat.CancelInput(); }
     focusGeneration = Input::FocusGeneration();
     bool corpseInteraction = false;
-    if (lootingCorpse >= 0 && (closeLootRequested || !Input::IsFocused() ||
-        !combat.Corpse(lootingCorpse) || Input::GetKeyDown(GLFW_KEY_ESCAPE) ||
-        Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_I))) {
+    if (lootingCorpse>=0 && !combat.Corpse(lootingCorpse)) {
         CloseCorpseLoot();
-        corpseInteraction = true;
+        corpseInteraction=true;
+    } else if (lootingCorpse>=0 && corpseLootPanelOpen &&
+        (closeLootRequested || !Input::IsFocused() || Input::GetKeyDown(GLFW_KEY_ESCAPE) ||
+         Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_D) ||
+         Input::GetKeyDown(GLFW_KEY_I))) {
+        corpseLootPanelOpen=false;
+        closeLootRequested=false;
+        Input::SetCursorCaptured(true);
+        corpseInteraction=true;
+    } else if (lootingCorpse>=0 && !corpseLootPanelOpen &&
+        Input::GetKeyDown(GLFW_KEY_F)) {
+        CloseCorpseLoot();
+        corpseInteraction=true;
     }
     if (lootingCorpse < 0 && !corpseInteraction) playerController.UpdateInterface();
     corpseTarget = playerController.IsGameplayInputEnabled() && lootingCorpse < 0 ?
         combat.FindCorpse(*player, collisionWorld) : -1;
-    if (playerController.IsGameplayInputEnabled() && !corpseInteraction &&
+    if (lootingCorpse<0 && playerController.IsGameplayInputEnabled() && !corpseInteraction &&
         lootingCorpse<0 && corpseTarget<0 &&
         Input::GetKeyDown(GLFW_KEY_F) && combat.CanInteractWithRescue(*player,collisionWorld)) {
         rescuePromptOpen=true;
@@ -137,9 +147,11 @@ void RaidScene::Update(float dt)
         combat.CancelInput();
         Input::SetCursorCaptured(false);
     }
-    if (!corpseInteraction && corpseTarget >= 0 && Input::GetKeyDown(GLFW_KEY_F)) {
-        corpseInteraction = true;
-        const auto* corpse = combat.Corpse(corpseTarget);
+    auto beginCorpseLoot=[&](bool openLootPanel) {
+        const auto* corpse=combat.Corpse(corpseTarget);
+        if (!corpse) return;
+        corpseInteraction=true;
+        corpse->visual->SetLootCorpseSupine(true,corpse->body);
         // Keep feet and knees supported while the hands search the corpse's waist.
         const auto placementClear = [&](const glm::vec3& candidate, float height,
             const std::array<glm::vec3, 4>& supports) {
@@ -157,12 +169,21 @@ void RaidScene::Update(float dt)
         player->rotation.y = corpse->body.rotation.y + 180.f;
         player->SetLooting(true);
         lootingCorpse = corpseTarget;
+        corpseLootPanelOpen=openLootPanel;
         freeLook = false;
         actions.Cancel();
         combat.CancelInput();
+        Input::SetCursorCaptured(!openLootPanel);
+    };
+    if (!corpseInteraction && lootingCorpse<0 && corpseTarget>=0 &&
+        (Input::GetKeyDown(GLFW_KEY_F)||Input::GetKeyDown(GLFW_KEY_D))) {
+        beginCorpseLoot(Input::GetKeyDown(GLFW_KEY_D));
+    } else if (!corpseInteraction && lootingCorpse>=0 && !corpseLootPanelOpen &&
+        Input::GetKeyDown(GLFW_KEY_D)) {
+        corpseLootPanelOpen=true;
         Input::SetCursorCaptured(false);
     }
-    if (lootingCorpse >= 0) {
+    if (lootingCorpse >= 0 && corpseLootPanelOpen) {
         if (takeCorpseStack) {
             loot.Notify(combat.TakeCorpseItem(lootingCorpse, takeCorpseStack, *player) ?
                 "시체에서 아이템을 획득했습니다." : "휴대 공간이 부족하거나 아이템이 없습니다.");
@@ -173,7 +194,8 @@ void RaidScene::Update(float dt)
             takeCorpseWeapon = false;
         }
     }
-    actions.Update(*player, loot, camera, collisionWorld, (playerController.IsInventoryOpen() || lootingCorpse >= 0) && Input::IsFocused());
+    actions.Update(*player,loot,camera,collisionWorld,
+        (playerController.IsInventoryOpen()||corpseLootPanelOpen)&&Input::IsFocused());
     const bool canLook = playerController.IsGameplayInputEnabled() && player->vitals.Alive() && lootingCorpse < 0;
     if (canLook && Input::GetKeyDown(GLFW_KEY_V))
         firstPerson = !firstPerson;
@@ -200,7 +222,7 @@ void RaidScene::Update(float dt)
         player->rotation.y = glm::degrees(std::atan2(camera.front.x, camera.front.z));
     FollowCamera(camera);
     loot.Update(dt,*player,camera,collisionWorld,
-        canLook&&corpseTarget<0&&!corpseInteraction&&!rescuePromptOpen,
+        canLook&&corpseTarget<0&&!corpseInteraction&&!rescuePromptOpen&&lootingCorpse<0,
         Input::GetKeyDown(GLFW_KEY_F)&&!rescuePromptOpen);
     CharacterVisualState visualState{!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
         combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasWeapon()};
@@ -264,7 +286,11 @@ void RaidScene::Render()
         static_cast<float>(sceneWidth), static_cast<float>(height), glm::vec3(0.3f, 0.8f, 0.4f), firstPerson && lootingCorpse < 0);
     combat.Render(shader, viewCamera, static_cast<float>(sceneWidth), static_cast<float>(height));
     glViewport(0, 0, width, height);
-    hud.Render(*player, loot, combat, actions, playerController.IsInventoryOpen(), raid, collisionWorld, shader, combat.EditableCorpse(lootingCorpse), corpseTarget,
+    const int corpsePromptTarget=corpseLootPanelOpen?-1:
+        lootingCorpse>=0?lootingCorpse:corpseTarget;
+    hud.Render(*player,loot,combat,actions,playerController.IsInventoryOpen(),raid,
+        collisionWorld,shader,corpseLootPanelOpen?combat.EditableCorpse(lootingCorpse):nullptr,
+        corpsePromptTarget,
         &takeCorpseStack, &takeCorpseWeapon, &closeLootRequested,&rescuePromptOpen,&rescueRequested);
 }
 
@@ -363,6 +389,9 @@ void RaidScene::StartRaid()
     combat.SetLoadout(player->GetInventory());
     rescuePromptOpen=false;
     rescueRequested=false;
+    corpseLootPanelOpen=false;
+    lootingCorpse=-1;
+    corpseTarget=-1;
     if (hideout.rescuedSurvivors<Hideout::MaxRescuedSurvivors)
         combat.SpawnRescueSurvivor(player->position,collisionWorld);
     summary = RaidSummary{};
@@ -422,6 +451,7 @@ void RaidScene::CloseCorpseLoot()
         Input::SetCursorCaptured(Input::IsFocused() && !playerController.IsInventoryOpen());
     }
     lootingCorpse = -1;
+    corpseLootPanelOpen=false;
     closeLootRequested = false;
     takeCorpseStack = 0;
     takeCorpseWeapon = false;
@@ -448,6 +478,7 @@ void RaidScene::EnterHideout()
     hideoutStoragePanel = false;
     hideoutExitMenu = false;
     hideoutPrompt = hideoutZone = 0;
+    corpseLootPanelOpen=false;
     hideoutFurniture = -1;
     hideoutCameraInRoom = false;
     hideoutCameraModelHidden = false;
