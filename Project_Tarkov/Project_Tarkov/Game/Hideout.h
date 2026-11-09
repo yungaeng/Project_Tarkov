@@ -3,6 +3,7 @@
 #include "Inventory.h"
 #include "PlayerVitals.h"
 #include <array>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,7 @@ public:
     std::array<int, ItemTypeCount> stash{{10, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0}};
     PlayerAppearance appearance = PlayerAppearance::Female;
     PlayerVitals vitals;
+    std::int64_t rubles = 0;
     std::uint32_t clothingMask = DefaultClothingMask;
     int rifles = 0;
     Inventory loadout;
@@ -35,6 +37,7 @@ public:
     bool Save(bool requireStashSpace = false);
     bool HealBodyPart(BodyPart part);
     bool AutoArrangeStash();
+    bool SellStashItem(StackId id);
     bool Depart();
     void Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing);
 };

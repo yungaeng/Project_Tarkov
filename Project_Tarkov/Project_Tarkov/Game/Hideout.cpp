@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <utility>
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -19,6 +20,27 @@ bool Hideout::AutoArrangeStash()
     return true;
 }
 
+bool Hideout::SellStashItem(StackId id)
+{
+    if (!ready) return false;
+    const auto* item = storage.Find(id);
+    if (!item) { message = "판매할 창고 아이템이 없습니다."; return false; }
+    const auto proceeds = static_cast<std::int64_t>(GetItemDefinition(item->type).price) * item->quantity;
+    if (proceeds <= 0 || rubles > (std::numeric_limits<std::int64_t>::max)() - proceeds) {
+        message = "판매 금액을 처리할 수 없습니다.";
+        return false;
+    }
+    auto before = *this;
+    if (!storage.Remove(id, item->quantity)) {
+        message = "창고 아이템 판매에 실패했습니다.";
+        return false;
+    }
+    rubles += proceeds;
+    if (!Save()) { const auto failure = message; *this = std::move(before); message = failure; return false; }
+    message = "판매 완료: +" + std::to_string(proceeds) + " RUB";
+    return true;
+}
+
 bool Hideout::Save(bool requireStashSpace)
 {
     if (!ready) { message = "프로필을 사용할 수 없습니다. 저장 파일을 복구한 뒤 다시 실행하세요."; return false; }
@@ -28,7 +50,7 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 13\n" << static_cast<int>(appearance) << ' ' << clothingMask << '\n';
+    out << "HIDEOUT 14\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' ' << rubles << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
         for (const auto& item : inventory.Items())
@@ -97,13 +119,15 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=13)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=14)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
         // Retired appearance ID 1 uses the default character and its compatible equipment. 
         next.appearance = appearanceId == static_cast<int>(PlayerAppearance::Male) ? PlayerAppearance::Male : PlayerAppearance::Female;
         valid=valid && static_cast<bool>(in >> next.clothingMask) && !(next.clothingMask & ~AllClothingMask);
+        if (savedVersion>=14)
+            valid=valid && static_cast<bool>(in >> next.rubles) && next.rubles>=0;
         auto readInventory=[&](Inventory& inventory,bool isStorage) {
             int capacity=0,count=0;
             if (!(in >> capacity >> count) || count<0 || count>1000000) return false;
@@ -151,6 +175,8 @@ void Hideout::Load()
                 if (!StoreGarment(next.storage,ItemType::UnderShirt)) return;
                 next.clothingMask &= ~ClothingBit(ItemType::UnderShirt);
             }
+        }
+        if (savedVersion<14) {
             in.close();
             if (!next.Save()) { message=next.message; return; }
         }

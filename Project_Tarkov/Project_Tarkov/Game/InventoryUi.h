@@ -10,12 +10,13 @@ namespace InventoryUi {
 inline float PanelOpacity = 1.f;
 // A single deferred command avoids mutating containers while ImGui iterates them.
 struct Drag { int source; StackId id; };
-enum class Action { None, Move, Use, Heal, FillOne, FillAll, Unload, Eject };
+enum class Action { None, Move, Use, Heal, FillOne, FillAll, Unload, Eject, Sell, Split };
 struct Command {
     Action action = Action::None;
     Drag item{};
     int destination = 0;
     int slot = -100;
+    int quantity = 0;
 };
 inline void Picture(ImDrawList* draw, ImTextureID texture, ItemType type, ImVec2 p, ImVec2 size, float opacity = 1.f)
 {
@@ -64,23 +65,30 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
                     IsWeapon(item->type) && !item->magazineInserted ? " | 탄창 없음" : "");
         }
         if (ImGui::BeginPopupContextItem("actions")) {
-            if (source == 2 && ImGui::MenuItem("해제 → 휴대품")) command = {Action::Move,{source,item->id},0,-100};
-            if (source != 2 && (item->type == ItemType::Water || IsClothing(item->type)))
-                if (ImGui::MenuItem(IsClothing(item->type) ? "착용" : "사용")) command = {Action::Use,{source,item->id}};
-            if (item->type == ItemType::Bandage && ImGui::BeginMenu("치료 부위")) {
-                for (int part=0; part<BodyPartCount; ++part)
-                    if (ImGui::MenuItem(BodyPartNames[part])) command={Action::Heal,{source,item->id},0,part};
-                ImGui::EndMenu();
+            if (source == 1 && showPrice) {
+                if (ImGui::MenuItem("판매")) command = {Action::Sell,{source,item->id}};
+                if (item->quantity > 1 && GetItemDefinition(item->type).maxStack > 1 &&
+                    ImGui::MenuItem("분할 (절반)"))
+                    command = {Action::Split,{source,item->id},0,-100,item->quantity/2};
+            } else {
+                if (source == 2 && ImGui::MenuItem("해제 → 휴대품")) command = {Action::Move,{source,item->id},0,-100};
+                if (source != 2 && (item->type == ItemType::Water || IsClothing(item->type)))
+                    if (ImGui::MenuItem(IsClothing(item->type) ? "착용" : "사용")) command = {Action::Use,{source,item->id}};
+                if (item->type == ItemType::Bandage && ImGui::BeginMenu("치료 부위")) {
+                    for (int part=0; part<BodyPartCount; ++part)
+                        if (ImGui::MenuItem(BodyPartNames[part])) command={Action::Heal,{source,item->id},0,part};
+                    ImGui::EndMenu();
+                }
+                if (IsMagazine(item->type)) {
+                    if (ImGui::MenuItem("1발만 채우기")) command = {Action::FillOne,{source,item->id}};
+                    if (ImGui::MenuItem("전부 채우기")) command = {Action::FillAll,{source,item->id}};
+                    if (ImGui::MenuItem("전부 빼내기")) command = {Action::Unload,{source,item->id}};
+                }
+                if (IsWeapon(item->type) && item->magazineInserted && ImGui::MenuItem("탄창 분리"))
+                    command={Action::Eject,{source,item->id}};
+                if (source == 0 && ImGui::MenuItem("바닥 / 창고로 이동")) command = {Action::Move,{source,item->id},1,-100};
+                if ((source == 1 || source == 5) && ImGui::MenuItem("휴대품으로 이동")) command = {Action::Move,{source,item->id},0,-100};
             }
-            if (IsMagazine(item->type)) {
-                if (ImGui::MenuItem("1발만 채우기")) command = {Action::FillOne,{source,item->id}};
-                if (ImGui::MenuItem("전부 채우기")) command = {Action::FillAll,{source,item->id}};
-                if (ImGui::MenuItem("전부 빼내기")) command = {Action::Unload,{source,item->id}};
-            }
-            if (IsWeapon(item->type) && item->magazineInserted && ImGui::MenuItem("탄창 분리"))
-                command={Action::Eject,{source,item->id}};
-            if (source == 0 && ImGui::MenuItem("바닥 / 창고로 이동")) command = {Action::Move,{source,item->id},1,-100};
-            if ((source == 1 || source == 5) && ImGui::MenuItem("휴대품으로 이동")) command = {Action::Move,{source,item->id},0,-100};
             ImGui::EndPopup();
         }
         std::string amount = IsMagazine(item->type) || IsWeapon(item->type) ?
@@ -148,6 +156,7 @@ inline void Carried(const Inventory& inventory, std::uint32_t clothing, ImTextur
 inline bool Execute(Command command, Inventory& carried, Inventory* external, std::uint32_t& clothing, PlayerVitals& vitals, bool male=false)
 {
     if (command.action == Action::None) return true;
+    if (command.action == Action::Sell) return false;
     if (command.item.source == 2) {
         if (command.action != Action::Move || command.item.id < 1 || command.item.id > ClothingSlotCount) return false;
         const auto type = ClothingType(static_cast<int>(command.item.id)-1,male);
@@ -168,6 +177,8 @@ inline bool Execute(Command command, Inventory& carried, Inventory* external, st
     if (!source) return false;
     const auto* item=source->Find(command.item.id);
     if (!item) return false;
+    if (command.action == Action::Split)
+        return source->SplitStack(item->id,command.quantity);
     if (command.action == Action::Heal) {
         if (item->type != ItemType::Bandage || command.slot < 0 || command.slot >= BodyPartCount ||
             !vitals.Heal(static_cast<BodyPart>(command.slot))) return false;
