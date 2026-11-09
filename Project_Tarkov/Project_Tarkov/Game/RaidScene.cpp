@@ -501,8 +501,7 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
     hideoutBedBeforeCamera=camera;
     hideoutBedTestRoom=room;
     const glm::vec3 bedPosition(room*6.f+1.1f,0.f,-4.8f);
-    hideoutBedNpcMoved=room==1 && player->appearance==PlayerAppearance::Male &&
-        hideoutSwitchNpcAppearance==PlayerAppearance::Female;
+    hideoutBedNpcMoved=true;
     if (hideoutBedNpcMoved) {
         hideoutSwitchNpc.position=bedPosition;
         hideoutSwitchNpc.rotation.y=0.f;
