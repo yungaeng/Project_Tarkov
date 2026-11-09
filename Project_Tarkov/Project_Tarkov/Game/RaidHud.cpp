@@ -896,7 +896,8 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         const float cell=(std::max)(32.f,(std::min)((ImGui::GetContentRegionAvail().x-(columns-1)*gap)/columns,80.f));
         const auto origin=ImGui::GetCursorScreenPos();
         InventoryUi::GridAt(hideout.storage,1,0,hideout.storage.SlotCapacity(),columns,
-            texture,command,origin,cell,gap,hideoutStashSearch,true);
+            texture,command,origin,cell,gap,hideoutStashSearch,true,
+            hideout.appearance == PlayerAppearance::Male);
         ImGui::EndChild(); ImGui::EndChild();
     };
     if (hideoutHealthTab) {

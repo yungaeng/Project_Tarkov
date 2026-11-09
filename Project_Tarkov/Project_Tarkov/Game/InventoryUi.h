@@ -34,7 +34,7 @@ inline void Target(Command& command, int destination, int slot)
     }
 }
 inline void Cell(const ItemStack* item, int source, int slot, ImTextureID texture, Command& command,
-    ImVec2 size, float opacity = 1.f, bool showPrice = false)
+    ImVec2 size, float opacity = 1.f, bool showPrice = false, bool male = false)
 {
     opacity *= PanelOpacity;
     ImGui::PushID(source); ImGui::PushID(slot);
@@ -66,6 +66,9 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
         }
         if (ImGui::BeginPopupContextItem("actions")) {
             if (source == 1 && showPrice) {
+                if (IsClothing(item->type) && CanWear(item->type,male) &&
+                    ImGui::MenuItem("착용하기"))
+                    command = {Action::Use,{source,item->id}};
                 if (ImGui::MenuItem("판매")) command = {Action::Sell,{source,item->id}};
                 if (item->quantity > 1 && GetItemDefinition(item->type).maxStack > 1 &&
                     ImGui::MenuItem("분할 (절반)"))
@@ -102,7 +105,7 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
 }
 // Draw one card over the whole footprint, and keep covered tiles out of hit testing.
 inline void GridAt(const Inventory& inventory,int source,int first,int count,int columns,
-    ImTextureID texture,Command& command,ImVec2 origin,float cell,float gap=4.f,const char* search="",bool showPrices=false)
+    ImTextureID texture,Command& command,ImVec2 origin,float cell,float gap=4.f,const char* search="",bool showPrices=false,bool male=false)
 {
     for (int i=0;i<count;++i) {
         if (inventory.Covering(first+i)) continue;
@@ -117,7 +120,7 @@ inline void GridAt(const Inventory& inventory,int source,int first,int count,int
         const bool match=!search[0] || std::string(GetItemDefinition(item.type).name).find(search)!=std::string::npos;
         Cell(&item,source,item.slot,texture,command,
             {footprint.width*cell+(footprint.width-1)*gap,footprint.height*cell+(footprint.height-1)*gap},
-            match?1.f:.2f,showPrices);
+            match?1.f:.2f,showPrices,male);
     }
     ImGui::SetCursorScreenPos(origin);
     ImGui::Dummy({columns*(cell+gap),((count+columns-1)/columns)*(cell+gap)});
@@ -194,8 +197,20 @@ inline bool Execute(Command command, Inventory& carried, Inventory* external, st
         if (source == &carried) return carried.EquipClothing(item->id,clothing);
         auto next = carried;
         const auto bit=ClothingBit(item->type);
-        if ((clothing & bit) || !next.ConfigureGear(clothing | bit)) return false;
-        source->Remove(item->id,1); clothing |= bit; carried=std::move(next); return true;
+        auto nextSource = *source;
+        if (clothing & bit) {
+            const auto replaced = ClothingType(ClothingSlot(item->type),male);
+            if (!external || external != source || !nextSource.Remove(item->id,1) ||
+                !nextSource.TryAdd({replaced,1}))
+                return false;
+            *source = std::move(nextSource);
+            return true;
+        }
+        if (!next.ConfigureGear(clothing | bit) || !nextSource.Remove(item->id,1)) return false;
+        clothing |= bit;
+        carried=std::move(next);
+        *source=std::move(nextSource);
+        return true;
     }
     if (command.destination == 2) {
         if (!IsClothing(item->type) || item->type != ClothingType(command.slot,male)) return false;
