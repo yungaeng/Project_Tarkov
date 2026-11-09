@@ -155,7 +155,7 @@ void RaidScene::Update(float dt)
         };
         const auto anchor = playerVisual.FitLootPose(*player, corpse->body, *corpse->visual, placementClear);
         player->position = anchor;
-        player->rotation.y = corpse->body.rotation.y + 180.f;
+        player->rotation.y = playerVisual.FittedLootYaw();
         player->SetLooting(true);
         lootingCorpse = corpseTarget;
         corpseLootPanelOpen=true;
@@ -533,9 +533,8 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
         return collisionWorld.CanOccupy(candidate+glm::vec3(0,.002f,0),.35f,height);
     };
     player->position=playerVisual.FitLootPose(*player,hideoutSwitchNpc,
-        hideoutSwitchNpcVisual,placementClear);
-    player->rotation.y=hideoutSwitchNpc.rotation.y+
-        hideoutSwitchNpcVisual.HideoutBedYaw()+180.f;
+        hideoutSwitchNpcVisual,placementClear,90.f);
+    player->rotation.y=playerVisual.FittedLootYaw();
     player->SetLooting(true);
     playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
     hideoutCameraInRoom=false;

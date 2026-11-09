@@ -40,7 +40,9 @@ public:
     glm::vec3 FirstPersonCameraPosition(const Character& character) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
-        const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear);
+        const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear,
+        float approachYaw = 180.f);
+    float FittedLootYaw() const { return lootPoseYaw; }
     bool LootPoseValid() const { return lootPoseValid; }
     float LootPoseHeight() const { return lootPoseHeight; }
     const std::array<glm::vec3, 4>& LootSupports() const { return lootSupports; }
@@ -65,6 +67,7 @@ private:
     bool hideoutKneelPose = false, hideoutKneelPoseInitialized = false;
     bool lootPreview = false, lootPreviewInitialized = false;
     float lootPoseHeight = .75f;
+    float lootPoseYaw = 180.f;
     float lootClock = 0;
     glm::mat4 lootInverse{1};
     std::array<glm::vec3, 2> lootHandTargets{}, lootElbows{};

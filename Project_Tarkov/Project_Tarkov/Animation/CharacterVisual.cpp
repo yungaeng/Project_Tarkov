@@ -439,18 +439,21 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
 
 glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Character& corpse,
     const CharacterVisual& corpseVisual,
-    const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear)
+    const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear,
+    float approachYaw)
 {
     animation.Update(0, "idle", false, false);
     animation.ApplyMotion(assets->lootClip, 0, 1, true, false, true);
     lootPoseValid = false;
+    lootPoseYaw = corpse.rotation.y +
+        (corpseVisual.hideoutBedPose ? corpseVisual.hideoutBedYaw : 0.f) + approachYaw;
     auto corpseModel = glm::translate(glm::mat4(1), corpse.position);
     corpseModel = glm::rotate(corpseModel, glm::radians(corpse.rotation.y), glm::vec3(0, 1, 0));
     corpseModel *= corpseVisual.CorpseRootMatrix();
     corpseModel = glm::scale(corpseModel, corpse.scale * corpse.GetSettings().modelScale);
     const float corpseYaw=corpse.rotation.y+
         (corpseVisual.hideoutBedPose?corpseVisual.hideoutBedYaw:0.f);
-    auto lootModel = glm::rotate(glm::mat4(1), glm::radians(corpseYaw + 180.f), glm::vec3(0, 1, 0));
+    auto lootModel = glm::rotate(glm::mat4(1), glm::radians(lootPoseYaw), glm::vec3(0, 1, 0));
     lootModel *= assets->lootClip.Sample("Root", 0).Matrix();
     lootModel = glm::scale(lootModel, character.scale * character.GetSettings().modelScale);
     const auto pelvis = glm::vec3(corpseModel * glm::vec4(corpseVisual.animation.NodePosition("Hips"), 1));
@@ -678,6 +681,7 @@ void CharacterVisual::Reset()
     backpackClock = backpackMotion = 0;
     lootPoseValid = false;
     lootPoseHeight = .75f;
+    lootPoseYaw = 180.f;
     lootClock = 0;
     lootInverse = glm::mat4(1);
     lootHandTargets = lootElbows = {};
