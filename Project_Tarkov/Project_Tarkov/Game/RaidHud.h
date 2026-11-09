@@ -31,6 +31,7 @@ public:
     static float LootPanelWidth(float screenWidth) { return screenWidth * .42f < 520.f ? screenWidth * .42f : 520.f; }
     void RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader,
         bool mapPanel = false, bool* exitMenuOpen = nullptr);
+    void RenderHideoutFridge(Hideout& hideout, bool& panelOpen, bool& exitMenuOpen);
     void RenderHideoutPauseMenu(bool& exitMenuOpen);
     void SetHideoutHealthTab(bool health) { hideoutHealthTab = health; }
     bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader);

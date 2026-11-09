@@ -399,6 +399,7 @@ void RaidScene::EnterHideout()
     freeLook = false;
     camera = Camera{};
     hideoutPanel = false;
+    hideoutFridgePanel = false;
     hideoutExitMenu = false;
     hideoutPrompt = hideoutZone = hideoutStation = 0;
     deployRequested = false;
@@ -413,16 +414,17 @@ void RaidScene::UpdateHideout(float dt)
     if (hideoutExitMenu) {
         if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
             hideoutExitMenu = false;
-            Input::SetCursorCaptured(!hideoutPanel);
+            Input::SetCursorCaptured(!hideoutPanel&&!hideoutFridgePanel);
         }
         return;
     }
-    if (hideoutPanel) {
+    if (hideoutPanel||hideoutFridgePanel) {
         if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
             hideoutExitMenu = true;
             Input::SetCursorCaptured(false);
         } else if (Input::GetKeyDown(GLFW_KEY_F)) {
             hideoutPanel = false;
+            hideoutFridgePanel = false;
             player->appearance = hideout.appearance;
             player->clothingMask = hideout.clothingMask;
             Input::SetCursorCaptured(true);
@@ -458,11 +460,13 @@ void RaidScene::UpdateHideout(float dt)
     }
     hideoutZone = zone;
     hideoutStation = 0;
-    if (p.x>.2f && p.x<5.8f && p.z < -4.f)
-        hideoutStation = p.x<2.1f ? 1 : p.x<3.9f ? 2 : 3;
+    if (p.x>.2f && p.x<23.8f && p.z < -4.f) {
+        hideoutStation = p.x<6.f ? 1 : p.x<12.f ? 2 : p.x<18.f ? 3 : 4;
+    }
     if (!hideoutPrompt && hideoutStation && Input::GetKeyDown(GLFW_KEY_F)) {
-        hideoutPanel = true;
-        hud.SetHideoutHealthTab(hideoutStation == 1);
+        hideoutFridgePanel = hideoutStation == 4;
+        hideoutPanel = !hideoutFridgePanel;
+        if (hideoutPanel) hud.SetHideoutHealthTab(hideoutStation == 1);
         player->StopMovement();
         Input::SetCursorCaptured(false);
     }
@@ -477,6 +481,13 @@ void RaidScene::RenderHideoutMap(int width, int height)
         Renderer::Draw(shader,batch.mesh,camera,glm::mat4(1),float(width),float(height),batch.color);
     }
     playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
+    if (hideoutFridgePanel) {
+        const bool wasFridgePanelOpen=hideoutFridgePanel;
+        hud.RenderHideoutFridge(hideout,hideoutFridgePanel,hideoutExitMenu);
+        if (wasFridgePanelOpen&&!hideoutFridgePanel)
+            Input::SetCursorCaptured(true);
+        return;
+    }
     if (hideoutPanel) {
         const bool wasExitMenuOpen=hideoutExitMenu;
         hud.RenderHideout(hideout,*player,playerVisual,shader,true,&hideoutExitMenu);
@@ -491,11 +502,11 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui::SetNextWindowBgAlpha(.8f);
     ImGui::Begin("은신처 안내",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::TextUnformatted("은신처 · 개방형 테라스 아파트 · 3인칭");
-    ImGui::TextUnformatted("← 복도 왼쪽 끝: 레이드 진입 | 방 1: 장비 준비 | 방 2: 캐릭터 전환");
-    ImGui::TextUnformatted("방 3 · 방 4: 아직 개방되지 않았습니다.");
+    ImGui::TextUnformatted("복도 왼쪽 끝: 레이드 진입 | 방 1: 의료실 | 방 2: 무기고");
+    ImGui::TextUnformatted("방 3: 옷장 | 방 4: 침실 · 물 냉장고");
     ImGui::TextUnformatted("WASD 이동 / 마우스 시점 / F 가구 이용 / Esc 일시 정지 메뉴");
     if (hideoutStation) {
-        const char* names[] = {"", "의료품 탁자", "무기고 캐비넷", "옷장 (장비와 의상)"};
+        const char* names[] = {"", "의료 테이블", "무기고", "옷장", "냉장고 · 물 보관"};
         ImGui::Text("[F] %s",names[hideoutStation]);
     }
     if (!hideout.message.empty()) ImGui::TextWrapped("%s",hideout.message.c_str());

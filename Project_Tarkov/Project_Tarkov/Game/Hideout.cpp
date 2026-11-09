@@ -41,6 +41,22 @@ bool Hideout::SellStashItem(StackId id)
     return true;
 }
 
+bool Hideout::TransferFridgeWater(StackId id, bool store, int slot)
+{
+    if (!ready) return false;
+    auto updated = *this;
+    auto& source = store ? updated.loadout : updated.fridgeStorage;
+    auto& destination = store ? updated.fridgeStorage : updated.loadout;
+    const auto* item = source.Find(id);
+    if (!item || item->type != ItemType::Water || !source.TransferTo(id,destination,slot)) {
+        message = store ? "냉장고에는 물만 보관할 수 있습니다." : "꺼낼 물이 없거나 휴대 공간이 부족합니다.";
+        return false;
+    }
+    if (!updated.Save()) { message = updated.message; return false; }
+    *this = std::move(updated);
+    return true;
+}
+
 bool Hideout::Save(bool requireStashSpace)
 {
     if (!ready) { message = "프로필을 사용할 수 없습니다. 저장 파일을 복구한 뒤 다시 실행하세요."; return false; }
@@ -50,7 +66,7 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories("Saves", error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out("Saves/hideout.tmp", std::ios::trunc);
-    out << "HIDEOUT 14\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' ' << rubles << '\n';
+    out << "HIDEOUT 15\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' ' << rubles << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
         for (const auto& item : inventory.Items())
@@ -59,6 +75,7 @@ bool Hideout::Save(bool requireStashSpace)
     };
     writeInventory(storage);
     writeInventory(loadout);
+    writeInventory(fridgeStorage);
     for (float value : vitals.BodyHealth()) out << value << ' ';
     out << vitals.Hydration() << ' ' << vitals.Stamina() << '\n';
     out << "END\n";
@@ -106,7 +123,10 @@ void Hideout::Load()
     if (!exists) {
         loadout.SetSlotCapacity(InventorySlotsForGear(clothingMask));
         storage.SetSlotCapacity(80);
-        for (int type=0; type<11; ++type) if (stash[type]) storage.TryAdd({static_cast<ItemType>(type),stash[type]});
+        for (int type=0; type<11; ++type) if (stash[type]) {
+            if (static_cast<ItemType>(type)==ItemType::Water) fridgeStorage.TryAdd({ItemType::Water,stash[type]});
+            else storage.TryAdd({static_cast<ItemType>(type),stash[type]});
+        }
         storage.TryAdd({ItemType::Trunks,1});
         loadout.TryAdd({ItemType::Rifle,1,0,30,true,-1});
         loadout.TryAdd({ItemType::Magazine,1,0,30,false,12});
@@ -119,7 +139,7 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=14)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=15)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
@@ -160,6 +180,26 @@ void Hideout::Load()
             return true;
         };
         valid=valid && readInventory(next.storage,true) && readInventory(next.loadout,false);
+        if (savedVersion >= 15) {
+            int capacity=0,count=0;
+            valid=valid && static_cast<bool>(in >> capacity >> count) && capacity==BaseInventorySlots &&
+                count>=0 && count<=BaseInventorySlots &&
+                static_cast<bool>(next.fridgeStorage.ConfigureGear(0));
+            for (int i=0; valid && i<count; ++i) {
+                int type=-1,inserted=0,mode=0;
+                ItemStack item{ItemType::Bandage,0};
+                valid=static_cast<bool>(in >> type >> item.quantity >> item.slot >> item.rounds >> inserted >> mode) &&
+                    type==static_cast<int>(ItemType::Water) && inserted==0 && mode>=0 && mode<=2 &&
+                    item.quantity>0 && item.quantity<=GetItemDefinition(ItemType::Water).maxStack &&
+                    item.rounds==0 && item.slot>=0 && item.slot<BaseInventorySlots;
+                if (valid) {
+                    item.type=ItemType::Water;
+                    item.magazineInserted=false;
+                    item.fireMode=static_cast<FireMode>(mode);
+                    valid=!next.fridgeStorage.Covering(item.slot) && next.fridgeStorage.TryAdd(item);
+                }
+            }
+        }
         std::array<float,BodyPartCount> body{};
         float hydration=0,stamina=0;
         for (auto& value:body) valid=static_cast<bool>(in >> value) && valid;
@@ -176,7 +216,13 @@ void Hideout::Load()
                 next.clothingMask &= ~ClothingBit(ItemType::UnderShirt);
             }
         }
-        if (savedVersion<14) {
+        if (savedVersion<15) {
+            const auto priorStorage=next.storage.Items();
+            for (auto item : priorStorage) {
+                if (item.type==ItemType::Water) item.slot=-100;
+                if (item.type==ItemType::Water && next.fridgeStorage.TryAdd(item))
+                    next.storage.Remove(item.id,item.quantity);
+            }
             in.close();
             if (!next.Save()) { message=next.message; return; }
         }
@@ -262,6 +308,12 @@ void Hideout::Load()
     for (int type=0;type<11;++type) if (next.stash[type] && !preserve({static_cast<ItemType>(type),next.stash[type]})) {
         ready=false; message="기존 창고를 재배치할 수 없습니다. 원본을 보존했습니다."; return;
     }
+    const auto priorStorage=next.storage.Items();
+    for (auto item : priorStorage) {
+        if (item.type==ItemType::Water) item.slot=-100;
+        if (item.type==ItemType::Water && next.fridgeStorage.TryAdd(item))
+            next.storage.Remove(item.id,item.quantity);
+    }
     if (!preserve({ItemType::Trunks,1})) return;
     if (next.rifles && !preserve({ItemType::Rifle,next.rifles})) {
         ready=false; message="기존 총기를 재배치할 수 없습니다. 원본을 보존했습니다."; return;
@@ -285,11 +337,17 @@ bool Hideout::DrinkWater(StackId id, bool fromStash)
 {
     if (!ready) return false;
     auto before = *this;
-    auto& source = fromStash && (id || storage.Count(ItemType::Water)) ? storage : loadout;
-    if (!id) for (const auto& item : source.Items()) if (item.type == ItemType::Water) { id = item.id; break; }
-    const auto* item = source.Find(id);
+    Inventory* source = &loadout;
+    if (fromStash) {
+        if (id && fridgeStorage.Find(id)) source = &fridgeStorage;
+        else if (id && storage.Find(id)) source = &storage;
+        else if (!id && fridgeStorage.Count(ItemType::Water)) source = &fridgeStorage;
+        else if (!id && storage.Count(ItemType::Water)) source = &storage;
+    }
+    if (!id) for (const auto& entry : source->Items()) if (entry.type == ItemType::Water) { id = entry.id; break; }
+    const auto* item = source->Find(id);
     if (!item || item->type != ItemType::Water || !vitals.Drink()) { message = "물이 없거나 수분이 가득 찼습니다."; return false; }
-    source.Remove(id, 1);
+    source->Remove(id, 1);
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; return false; }
     return true;
 }

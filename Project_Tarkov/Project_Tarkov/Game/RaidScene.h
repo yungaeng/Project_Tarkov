@@ -71,6 +71,7 @@ private:
     void UpdateHideout(float dt);
     void RenderHideoutMap(int width, int height);
     bool hideoutPanel = false;
+    bool hideoutFridgePanel = false;
     bool hideoutExitMenu = false;
     int hideoutPrompt = 0;
     int hideoutZone = 0;

@@ -25,6 +25,8 @@ public:
     int rifles = 0;
     Inventory loadout;
     Inventory storage;
+    Inventory fridgeStorage;
+    bool TransferFridgeWater(StackId id, bool store, int slot = -100);
     bool DrinkWater(StackId id = 0, bool fromStash = true);
     void RefreshWeapons();
     bool rifle = true;

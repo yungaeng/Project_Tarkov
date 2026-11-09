@@ -34,7 +34,7 @@ inline void Target(Command& command, int destination, int slot)
     }
 }
 inline void Cell(const ItemStack* item, int source, int slot, ImTextureID texture, Command& command,
-    ImVec2 size, float opacity = 1.f, bool showPrice = false, bool male = false)
+    ImVec2 size, float opacity = 1.f, bool showPrice = false, bool male = false, bool fridgeMode = false)
 {
     opacity *= PanelOpacity;
     ImGui::PushID(source); ImGui::PushID(slot);
@@ -65,7 +65,13 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
                     IsWeapon(item->type) && !item->magazineInserted ? " | 탄창 없음" : "");
         }
         if (ImGui::BeginPopupContextItem("actions")) {
-            if (source == 1 && showPrice) {
+            if (fridgeMode) {
+                if (item->type == ItemType::Water && source == 0 &&
+                    ImGui::MenuItem("냉장고에 보관"))
+                    command = {Action::Move,{source,item->id},6};
+                if (source == 6 && ImGui::MenuItem("휴대품으로 꺼내기"))
+                    command = {Action::Move,{source,item->id},0};
+            } else if (source == 1 && showPrice) {
                 if (IsClothing(item->type) && CanWear(item->type,male) &&
                     ImGui::MenuItem("착용하기"))
                     command = {Action::Use,{source,item->id}};
@@ -105,7 +111,7 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
 }
 // Draw one card over the whole footprint, and keep covered tiles out of hit testing.
 inline void GridAt(const Inventory& inventory,int source,int first,int count,int columns,
-    ImTextureID texture,Command& command,ImVec2 origin,float cell,float gap=4.f,const char* search="",bool showPrices=false,bool male=false)
+    ImTextureID texture,Command& command,ImVec2 origin,float cell,float gap=4.f,const char* search="",bool showPrices=false,bool male=false,bool fridgeMode=false)
 {
     for (int i=0;i<count;++i) {
         if (inventory.Covering(first+i)) continue;
@@ -120,7 +126,7 @@ inline void GridAt(const Inventory& inventory,int source,int first,int count,int
         const bool match=!search[0] || std::string(GetItemDefinition(item.type).name).find(search)!=std::string::npos;
         Cell(&item,source,item.slot,texture,command,
             {footprint.width*cell+(footprint.width-1)*gap,footprint.height*cell+(footprint.height-1)*gap},
-            match?1.f:.2f,showPrices,male);
+            match?1.f:.2f,showPrices,male,fridgeMode);
     }
     ImGui::SetCursorScreenPos(origin);
     ImGui::Dummy({columns*(cell+gap),((count+columns-1)/columns)*(cell+gap)});

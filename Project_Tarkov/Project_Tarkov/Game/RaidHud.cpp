@@ -951,6 +951,79 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::Render(); ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+void RaidHud::RenderHideoutFridge(Hideout& hideout, bool& panelOpen, bool& exitMenuOpen)
+{
+    if (!rendererReady || !panelOpen) return;
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    const auto& io=ImGui::GetIO();
+    const auto texture=(ImTextureID)(intptr_t)itemImages.id;
+    ImGui::SetNextWindowPos({0,0},ImGuiCond_Always);
+    ImGui::SetNextWindowSize(io.DisplaySize,ImGuiCond_Always);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg,ImVec4(.045f,.05f,.047f,.92f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,ImVec2(20,18));
+    ImGui::Begin("냉장고 보관함",nullptr,ImGuiWindowFlags_NoDecoration|
+        ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoMove);
+    ImGui::TextColored({.78f,.76f,.60f,1},"냉장고 · 물 전용");
+    ImGui::SameLine();
+    ImGui::TextDisabled("아이템을 끌어 옮기거나 우클릭하세요.");
+    ImGui::SameLine();
+    ImGui::SetCursorPosX((std::max)(ImGui::GetCursorPosX(),io.DisplaySize.x-100.f));
+    if (ImGui::Button("닫기")) panelOpen=false;
+    ImGui::Separator();
+    if (!hideout.message.empty()) ImGui::TextDisabled("%s",hideout.message.c_str());
+    ImGui::BeginDisabled(!hideout.ready||!Input::IsFocused()||exitMenuOpen);
+    InventoryUi::Command command;
+    if (ImGui::BeginTable("FridgeStorageLayout",2,ImGuiTableFlags_SizingStretchProp|ImGuiTableFlags_BordersInnerV)) {
+        ImGui::TableSetupColumn("휴대품",ImGuiTableColumnFlags_WidthStretch,1.3f);
+        ImGui::TableSetupColumn("냉장고 · 물",ImGuiTableColumnFlags_WidthStretch,1.f);
+        ImGui::TableNextColumn();
+        ImGui::Text("휴대품 %d / %d",hideout.loadout.StorageUsed(),hideout.loadout.SlotCapacity());
+        const float gap=4.f;
+        const float width=ImGui::GetContentRegionAvail().x;
+        const float pocketCell=(std::max)(26.f,(width-gap*5)/6);
+        const auto textureId=(ImTextureID)(intptr_t)itemImages.id;
+        InventoryUi::GridAt(hideout.loadout,0,0,12,6,textureId,command,
+            ImGui::GetCursorScreenPos(),pocketCell,gap,"",false,false,true);
+        ImGui::SetCursorScreenPos({ImGui::GetCursorScreenPos().x,
+            ImGui::GetCursorScreenPos().y+10});
+        if (hideout.clothingMask&ClothingBit(ItemType::Vest)) {
+            ImGui::TextUnformatted("조끼");
+            const float cell=(std::max)(26.f,(width-gap*2)/3);
+            InventoryUi::GridAt(hideout.loadout,0,12,6,3,textureId,command,
+                ImGui::GetCursorScreenPos(),cell,gap,"",false,false,true);
+            ImGui::SetCursorScreenPos({ImGui::GetCursorScreenPos().x,
+                ImGui::GetCursorScreenPos().y+8});
+        }
+        if (hideout.clothingMask&ClothingBit(ItemType::Backpack)) {
+            ImGui::TextUnformatted("배낭");
+            const float cell=(std::max)(26.f,(width-gap*3)/4);
+            InventoryUi::GridAt(hideout.loadout,0,18,12,4,textureId,command,
+                ImGui::GetCursorScreenPos(),cell,gap,"",false,false,true);
+        }
+        ImGui::TableNextColumn();
+        ImGui::Text("물 %d개",hideout.fridgeStorage.Count(ItemType::Water));
+        const float fridgeWidth=ImGui::GetContentRegionAvail().x;
+        const float fridgeCell=(std::max)(30.f,(std::min)((fridgeWidth-gap*5)/6,80.f));
+        InventoryUi::GridAt(hideout.fridgeStorage,6,0,BaseInventorySlots,6,texture,command,
+            ImGui::GetCursorScreenPos(),fridgeCell,gap,"",false,false,true);
+        ImGui::EndTable();
+    }
+    ImGui::EndDisabled();
+    if (command.action==InventoryUi::Action::Move) {
+        const bool storing=command.item.source==0&&command.destination==6;
+        const bool retrieving=command.item.source==6&&command.destination==0;
+        if (storing||retrieving) hideout.TransferFridgeWater(command.item.id,storing,command.slot);
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
+    if (exitMenuOpen) DrawHideoutExitMenu(exitMenuOpen,io.DisplaySize);
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void RaidHud::RenderHideoutPauseMenu(bool& exitMenuOpen)
 {
     if (!rendererReady || !exitMenuOpen) return;
