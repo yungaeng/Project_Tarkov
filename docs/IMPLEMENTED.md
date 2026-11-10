@@ -40,7 +40,7 @@
 | 영속성 | `HIDEOUT 19`, 이전 v1~v18 읽기·변환, 기본 보관품 1회 지급 및 방별 구조 인원 유지 | `Game/Hideout.cpp` |
 | 표현 | 공유 캐릭터, 전술복·군화, GPU 스키닝, 합성 총성 | `Animation/`, `Graphics/`, `Core/GunshotAudio.*` |
 
-이하 소스 경로는 별도 표기가 없으면 `Project_Tarkov/Project_Tarkov/` 기준이다. 소총과 방탄헬멧이라는 이름이 있어도 실총별 탄도나 방탄 성능까지 구현된 것은 아니다.
+이하 소스 경로는 별도 표기가 없으면 저장소 루트의 `src/` 기준이다. 에셋 경로는 `Assets/`, 제작 원본 경로는 `ArtSource/`, 제작 도구 경로는 `Tools/` 기준이다. 소총과 방탄헬멧이라는 이름이 있어도 실총별 탄도나 방탄 성능까지 구현된 것은 아니다.
 
 ## 2. 빌드와 실행
 
@@ -49,26 +49,20 @@
 - Windows, Visual Studio 2022의 C++ 데스크톱 개발 도구, MSVC v143, Windows SDK가 필요하다. 기본 확인 구성은 Debug | x64이며 Release | x64도 제공한다. Win32는 검증 대상으로 간주하지 않는다.
 - 루트 `vcpkg.json`이 GLAD 1/OpenGL 3.3 loader, GLM, Assimp, stb, GLFW3, ImGui의 GLFW/OpenGL3 바인딩을 선언한다. baseline이 고정되어 있다.
 - `VCPKG_ROOT`로 vcpkg 설치 위치를 지정한다. 기본 경로는 `%USERPROFILE%\vcpkg`이며 부트스트랩된 `vcpkg.exe`가 필요하다. 최초 복원에는 네트워크가 필요하다.
-- `Project_Tarkov/Project_Tarkov.sln`을 열고 x64로 빌드한다. NuGet 복원이나 별도 `glad.c` 추가는 필요하지 않다. `Graphics/Texture.cpp`가 stb_image 구현을 제공한다.
-- `.build`와 `vcpkg_installed`는 생성물/의존성 영역이다. 저장소 소스와 구분한다.
+- 저장소 루트의 `Project_Tarkov.sln`을 열고 **Debug | x64**로 빌드한다. NuGet 복원이나 별도 `glad.c` 추가는 필요하지 않다. `src/Graphics/Texture.cpp`가 stb_image 구현을 제공한다.
+- `.build`와 `vcpkg_installed`는 생성물/의존성 영역이다. 저장소 소스와 구분한다. Visual Studio 프로젝트 출력 및 중간 파일은 `Project_Tarkov/x64/Debug/` 아래에 둔다.
 
 ### 2.2 실행 자원과 배포
 
-`CopyRuntimeAssets` 빌드 타깃이 `Assets`를 실행 파일 옆에 복사한다. 작업 디렉터리에 `Assets`가 없으면 실행 파일 위치를 기준으로 찾는 경로 처리가 있다. Visual Studio 디버깅 작업 디렉터리는 `$(ProjectDir)`이다.
+`CopyRuntimeAssets` 빌드 타깃이 실행에 필요한 셰이더·애니메이션·맵 데이터·UI 이미지·모델을 `Project_Tarkov/x64/Debug/Assets/`에 복사한다. 개발 빌드에서는 실행 파일 상위의 저장소 루트 `Assets/`를 사용하고, 패키지 실행에서는 실행 파일 옆 `Assets/`를 사용한다. 경로 탐색은 현재 작업 디렉터리를 바꾸지 않는다. Visual Studio 디버깅 작업 디렉터리는 실행 출력 폴더다.
 
 ```powershell
-Push-Location .\Project_Tarkov\Project_Tarkov
-try {
-    & ..\x64\Debug\Project_Tarkov.exe
-}
-finally {
-    Pop-Location
-}
+.\Project_Tarkov\x64\Debug\Project_Tarkov.exe
 ```
 
-필수 자원은 `Assets/Shaders/cube.vs`, `cube.fs`, `Assets/Models/Player/Ch22_nonPBR.fbx`, `여캐/character.mesh`, `character.png`, Idle/Walking/Fast Run/Crouched Walking FBX, 총기 모델과 `.anim` 파일이다. 예전 안내처럼 원본 FBX 하나만 복사해서는 현재 캐릭터가 구성되지 않는다. 배포 시 EXE·필요 DLL·전체 Assets를 함께 제공해야 한다.
+필수 자원은 `Assets/Shaders/`, `Assets/Animations/`, `Assets/Maps/`, `Assets/Models/`, `Assets/UI/` 아래에 둔다. 예전 안내처럼 원본 FBX 하나만 복사해서는 현재 캐릭터가 구성되지 않는다. 배포 시 EXE·필요 DLL·복사 대상 `Assets/`를 함께 제공해야 한다.
 
-`Saves/hideout.txt`는 **현재 작업 디렉터리 기준**이다. 실행 위치가 달라지면 다른 저장 폴더를 사용할 수 있으므로 에셋 검색 경로와 저장 경로를 혼동하지 않는다.
+기본 저장 위치는 실행 파일 옆 `Saves/hideout.txt`다. `TARKOV_ASSET_ROOT`와 `TARKOV_SAVE_ROOT` 환경 변수로 각각 절대 경로를 지정할 수 있다. 저장 위치를 지정하지 않으면 이전 저장 폴더를 찾아 기존 파일을 그 자리에서 계속 사용하며, 자동 이동·병합·덮어쓰기는 하지 않는다. 여러 과거 저장 폴더가 발견되면 잘못된 프로필을 선택하지 않도록 명시적인 `TARKOV_SAVE_ROOT` 설정을 요구한다.
 
 ### 2.3 알려진 환경 문제
 
@@ -78,23 +72,18 @@ GLAD 헤더/심볼 오류는 vcpkg 복원과 GLAD 1 API 구성을 확인한다. 
 
 | 폴더/파일 | 역할 |
 | --- | --- |
-| `Core/Application.*` | 초기화, 프레임 루프, Q/F11 처리, 종료 순서 |
-| `Core/Window.*`, `Input.*`, `Time.*`, `Logger.*` | GLFW 창, 입력 상태/포커스, 프레임 시간, 로그 |
-| `Scene/Scene.*`, `SceneManager.*` | 장면 인터페이스, 장면 소유권, 예약된 전환 적용 |
-| `Game/Entity.*`, `Character.*`, `Player.*` | 위치/회전/크기 → 물리/자세 → 플레이어 상태와 인벤토리 |
-| `Game/PlayerController.*` | 입력을 이동·자세 명령으로 변환 |
-| `Physics/CollisionWorld.h`, `Raycast.h` | 정적 AABB, 축별 이동, 지면/공간 판정, 광선 교차 |
-| `Game/RaidScene.*` | 은신처와 레이드 상태, 시스템 순서, 탈출/실패 정산 |
-| `Game/RaidResultScene.*`, `RaidSummary.h` | 성공 결과 장면과 처치/획득 요약 |
-| `Game/Inventory.*`, `InventoryActions.*`, `LootSystem.*` | 데이터, UI 요청 처리, 월드 아이템 |
-| `Game/CombatSystem.*`, `PlayerVitals.h`, `Hideout.*` | 전투·AI, 생존 상태, 창고·프로필 |
-| `Game/RaidHud.*` | 한글 HUD, 장비/건강/창고/수색/결과 UI |
-| `Graphics/` | 카메라, 메시/텍스처/셰이더, Assimp 모델 로딩, 렌더러 |
-| `Animation/` | 골격·모션 클립, 캐릭터/총기 표현, 파지 IK |
-| `Game/IndustrialZone.h`, `IndustrialDetails.h`, `IndustrialGeometry.h` | 기본 배치, 세부 장식/충돌, 정적 메시 생성·합치기 |
-| 루트 `Tools/` | 캐릭터 변환, 의상 생성, 에셋/자세 검증 |
+| `src/Core/` | 애플리케이션·입력·로깅, 공통 에셋 경로/카탈로그 |
+| `src/Scene/`, `src/Physics/` | 장면 전환, 충돌·레이캐스트 |
+| `src/Game/Character/`, `src/Game/Combat/` | 캐릭터·플레이어 상태와 전투·AI·루팅 |
+| `src/Game/Hideout/`, `src/Game/Raid/` | 은신처 기능과 장면, 레이드 진행·결과 |
+| `src/Game/Inventory/`, `src/Game/UI/` | 인벤토리 명령/데이터와 화면별 HUD |
+| `src/Game/World/`, `src/Graphics/WorldGeometry.*` | 맵 배치 데이터 연결, 공통 메시·충돌 지오메트리 |
+| `src/Graphics/`, `src/Animation/` | 카메라·렌더링 및 골격 애니메이션 |
+| `Assets/Maps/` | 산업단지 위치, 은신처 외벽·방 배치, 가구 프리팹 데이터 |
+| `ArtSource/Characters/` | 캐릭터 편집 원본과 파생 제작 자료 |
+| `Tools/Characters/`, `Tools/Validation/` | 캐릭터 제작·검증 도구와 C++ 자세 검증 소스 |
 
-Application은 이벤트와 입력을 갱신하고 장면 Update, 예약 장면 전환, Render, 버퍼 교환을 수행한다. 레이드에서는 타이머 → 포커스/수색 요청 → 아이템 요청 → 이동/생존 상태 → 전투·AI → 줍기 → 시각 포즈 → 사망/탈출 판정 순서로 연결된다. 타이머 만료는 이보다 먼저 처리한다. UI에서 발생한 요청은 다음 Update에서 검증한다.
+은신처와 레이드 장면·명령, 각 화면 UI, 월드 배치, 공통 지오메트리가 별도 구현 파일로 분리되어 있다. `RaidHud`는 레이드 표시를 유지하고 은신처·인벤토리·결과 UI는 각각 `HideoutHud`, `InventoryHud`, `ResultHud`에 둔다. UI 명령은 게임 로직에서 검증·저장한다. 레이드에서는 타이머 → 포커스/수색 요청 → 아이템 요청 → 이동/생존 상태 → 전투·AI → 줍기 → 시각 포즈 → 사망/탈출 판정 순서로 연결된다. 타이머 만료는 이보다 먼저 처리한다.
 
 RaidScene이 플레이어·충돌 월드·표현 자원을 소유하고 Character는 충돌 월드를 비소유 포인터로 참조한다. `EntityManager`에는 `unique_ptr` 기반 소유 API가 있지만 현재 주요 실행 경로의 필수 관리자는 아니다. Mesh/Shader/Texture는 복사를 막고 자원 수명을 관리한다. 장면·GPU 자원과 ImGui를 먼저 해제한 뒤 입력과 OpenGL 창을 종료한다.
 
@@ -369,13 +358,15 @@ Saves/hideout.txt의 헤더는 HIDEOUT 19이다. 착용 마스크·루블 잔액
 
 | 루트 도구 | 역할/사용 예 |
 | --- | --- |
-| `Tools/import_pmx_character.py` | PMX→게임 외형 변환; source와 `--rig`, `--assimp`, `--output` 지정 |
-| `Tools/create_tactical_outfit.py` | 전술복 재생성; 캐릭터 폴더, 필요 시 `--vest-only` |
-| `Tools/fit_underwear.py` | 속옷 피팅/통합; 캐릭터 폴더, 필요 시 `--thong-only` |
-| `Tools/create_combat_boots.py` | 검정 군화 제작/통합; 전술복 전체 재생성 후 다시 적용 |
-| `Tools/validate_character.py` | 메시 구조·가중치 확인과 `--preview` 소프트웨어 미리보기 |
-| `Tools/validate_tactical_outfit.py` | 의상 변형/포즈 확인과 미리보기 |
-| `Tools/validate_tactical_motion.cpp` | 실제 OpenGL의 7자세·2시점 캡처 및 기본 오류 검사 |
+| `Tools/Characters/import_pmx_character.py` | PMX→게임 외형 변환; source와 `--rig`, `--assimp`, `--output` 지정 |
+| `Tools/Characters/attach_vrm_head.py` | VRM에서 내보낸 머리를 게임용 기존 리그에 연결 |
+| `Tools/Characters/create_tactical_outfit.py` | 전술복 생성; 캐릭터 폴더, 필요 시 `--vest-only` |
+| `Tools/Characters/fit_underwear.py`, `fit_black_trunks.py` | 여성 속옷 또는 남성 트렁크 피팅 |
+| `Tools/Characters/create_combat_boots.py` | 검정 군화 생성; 기본 대상은 `Assets/Models/Player/여캐/` |
+| `Tools/Characters/validate_character.py`, `validate_tactical_outfit.py` | 메시·가중치·의상 포즈 확인과 소프트웨어 미리보기 |
+| `Tools/Validation/validate_tactical_motion.cpp` | 별도 C++ 자세 검증 도구 소스; Visual Studio 게임 프로젝트에는 포함하지 않음 |
+
+스크립트 실행 옵션, 입력/출력 경로 기준, Python 의존성은 `Tools/README.md`를 참고한다.
 
 Python 변환/미리보기에는 NumPy/Pillow와 도구별 입력 자원이 필요하다. 임포트에는 기존 Assimp DLL/리그도 필요하다. 몸/전술복 재생성 후 속옷·군화 통합 결과를 재검증해야 한다. 생성 에셋과 기존 원본 에셋의 사용 조건은 각각 관리하며, 소프트웨어 미리보기를 게임 내 검증과 동일시하지 않는다.
 
@@ -415,6 +406,7 @@ OpenGL 3.3 Core, 4× MSAA 요청, sRGB 텍스처와 선형 공간 조명, ACES �
 | 2026-10-11 창고/의상 | Python 재현과 에셋 검사 기록 | C++ 창고 런타임 검증 아님 |
 | 2026-10-20 자세/카메라 | 기존 애니메이션 문서에 Debug x64 컴파일·링크, OpenGL 7자세/14캡처, 시작/셰이더 로딩 확인 기록 | 전체 레이드·저장·수색 회귀 통과를 뜻하지 않음; PDB 우회 사용 |
 | 2026-10-22 문서 통합 | 현재 코드와 기존 기록 대조, 링크/문서 구조 정적 검사 | 이 문서 작업에서 게임 빌드/실행을 새로 수행하지 않음 |
+| 2026-11-10 프로젝트 구조 | Debug \| x64 전체 빌드 성공; 실행 파일과 88개 런타임 자원 복사 확인; 격리된 저장 폴더로 시작/프로필 생성 스모크 테스트 성공; 프로젝트 XML·필터 목록 및 Python 9개 파일 구문 검사 | 실제 플레이 회귀는 수행하지 않음. Python 도구의 `--help`는 환경에 NumPy가 없어 실행하지 못함 |
 
 ### 14.2 다음 실행에서 확인할 핵심 흐름
 

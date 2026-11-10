@@ -1,0 +1,15 @@
+# kind index x y z — coordinates in metres, north is -Z
+spawn 0 -210 0 210
+spawn 1 -210 0 -210
+exit 0 225 0 -220
+exit 1 225 0 220
+building 0 -125 0 -105
+building 1 -125 0 -35
+building 2 0 0 0
+building 3 -120 0 110
+building 4 120 0 110
+enemy 0 -125 0 -105
+enemy 1 111 0 -105
+enemy 2 0 0 0
+enemy 3 -120 0 110
+enemy 4 120 0 110

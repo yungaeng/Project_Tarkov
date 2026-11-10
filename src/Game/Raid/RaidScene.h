@@ -1,0 +1,112 @@
+#pragma once
+#include "../../Scene/Scene.h"
+#include "../../Physics/CollisionWorld.h"
+#include "../Character/Player.h"
+#include "../Character/PlayerController.h"
+#include "../Combat/LootSystem.h"
+#include "../UI/RaidHud.h"
+#include "../Inventory/InventoryActions.h"
+#include "../Combat/CombatSystem.h"
+#include "../../Graphics/ThirdPersonCameraController.h"
+#include "../../Animation/CharacterVisual.h"
+#include "../../Graphics/Shader.h"
+#include "../../Graphics/Mesh.h"
+#include "../../Graphics/Camera.h"
+#include <memory>
+#include "../../Graphics/WorldGeometry.h"
+#include "RaidStatus.h"
+#include "../Hideout/Hideout.h"
+#include "RaidSummary.h"
+
+class SceneManager;
+class RaidScene : public Scene
+{
+public:
+    explicit RaidScene(SceneManager& manager);
+    RaidScene(SceneManager& manager, Hideout carriedHideout);
+    void Init() override;
+    void Update(float dt) override;
+    void Render() override;
+    void Shutdown() override;
+
+private:
+    // Declared before the player so the collision world outlives it.
+    CollisionWorld collisionWorld;
+    std::unique_ptr<Player> player;
+    PlayerController playerController;
+    ThirdPersonCameraController cameraController;
+    CharacterVisual playerVisual;
+    Character hideoutSwitchNpc;
+    CharacterVisual hideoutSwitchNpcVisual;
+    std::vector<std::unique_ptr<Character>> hideoutResidentNpcs;
+    std::vector<std::unique_ptr<CharacterVisual>> hideoutResidentVisuals;
+    std::vector<int> hideoutResidentRooms;
+    PlayerAppearance hideoutSwitchNpcAppearance = PlayerAppearance::Male;
+    PlayerAppearance hideoutPromptAppearance = PlayerAppearance::Male;
+    Shader shader;
+    Mesh cubeMesh;
+    Camera camera;
+    // Free look changes only the rendered view; gameplay keeps using camera.
+    Camera previewCamera;
+    bool raidPortrait = false;
+    bool freeLook = false;
+    bool firstPerson = false;
+    LootSystem loot;
+    RaidHud hud;
+    InventoryActions actions;
+    CombatSystem combat;
+    unsigned focusGeneration = 0;
+    std::vector<WorldGeometry::Batch> mapBatches;
+    RaidStatus raid;
+    Hideout hideout;
+    bool deployRequested = false;
+    SceneManager& sceneManager;
+    bool hasProvidedHideout = false;
+    Inventory startingInventory;
+    std::uint32_t startingClothingMask = 0;
+    RaidSummary summary;
+    int lootingCorpse = -1, corpseTarget = -1;
+    bool corpseLootPanelOpen = false;
+    bool closeLootRequested = false;
+    bool rescuePromptOpen = false;
+    bool rescueRequested = false;
+    StackId takeCorpseStack = 0;
+    bool takeCorpseWeapon = false;
+    glm::vec3 beforeLootPosition{0};
+    float beforeLootRotation = 0;
+    Camera beforeLootCamera;
+    void CloseCorpseLoot();
+    void StartRaid();
+    void EnterHideout();
+    void ConfigureHideoutSwitchNpc();
+    void BeginHideoutBedPoseTest(int room);
+    void BeginHideoutBedLooting();
+    void EndHideoutBedPoseTest();
+    void UpdateHideout(float dt);
+    void RenderHideoutMap(int width, int height);
+    bool hideoutPanel = false;
+    bool hideoutStoragePanel = false;
+    int hideoutFurnitureRoom = 0;
+    int hideoutFurniture = -1;
+    bool hideoutExitMenu = false;
+    bool hideoutBedPoseActive = false;
+    bool hideoutBedPoseLooting = false;
+    bool hideoutBedCorpseAligned = false;
+    float hideoutBedPoseElapsed = 0.f;
+    bool hideoutBedTestPrompt = false;
+    int hideoutBedTestRoom = -1;
+    bool hideoutBedNpcMoved = false;
+    glm::vec3 hideoutBedBeforePlayerPosition{0};
+    float hideoutBedBeforePlayerRotation = 0.f;
+    glm::vec3 hideoutBedBeforeNpcPosition{0};
+    float hideoutBedBeforeNpcRotation = 0.f;
+    Camera hideoutBedBeforeCamera;
+    int hideoutPrompt = 0;
+    int hideoutPromptRoom = -1;
+    int hideoutZone = 0;
+    bool hideoutCameraInRoom = false;
+    bool hideoutCameraModelHidden = false;
+    float hideoutCameraBlend = 0.f;
+    void FinishRaid(RaidPhase result);
+    void FollowCamera(Camera& camera) const;
+};

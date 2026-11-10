@@ -1,0 +1,18 @@
+# Source text and binary classification. LFS is deliberately not enabled here.
+*.cpp text
+*.h text
+*.py text
+*.md text
+*.json text
+*.layout text
+*.parts text
+*.vcxproj text
+*.filters text
+*.sln text
+*.obj text
+*.fbx binary
+*.mesh binary
+*.png binary
+*.vrm binary
+*.vroid binary
+*.blend binary

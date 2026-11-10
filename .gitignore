@@ -11,3 +11,13 @@ __pycache__/
 
 # Local raid loot records
 **/Saves/
+
+# Local compiler/debugger products (do not ignore Wavefront model *.obj globally)
+*.pdb
+*.ilk
+*.pch
+*.ipch
+*.vcxproj.user
+*.suo
+*.VC.db
+*.VC.VC.opendb

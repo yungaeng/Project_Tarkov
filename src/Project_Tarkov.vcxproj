@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <VCPkgLocalAppDataDisabled>true</VCPkgLocalAppDataDisabled>
+    <VcpkgRoot Condition="'$(VcpkgRoot)' == '' and '$(VCPKG_ROOT)' != ''">$(VCPKG_ROOT)\</VcpkgRoot>
+    <VcpkgRoot Condition="'$(VcpkgRoot)' == ''">$(UserProfile)\vcpkg\</VcpkgRoot>
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgManifestRoot>$(MSBuildThisFileDirectory)..\</VcpkgManifestRoot>
+    <VcpkgInstalledDir>$(MSBuildThisFileDirectory)..\vcpkg_installed\</VcpkgInstalledDir>
+    <VcpkgAdditionalInstallOptions>"--x-buildtrees-root=$(MSBuildThisFileDirectory)..\.build\buildtrees" "--x-packages-root=$(MSBuildThisFileDirectory)..\.build\packages" "--downloads-root=$(MSBuildThisFileDirectory)..\.build\downloads"</VcpkgAdditionalInstallOptions>
+  </PropertyGroup>
+  <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{7da5c884-130a-4c07-9286-ad47187a2753}</ProjectGuid>
+    <RootNamespace>ProjectTarkov</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)..\Project_Tarkov\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)obj\$(ProjectName)\</IntDir>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>GLFW_INCLUDE_NONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets" />
+  <ItemGroup>
+    <RuntimeAsset Include="$(MSBuildThisFileDirectory)..\Assets\Shaders\**\*;$(MSBuildThisFileDirectory)..\Assets\Animations\**\*;$(MSBuildThisFileDirectory)..\Assets\Maps\**\*;$(MSBuildThisFileDirectory)..\Assets\UI\*.png;$(MSBuildThisFileDirectory)..\Assets\Models\Weapons\*.obj;$(MSBuildThisFileDirectory)..\Assets\Models\Player\Ch22_nonPBR.fbx;$(MSBuildThisFileDirectory)..\Assets\Models\Player\*\character.mesh;$(MSBuildThisFileDirectory)..\Assets\Models\Player\*\character.png">
+      <AssetRelativePath>$([MSBuild]::MakeRelative('$(MSBuildThisFileDirectory)..\Assets', '%(FullPath)'))</AssetRelativePath>
+    </RuntimeAsset>
+    <None Include="@(RuntimeAsset)"><Link>Assets\%(AssetRelativePath)</Link></None>
+  </ItemGroup>
+  <Target Name="CopyRuntimeAssets" AfterTargets="Build">
+    <Copy SourceFiles="@(RuntimeAsset)" DestinationFiles="@(RuntimeAsset->'$(OutDir)Assets\%(AssetRelativePath)')" SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup Label="Sources">
+    <ClCompile Include="Animation\CharacterVisual.cpp" />
+    <ClInclude Include="Animation\CharacterVisual.h" />
+    <ClCompile Include="Animation\MotionClip.cpp" />
+    <ClInclude Include="Animation\MotionClip.h" />
+    <ClCompile Include="Animation\SkeletalAnimation.cpp" />
+    <ClInclude Include="Animation\SkeletalAnimation.h" />
+    <ClCompile Include="Animation\WeaponVisual.cpp" />
+    <ClInclude Include="Animation\WeaponVisual.h" />
+    <ClCompile Include="Core\Application.cpp" />
+    <ClInclude Include="Core\Application.h" />
+    <ClInclude Include="Core\AssetCatalog.h" />
+    <ClCompile Include="Core\GunshotAudio.cpp" />
+    <ClInclude Include="Core\GunshotAudio.h" />
+    <ClCompile Include="Core\Input.cpp" />
+    <ClInclude Include="Core\Input.h" />
+    <ClCompile Include="Core\Logger.cpp" />
+    <ClInclude Include="Core\Logger.h" />
+    <ClCompile Include="Core\RuntimePaths.cpp" />
+    <ClInclude Include="Core\RuntimePaths.h" />
+    <ClCompile Include="Core\Time.cpp" />
+    <ClInclude Include="Core\Time.h" />
+    <ClCompile Include="Core\Window.cpp" />
+    <ClInclude Include="Core\Window.h" />
+    <ClCompile Include="Core\pch.cpp" />
+    <ClInclude Include="Core\pch.h" />
+    <ClCompile Include="Game\Character\Character.cpp" />
+    <ClInclude Include="Game\Character\Character.h" />
+    <ClInclude Include="Game\Character\CharacterSettings.h" />
+    <ClCompile Include="Game\Character\Entity.cpp" />
+    <ClInclude Include="Game\Character\Entity.h" />
+    <ClCompile Include="Game\Character\EntityManager.cpp" />
+    <ClInclude Include="Game\Character\EntityManager.h" />
+    <ClCompile Include="Game\Character\Player.cpp" />
+    <ClInclude Include="Game\Character\Player.h" />
+    <ClInclude Include="Game\Character\PlayerAppearance.h" />
+    <ClCompile Include="Game\Character\PlayerController.cpp" />
+    <ClInclude Include="Game\Character\PlayerController.h" />
+    <ClInclude Include="Game\Character\PlayerVitals.h" />
+    <ClCompile Include="Game\Combat\CombatSystem.cpp" />
+    <ClInclude Include="Game\Combat\CombatSystem.h" />
+    <ClCompile Include="Game\Combat\LootSystem.cpp" />
+    <ClInclude Include="Game\Combat\LootSystem.h" />
+    <ClInclude Include="Game\Config\RaidConfig.h" />
+    <ClCompile Include="Game\Hideout\Hideout.cpp" />
+    <ClInclude Include="Game\Hideout\Hideout.h" />
+    <ClCompile Include="Game\Hideout\HideoutCommands.cpp" />
+    <ClCompile Include="Game\Hideout\HideoutScene.cpp" />
+    <ClCompile Include="Game\Inventory\Inventory.cpp" />
+    <ClInclude Include="Game\Inventory\Inventory.h" />
+    <ClCompile Include="Game\Inventory\InventoryActions.cpp" />
+    <ClInclude Include="Game\Inventory\InventoryActions.h" />
+    <ClCompile Include="Game\Inventory\InventoryCommands.cpp" />
+    <ClInclude Include="Game\Inventory\InventoryCommands.h" />
+    <ClCompile Include="Game\Inventory\RaidInventoryCommands.cpp" />
+    <ClInclude Include="Game\Inventory\RaidInventoryCommands.h" />
+    <ClCompile Include="Game\Raid\RaidResultScene.cpp" />
+    <ClInclude Include="Game\Raid\RaidResultScene.h" />
+    <ClCompile Include="Game\Raid\RaidScene.cpp" />
+    <ClInclude Include="Game\Raid\RaidScene.h" />
+    <ClInclude Include="Game\Raid\RaidStatus.h" />
+    <ClInclude Include="Game\Raid\RaidSummary.h" />
+    <ClCompile Include="Game\UI\HideoutHud.cpp" />
+    <ClCompile Include="Game\UI\HudWidgets.cpp" />
+    <ClInclude Include="Game\UI\HudWidgets.h" />
+    <ClCompile Include="Game\UI\InventoryHud.cpp" />
+    <ClInclude Include="Game\UI\InventoryUi.h" />
+    <ClCompile Include="Game\UI\RaidHud.cpp" />
+    <ClInclude Include="Game\UI\RaidHud.h" />
+    <ClCompile Include="Game\UI\ResultHud.cpp" />
+    <ClCompile Include="Game\World\HideoutLayout.cpp" />
+    <ClInclude Include="Game\World\HideoutLayout.h" />
+    <ClCompile Include="Game\World\HideoutMap.cpp" />
+    <ClInclude Include="Game\World\HideoutMap.h" />
+    <ClCompile Include="Game\World\IndustrialDetails.cpp" />
+    <ClInclude Include="Game\World\IndustrialDetails.h" />
+    <ClCompile Include="Game\World\IndustrialLayout.cpp" />
+    <ClCompile Include="Game\World\IndustrialZone.cpp" />
+    <ClInclude Include="Game\World\IndustrialZone.h" />
+    <ClInclude Include="Graphics\AssimpHelper.h" />
+    <ClCompile Include="Graphics\Camera.cpp" />
+    <ClInclude Include="Graphics\Camera.h" />
+    <ClCompile Include="Graphics\Mesh.cpp" />
+    <ClInclude Include="Graphics\Mesh.h" />
+    <ClCompile Include="Graphics\ModelLoader.cpp" />
+    <ClInclude Include="Graphics\ModelLoader.h" />
+    <ClCompile Include="Graphics\Renderer.cpp" />
+    <ClInclude Include="Graphics\Renderer.h" />
+    <ClCompile Include="Graphics\Shader.cpp" />
+    <ClInclude Include="Graphics\Shader.h" />
+    <ClCompile Include="Graphics\Texture.cpp" />
+    <ClInclude Include="Graphics\Texture.h" />
+    <ClCompile Include="Graphics\ThirdPersonCameraController.cpp" />
+    <ClInclude Include="Graphics\ThirdPersonCameraController.h" />
+    <ClCompile Include="Graphics\WorldGeometry.cpp" />
+    <ClInclude Include="Graphics\WorldGeometry.h" />
+    <ClInclude Include="Physics\CollisionWorld.h" />
+    <ClInclude Include="Physics\Raycast.h" />
+    <ClCompile Include="Scene\Scene.cpp" />
+    <ClInclude Include="Scene\Scene.h" />
+    <ClCompile Include="Scene\SceneManager.cpp" />
+    <ClInclude Include="Scene\SceneManager.h" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,45 @@
+#include "../Core/RuntimePaths.h"
+#include "Texture.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_WINDOWS_UTF8
+#include "stb_image.h"
+
+bool Texture::Load(
+    const char* path)
+{
+    int w, h, c;
+
+    unsigned char* data =
+        stbi_load(RuntimePaths::Asset(path).u8string().c_str(), &w, &h, &c, 4);
+
+    if (!data)
+        return false;
+
+    Reset();
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexImage2D(
+        GL_TEXTURE_2D, 0,
+        GL_SRGB8_ALPHA8,
+        w, h, 0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(
+        GL_TEXTURE_2D);
+
+    stbi_image_free(data);
+
+    return true;
+}
+
+void Texture::Bind(int slot)
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, id);
+}
