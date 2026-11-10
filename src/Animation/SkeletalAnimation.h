@@ -40,6 +40,8 @@ public:
     glm::vec3 BoundsMax() const;
     void CreateMesh(Mesh& mesh) const;
     glm::vec3 NodePosition(const std::string& name) const;
+    // Aim a bone toward a model-space direction, independent of its bind axes.
+    void AimBoneDirection(const std::string& joint, const std::string& child, const glm::vec3& direction);
     void SolveArm(const std::string& side, const glm::vec3& target, const glm::vec3& pole,
         const glm::vec3& palmDirection, float weight);
     bool GroundLootSupports(const glm::mat4& model, float ground);

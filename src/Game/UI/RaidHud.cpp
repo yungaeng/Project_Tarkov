@@ -109,6 +109,16 @@ void RaidHud::Render(Player& player, LootSystem& loot, CombatSystem& combat, Inv
         const auto& exit = IndustrialZone::Exits()[raid.assignedExit];
         ImGui::Text("지정 탈출구: %s | %.0fm", exit.name, raid.exitDistance);
         ImGui::Text("탈출구 X %.0f / Z %.0f", exit.position.x, exit.position.z);
+        if (const auto* survivor = combat.RescueBody()) {
+            const auto& position = survivor->position;
+            const float distance = glm::length(position - player.position);
+            ImGui::Text("[테스트] 구조 대상: %s | %.1fm",
+                combat.HasRecruitedRescue() ? "동행 중" : "구조 대기", distance);
+            ImGui::Text("구조 대상 X %.1f / Y %.1f / Z %.1f",
+                position.x, position.y, position.z);
+        } else {
+            ImGui::TextUnformatted("[테스트] 구조 대상: 없음 (미생성 또는 사망)");
+        }
         if (raid.extraction > 0)
             ImGui::Text("탈출까지 %.1f초", RaidConfig::DefaultExtractTime - raid.extraction);
     }

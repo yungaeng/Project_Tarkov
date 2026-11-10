@@ -79,7 +79,7 @@ public:
     bool Save(bool requireStashSpace = false);
     void ApplyInventoryCommand(const InventoryCommands::Command& command, int storageRoom = -1, int storageFurniture = -1);
     bool HealBodyPart(BodyPart part);
-    bool AutoArrangeStash();
+    bool AutoArrangeStash(int room = -1, int furniture = -1);
     bool SellStashItem(StackId id);
     bool Depart();
     bool Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing,

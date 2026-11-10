@@ -12,11 +12,18 @@
 
 namespace { constexpr int MaxStored = 1000000; }
 
-bool Hideout::AutoArrangeStash()
+bool Hideout::AutoArrangeStash(int room, int furniture)
 {
     if (!ready) return false;
     auto before=*this;
-    storage.AutoArrange();
+    if (room == -1 && furniture == -1) storage.AutoArrange();
+    else {
+        if (room < 0 || room >= HideoutRoomCount || furniture < 0 || furniture >= FurnitureCount) {
+            message = "정리할 보관함을 찾을 수 없습니다.";
+            return false;
+        }
+        FurnitureStorageAt(room,static_cast<HideoutFurniture>(furniture)).AutoArrange();
+    }
     if (!Save()) { const auto failure=message; *this=std::move(before); message=failure; return false; }
     return true;
 }

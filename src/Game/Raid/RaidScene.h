@@ -93,6 +93,8 @@ private:
     bool hideoutBedPoseLooting = false;
     bool hideoutBedCorpseAligned = false;
     float hideoutBedPoseElapsed = 0.f;
+    float hideoutBedCameraYaw = 33.6901f;
+    float hideoutBedCameraPitch = 32.37f;
     bool hideoutBedTestPrompt = false;
     int hideoutBedTestRoom = -1;
     bool hideoutBedNpcMoved = false;

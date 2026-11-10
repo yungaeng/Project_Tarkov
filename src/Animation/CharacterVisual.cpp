@@ -80,6 +80,7 @@ struct CharacterVisual::Assets
 {
     Mesh mesh, backpack, backpackDetail;
     Texture texture;
+    MotionClip bedLootEnemyClip, bedLootPlayerClip;
     MotionClip deathClip, lootClip, lootSearchClip, hideoutKneelClip, holdClip, reloadClip, aimClip, recoilClip;
     MotionClip jumpClip, landClip;
     MotionClip proneClip, crawlClip;
@@ -116,6 +117,8 @@ void CharacterVisual::Init(PlayerAppearance appearance)
         shared->crawlClip.Load(AssetCatalog::Animations_Characters_ProneCrawl_anim);
         shared->lootClip.Load(AssetCatalog::Animations_Characters_CorpseLoot_anim);
         shared->lootSearchClip.Load(AssetCatalog::Animations_Characters_CorpseSearch_anim);
+        shared->bedLootEnemyClip.Load(AssetCatalog::Animations_Characters_BedLootEnemy_anim);
+        shared->bedLootPlayerClip.Load(AssetCatalog::Animations_Characters_BedLootPlayer_anim);
         shared->hideoutKneelClip.Load(AssetCatalog::Animations_Characters_HideoutKneel_anim);
         shared->holdClip.Load(AssetCatalog::Animations_Characters_RifleHold_anim);
         shared->reloadClip.Load(AssetCatalog::Animations_Characters_RifleReload_anim);
@@ -166,6 +169,50 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     weapon.SetMagazineInserted(state.magazineInserted);
     recoilTime = state.fired ? 0 : recoilTime + dt;
     firePending |= state.fired;
+    if (roomTwoLootRole != 0) {
+        state.hasWeapon = state.equipped = false;
+        weapon.Update(dt,false,false,0,false,false,true);
+        animation.Update(0,"idle",false,false);
+        animation.ApplyMotion(roomTwoLootRole == 1 ? assets->bedLootEnemyClip : assets->bedLootPlayerClip,
+            0,1,true,false);
+        // Imported rigs do not share the Euler axes assumed by the original preview.
+        // Establish the torso and leg directions in model space, parent before child.
+        const bool enemy = roomTwoLootRole == 1;
+        animation.AimBoneDirection("Hips","Spine",enemy ? glm::vec3(0,.12f,1) : glm::vec3(0,1,.08f));
+        animation.AimBoneDirection("Spine","Spine1",enemy ? glm::vec3(0,0,1) : glm::vec3(0,1,.15f));
+        animation.AimBoneDirection("Spine1","Spine2",enemy ? glm::vec3(0,0,1) : glm::vec3(0,1,.15f));
+        animation.AimBoneDirection("Spine2","Neck",enemy ? glm::vec3(0,.08f,1) : glm::vec3(0,1,.15f));
+        animation.AimBoneDirection("Neck","Head",enemy ? glm::vec3(0,.4f,1) : glm::vec3(0,1,.1f));
+        for (const std::string side : {"Left", "Right"}) {
+            animation.AimBoneDirection(side + "UpLeg",side + "Leg",glm::vec3(0,-1,.08f));
+            animation.AimBoneDirection(side + "Leg",side + "Foot",glm::vec3(0,.12f,-1));
+            animation.AimBoneDirection(side + "Foot",side + "ToeBase",glm::vec3(0,-.15f,-1));
+        }
+        if (enemy) {
+            const float kneeY = .5f * (animation.NodePosition("LeftLeg").y + animation.NodePosition("RightLeg").y);
+            for (const std::string side : {"Left", "Right"}) {
+                const auto shoulder = animation.NodePosition(side + "Arm");
+                const auto elbow = animation.NodePosition(side + "ForeArm");
+                const float armLength = glm::length(elbow - shoulder) +
+                    glm::length(animation.NodePosition(side + "Hand") - elbow);
+                // Hands forward of the shoulders; elbows bend outward, fingers forward.
+                const auto hand = glm::vec3(shoulder.x,kneeY,shoulder.z + armLength * .22f);
+                const auto pole = shoulder + glm::vec3(side == "Left" ? armLength * .3f : -armLength * .3f,
+                    -armLength * .5f,-armLength * .2f);
+                animation.SolveArm(side,hand,pole,glm::vec3(0,0,1),1);
+            }
+        }
+        animation.RefreshVertices();
+        const auto scale = character.scale * character.GetSettings().modelScale;
+        const auto hips = animation.NodePosition("Hips") * scale;
+        float bottom = (std::numeric_limits<float>::max)();
+        for (const auto& vertex : animation.Vertices())
+            bottom = (std::min)(bottom,vertex.position.y * scale.y);
+        if (!std::isfinite(bottom) || animation.Vertices().empty()) bottom = 0;
+        roomTwoLootRoot = glm::translate(glm::mat4(1),glm::vec3(-hips.x,-bottom,-hips.z));
+        UploadPalette();
+        return;
+    }
     if (hideoutBedPose) {
         weapon.Update(dt,false,false,0,false,false,true);
         if (!hideoutBedPoseInitialized) {
@@ -371,7 +418,8 @@ void CharacterVisual::Render(const Character& character, Shader& shader, Camera&
     if (!assets) return;
     glm::mat4 model = glm::translate(glm::mat4(1), character.position);
     model = glm::rotate(model, glm::radians(character.rotation.y), glm::vec3(0, 1, 0));
-    if (dying) model *= CorpseRootMatrix();
+    if (roomTwoLootRole != 0) model *= roomTwoLootRoot;
+    else if (dying) model *= CorpseRootMatrix();
     else if (hideoutBedPose) model *= hideoutBedRoot;
     else if (character.IsLooting()) {
         auto root = hideoutKneelPose
@@ -687,6 +735,33 @@ void CharacterVisual::SetHideoutBedPose(bool enabled,float surfaceHeight,const g
     hideoutBedPoseInitialized=false;
 }
 
+void CharacterVisual::SetRoomTwoLootPose(int role)
+{
+    roomTwoLootRole = std::clamp(role,0,2);
+    roomTwoLootRoot = glm::mat4(1);
+}
+
+void CharacterVisual::FitRoomTwoLootHands(const Character& character, const Character& target,
+    const CharacterVisual& targetVisual)
+{
+    if (!assets || !targetVisual.assets || roomTwoLootRole != 2 || targetVisual.roomTwoLootRole != 1) return;
+    const auto actor = glm::translate(glm::mat4(1),character.position) *
+        glm::rotate(glm::mat4(1),glm::radians(character.rotation.y),glm::vec3(0,1,0)) * roomTwoLootRoot *
+        glm::scale(glm::mat4(1),character.scale * character.GetSettings().modelScale);
+    const auto other = glm::translate(glm::mat4(1),target.position) *
+        glm::rotate(glm::mat4(1),glm::radians(target.rotation.y),glm::vec3(0,1,0)) * targetVisual.roomTwoLootRoot *
+        glm::scale(glm::mat4(1),target.scale * target.GetSettings().modelScale);
+    const auto hips = glm::vec3(other * glm::vec4(targetVisual.animation.NodePosition("Hips"),1));
+    for (const std::string side : {"Left", "Right"}) {
+        // Search the equipment at either side of the waist; keep the pelvis still.
+        const auto hand = glm::vec3(glm::inverse(actor) * glm::vec4(hips + glm::vec3(side == "Left" ? .16f : -.16f,.12f,0),1));
+        const auto pole = animation.NodePosition(side + "ForeArm");
+        animation.SolveArm(side,hand,pole,glm::vec3(0,-1,0),1);
+    }
+    animation.RefreshVertices();
+    UploadPalette();
+}
+
 void CharacterVisual::SetHideoutKneelPose(bool enabled)
 {
     if (hideoutKneelPose==enabled) return;
@@ -728,6 +803,8 @@ void CharacterVisual::Reset()
     assets.reset();
     lootCorpseFlipped=false;
     flippedDeathRoot=glm::mat4(1);
+    roomTwoLootRole=0;
+    roomTwoLootRoot=glm::mat4(1);
     hideoutBedPose=hideoutBedPoseInitialized=false;
     hideoutBedSurfaceHeight=0.f;
     hideoutBedYaw=0.f;

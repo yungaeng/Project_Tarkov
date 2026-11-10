@@ -231,6 +231,40 @@ glm::vec3 SkeletalAnimation::NodePosition(const std::string& name) const
     return {point.x, point.y, point.z};
 }
 
+void SkeletalAnimation::AimBoneDirection(const std::string& jointName,
+    const std::string& childName, const glm::vec3& direction)
+{
+    const auto joint = data->asset->nodeIds.find(jointName);
+    const auto child = data->asset->nodeIds.find(childName);
+    if (joint == data->asset->nodeIds.end() || child == data->asset->nodeIds.end() ||
+        glm::length(direction) < .00001f) return;
+    auto scene = data->asset->inverseRoot;
+    scene.Inverse();
+    auto from = (data->globals[child->second] * aiVector3D()) -
+        (data->globals[joint->second] * aiVector3D());
+    auto to = aiMatrix3x3(scene) * aiVector3D(direction.x,direction.y,direction.z);
+    if (from.Length() < .00001f || to.Length() < .00001f) return;
+    from.Normalize(); to.Normalize();
+    const float cosine = std::clamp(from * to,-1.f,1.f);
+    auto axis = from ^ to;
+    if (axis.Length() < .00001f) {
+        if (cosine > 0) return;
+        axis = from ^ aiVector3D(0,1,0);
+        if (axis.Length() < .00001f) axis = from ^ aiVector3D(1,0,0);
+    }
+    axis.Normalize();
+    const aiQuaternion delta(axis,std::acos(cosine));
+    aiQuaternion parentRotation;
+    aiVector3D scale, translation;
+    const int parent = data->asset->nodes[joint->second].parent;
+    if (parent >= 0) data->globals[parent].Decompose(scale,parentRotation,translation);
+    auto inverseParent = parentRotation;
+    inverseParent.Conjugate();
+    data->pose[joint->second].rotation = inverseParent * delta * parentRotation * data->pose[joint->second].rotation;
+    data->pose[joint->second].rotation.Normalize();
+    data->RefreshGlobals();
+}
+
 void SkeletalAnimation::SolveArm(const std::string& side, const glm::vec3& target, const glm::vec3& pole,
     const glm::vec3& palmDirection, float weight)
 {

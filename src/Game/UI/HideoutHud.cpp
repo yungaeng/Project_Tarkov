@@ -257,10 +257,12 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             ImGui::Text("%s · %s",storageNames[storageFurniture],storageItemNames[storageFurniture]);
         ImGui::SetNextItemWidth((std::max)(80.f,ImGui::GetContentRegionAvail().x*.5f));
         ImGui::InputTextWithHint("##StashSearch","검색",hideoutStashSearch,sizeof(hideoutStashSearch));
-        if (!furnitureMode) {
-            ImGui::SameLine();
-            if (ImGui::SmallButton("자동정리")) hideout.AutoArrangeStash();
-        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("자동정리"))
+            hideout.AutoArrangeStash(furnitureMode ? storageRoom : -1,
+                furnitureMode ? storageFurniture : -1);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("현재 보관함 전체를 정리합니다. 검색으로 숨겨진 아이템도 포함됩니다.");
         StorageFilter displayFilter=furnitureFilter;
         if (!furnitureMode) {
             const char* categories[]{"전체","무기","탄약·탄창","의류","의료품","음식·물","기타"};

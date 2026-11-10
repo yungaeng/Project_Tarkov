@@ -22,6 +22,7 @@ public:
     float BodyHealth(BodyPart part) const { return bodyHealth[static_cast<std::size_t>(part)]; }
     const std::array<float, BodyPartCount>& BodyHealth() const { return bodyHealth; }
     float Hydration() const { return hydration; }
+    void RefillHydration() { hydration = 100.f; }
     float Stamina() const { return stamina; }
     bool Alive() const
     {
@@ -46,7 +47,7 @@ public:
         value = (std::min)(100.0f, value + 20);
         return true;
     }
-    bool Drink() { if (!Alive() || hydration >= 100) return false; hydration = (std::min)(100.0f, hydration + 30); return true; }
+    bool Drink() { if (hydration >= 100) return false; hydration = (std::min)(100.0f, hydration + 30); return true; }
     bool Eat()
     {
         if (!Alive() || (stamina >= 100 && hydration >= 100)) return false;

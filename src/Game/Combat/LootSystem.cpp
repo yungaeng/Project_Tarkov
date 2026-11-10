@@ -8,6 +8,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
+#include <utility>
 
 namespace
 {
@@ -71,12 +72,11 @@ void LootSystem::Update(float dt, Player& player, const Camera& camera, const Co
         return;
     }
     if (!pickupPressed) return;
-    if (player.GetInventory().Pickup(item.stack))
-    {
-        message = std::string("획득: ") + GetItemDefinition(item.stack.type).name;
-        items.erase(items.begin() + target);
-        target = -1;
-    }
+    const auto name = std::string(GetItemDefinition(item.stack.type).name);
+    const bool equipBackpack = item.stack.type == ItemType::Backpack &&
+        !(player.clothingMask & ClothingBit(ItemType::Backpack));
+    if (TakeNearby(item.stack.id, player, world))
+        message = std::string(equipBackpack ? "가방 착용: " : "획득: ") + name;
     else message = "인벤토리가 가득 차 아이템을 줍지 못했습니다";
     messageTime = 2.5f;
 }
@@ -211,10 +211,40 @@ bool LootSystem::TakeNearby(StackId id, Player& player, const CollisionWorld& wo
     if (std::none_of(nearby.begin(), nearby.end(), [&](const ItemStack& s) { return s.id == id; })) return false;
     for (auto it = items.begin(); it != items.end(); ++it) {
         if (it->stack.id != id) continue;
+        // A 3x3 backpack cannot fit in pockets. Equip into an empty backpack slot
+        // before asking the carried inventory to allocate storage cells.
+        if (slot == -100 && it->stack.type == ItemType::Backpack &&
+            !(player.clothingMask & ClothingBit(ItemType::Backpack)))
+            return EquipNearby(id, player, world);
         auto copy = it->stack; copy.slot = slot;
         const bool taken = slot == -100 ? player.GetInventory().Pickup(copy) : player.GetInventory().TryAdd(copy);
         if (!taken) return false;
         items.erase(it); target = -1; return true;
+    }
+    return false;
+}
+
+bool LootSystem::EquipNearby(StackId id, Player& player, const CollisionWorld& world, int clothingSlot)
+{
+    if (!player.vitals.Alive() || clothingSlot < -1) return false;
+    const auto nearby = Nearby(player, world);
+    if (std::none_of(nearby.begin(), nearby.end(), [&](const ItemStack& s) { return s.id == id; })) return false;
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        if (it->stack.id != id) continue;
+        const auto type = it->stack.type;
+        if (!IsClothing(type) || !CanWear(type, player.appearance == PlayerAppearance::Male) ||
+            it->stack.quantity <= 0 || (clothingSlot >= 0 && ClothingSlot(type) != clothingSlot)) return false;
+        const auto bit = ClothingBit(type);
+        // Preserve existing equipment; replacements require removing it first.
+        if (player.clothingMask & bit) return false;
+        auto next = player.GetInventory();
+        const auto mask = player.clothingMask | bit;
+        if (!next.ConfigureGear(mask)) return false;
+        player.GetInventory() = std::move(next);
+        player.clothingMask = mask;
+        if (--it->stack.quantity == 0) items.erase(it);
+        target = -1;
+        return true;
     }
     return false;
 }

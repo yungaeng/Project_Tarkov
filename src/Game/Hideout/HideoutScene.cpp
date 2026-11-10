@@ -23,6 +23,13 @@
 
 void RaidScene::EnterHideout()
 {
+    // Recover legacy zero-water incapacitated profiles without clearing ordinary injuries.
+    if (hideout.vitals.Hydration() <= 0.f && !hideout.vitals.Alive()) {
+        auto body=hideout.vitals.BodyHealth();
+        for (float& health : body) health=(std::max)(health,51.f);
+        hideout.vitals.Restore(body,100.f,hideout.vitals.Stamina());
+    }
+    hideout.vitals.RefillHydration();
     HideoutMap::Build(collisionWorld,mapBatches,
         hideout.AvailableRoomCount(),hideout.rescuedRoomMask);
     player = std::make_unique<Player>();
@@ -100,10 +107,15 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
         hideoutSwitchNpc.position=bedPosition;
         hideoutSwitchNpc.rotation.y=0.f;
         CharacterVisualState npcState;
-        npcState.dead=true;
+        npcState.dead=room != 1;
+        hideoutSwitchNpcVisual.SetRoomTwoLootPose(room == 1 ? 1 : 0);
+        if (room == 1) {
+            hideoutSwitchNpc.position.z -= .25f;
+            hideoutSwitchNpc.rotation.y = 180.f;
+        }
         // Complete the raid death pose on the bed support plane before fitting.
         hideoutSwitchNpcVisual.Update(10.f,hideoutSwitchNpc,npcState);
-        hideoutSwitchNpcVisual.CenterDeathPoseOnSurface(hideoutSwitchNpc,bedPosition);
+        if (room != 1) hideoutSwitchNpcVisual.CenterDeathPoseOnSurface(hideoutSwitchNpc,bedPosition);
     }
 
     playerVisual.SetLootPreview(false);
@@ -111,6 +123,8 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
     player->SetLooting(false);
     playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
     hideoutBedPoseElapsed=0.f;
+    hideoutBedCameraYaw=33.6901f;
+    hideoutBedCameraPitch=32.37f;
     hideoutBedPoseLooting=false;
     hideoutBedCorpseAligned=false;
     hideoutCameraInRoom=false;
@@ -127,6 +141,16 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
 void RaidScene::BeginHideoutBedLooting()
 {
     const glm::vec3 bedPosition=HideoutLayout::Anchor(hideoutBedTestRoom,"bed")+glm::vec3(0,.67f,0);
+    if (hideoutBedTestRoom == 1) {
+        player->position = bedPosition + glm::vec3(0,0,.3f);
+        player->rotation.y = 180.f;
+        player->SetLooting(true);
+        playerVisual.SetRoomTwoLootPose(2);
+        playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
+        playerVisual.FitRoomTwoLootHands(*player,hideoutSwitchNpc,hideoutSwitchNpcVisual);
+        hideoutBedPoseLooting=true;
+        return;
+    }
     const auto placementClear=[&](const glm::vec3& candidate,float,
         const std::array<glm::vec3,4>& supports) {
         const float bedLeft=bedPosition.x-.69f,bedRight=bedPosition.x+.69f;
@@ -152,6 +176,7 @@ void RaidScene::EndHideoutBedPoseTest()
 {
     if (!hideoutBedPoseActive || !player) return;
     player->SetLooting(false);
+    playerVisual.SetRoomTwoLootPose(0);
     player->position=hideoutBedBeforePlayerPosition;
     player->rotation.y=hideoutBedBeforePlayerRotation;
     if (hideoutBedNpcMoved) {
@@ -191,11 +216,23 @@ void RaidScene::UpdateHideout(float dt)
         player->StopMovement();
         hideoutBedPoseElapsed+=dt;
         CharacterVisualState npcState;
-        npcState.dead=true;
+        npcState.dead=hideoutBedTestRoom != 1;
         hideoutSwitchNpcVisual.Update(dt,hideoutSwitchNpc,npcState);
         playerVisual.Update(dt,*player,{false,false,false,false,0,0,false});
+        if (hideoutBedTestRoom == 1)
+            playerVisual.FitRoomTwoLootHands(*player,hideoutSwitchNpc,hideoutSwitchNpcVisual);
         const glm::vec3 center=HideoutLayout::Anchor(hideoutBedTestRoom,"bed")+glm::vec3(0,.9f,0);
-        camera.position=center+glm::vec3(2.8f,3.2f,4.2f);
+        if (Input::IsFocused() &&
+            (Input::GetKey(GLFW_KEY_LEFT_ALT) || Input::GetKey(GLFW_KEY_RIGHT_ALT))) {
+            const auto delta=Input::GetMouseDelta();
+            hideoutBedCameraYaw-=delta.x*.2f;
+            hideoutBedCameraPitch=std::clamp(hideoutBedCameraPitch-delta.y*.2f,-10.f,80.f);
+        }
+        const float yaw=glm::radians(hideoutBedCameraYaw);
+        const float pitch=glm::radians(hideoutBedCameraPitch);
+        const float radius=5.9657f;
+        camera.position=center+radius*glm::vec3(std::cos(pitch)*std::sin(yaw),
+            std::sin(pitch),std::cos(pitch)*std::cos(yaw));
         camera.front=glm::normalize(center-camera.position);
         camera.up={0,1,0};
         camera.fieldOfView=48.f;
@@ -213,7 +250,7 @@ void RaidScene::UpdateHideout(float dt)
         if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
             hideoutExitMenu = true;
             Input::SetCursorCaptured(false);
-        } else if (Input::GetKeyDown(GLFW_KEY_F)) {
+        } else if (Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_I)) {
             hideoutPanel = false;
             hideoutStoragePanel = false;
             player->appearance = hideout.appearance;
@@ -227,6 +264,15 @@ void RaidScene::UpdateHideout(float dt)
             hideoutPrompt = 0;
             Input::SetCursorCaptured(true);
         }
+        return;
+    }
+    if (Input::IsFocused() && Input::GetKeyDown(GLFW_KEY_I)) {
+        hideoutPanel = true;
+        hideoutStoragePanel = false;
+        hud.SetHideoutHealthTab(false);
+        player->StopMovement();
+        player->SetSprinting(false);
+        Input::SetCursorCaptured(false);
         return;
     }
     if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
@@ -382,11 +428,11 @@ void RaidScene::RenderHideoutMap(int width, int height)
             ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|
             ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::TextUnformatted(hideoutBedPoseActive
-            ? "[F] 자세 종료 · [Esc] 자세 종료"
-            : "[F] 레이드 파밍 자세 테스트");
+            ? "[F/Esc] 자세 종료 · [Alt + 마우스] 카메라 회전"
+            : (hideoutBedTestRoom == 1 ? "[F] 새 파밍 자세 테스트" : "[F] 레이드 파밍 자세 테스트"));
         if (hideoutBedPoseActive)
             ImGui::TextUnformatted(hideoutBedPoseLooting
-                ? "침대 위 적 시체 파밍 중"
+                ? (hideoutBedTestRoom == 1 ? "적: 손·무릎 지지 / 플레이어: 뒤에서 장비 수색" : "침대 위 적 시체 파밍 중")
                 : "침대 위 적 사망 · 파밍 준비 중");
         ImGui::End();
     }

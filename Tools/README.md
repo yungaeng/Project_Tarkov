@@ -25,7 +25,15 @@ python .\Tools\Characters\<script>.py --help
 예를 들어 검증 미리보기는 다음처럼 저장할 수 있다.
 
 ```powershell
-python .\Tools\Characters\validate_character.py .\Assets\Models\Player\여캐 --preview .\.build\여캐-preview.png
+python .\Tools\Characters\validate_character.py .\Assets\Models\Player\여캐 --preview .\Project_Tarkov\x64\Debug\qa\여캐-preview.png
 ```
 
 `Tools/Characters/paths.py`는 기본 입력 루트 `Assets/`와 원본/파생 자료 루트 `ArtSource/`를 정의한다. 게임에 사용하는 결과는 `Assets/Models/Player/`에 두고, 원본과 제작 메타데이터는 `ArtSource/Characters/<캐릭터>/`에 보관한다. 스크립트 실행은 게임 빌드나 런타임 검증을 대신하지 않는다.
+
+## 출력 경로와 원본 보존
+
+기본 게임·테스트 작업 위치는 `Project_Tarkov/x64/Debug/`다. 위 검증 명령은 사용자가 이후 실행할 예시이며 이번 후속 작업에서는 실행하지 않았다. C++ 자세 도구는 별도 빌드 대상이고, 첫 번째 인자로 이미지 출력 폴더를 지정할 수 있다. 미지정 시 해당 도구 EXE 옆 `qa/`에 쓴다. 별도 도구도 `Project_Tarkov/x64/Debug/`에 배치하면 같은 출력 위치를 유지한다. 컴파일 시 `src` include 경로와 도구가 참조하는 게임 구현·런타임 라이브러리가 필요하며, 메인 게임의 main.cpp와 함께 링크하지 않는다.
+
+표준 캐릭터의 메타데이터와 의상 중간 파일은 `ArtSource/Characters/<캐릭터>/Derived/`, 실제 게임용 합성 메시·텍스처는 `Assets/Models/Player/<캐릭터>/`에 쓴다. 별도 출력 디렉터리를 지정한 경우 그 디렉터리 내부에 부속 자료도 유지한다. 제작 스크립트는 대상 파일을 갱신하므로 수동 실행 전 보존할 원본을 구분한다.
+
+이전 작업 기록에 따르면 Python 구문 검사는 수행됐지만 NumPy가 없어 --help 실행은 확인되지 않았다. 이는 도구 실행 검증 완료를 뜻하지 않는다. NumPy·Pillow 설치 및 실제 에셋 변환은 이번 후속 작업에 포함하지 않았다.

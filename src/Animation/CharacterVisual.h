@@ -37,6 +37,10 @@ public:
         const glm::vec3& bedCenter = glm::vec3(0));
     float HideoutBedYaw() const { return hideoutBedYaw; }
     void SetHideoutKneelPose(bool enabled);
+    // Room 2 preview: 0=off, 1=enemy on hands/knees, 2=kneeling searcher.
+    void SetRoomTwoLootPose(int role);
+    void FitRoomTwoLootHands(const Character& character, const Character& target,
+        const CharacterVisual& targetVisual);
     glm::vec3 FirstPersonCameraPosition(const Character& character) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
@@ -60,6 +64,8 @@ private:
     GLuint paletteBuffer = 0, paletteTexture = 0;
     float poseElapsed = 0;
     float backpackClock = 0, backpackMotion = 0;
+    int roomTwoLootRole = 0;
+    glm::mat4 roomTwoLootRoot{1};
     bool lootPoseValid = false;
     bool lootCorpseFlipped = false;
     glm::mat4 flippedDeathRoot{1};

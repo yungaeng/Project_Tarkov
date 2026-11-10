@@ -10,6 +10,10 @@ void ApplyRaid(Command command, Player& player, LootSystem& loot, const Collisio
             bool ok=false;
             if (command.item.source==3 && command.action==InventoryCommands::Action::Move && command.destination==0)
                 ok=loot.TakeNearby(command.item.id,player,world,command.slot);
+            else if (command.item.source==3 && command.action==InventoryCommands::Action::Use)
+                ok=loot.EquipNearby(command.item.id,player,world);
+            else if (command.item.source==3 && command.action==InventoryCommands::Action::Move && command.destination==2)
+                ok=loot.EquipNearby(command.item.id,player,world,command.slot);
             else if (command.item.source==4 && command.destination==0 && corpse && corpse->rifle) {
                 ItemStack weapon{ItemType::Rifle,1,0,30,true,command.slot};
                 ok=command.slot==-100?inventory.Pickup(weapon):inventory.TryAdd(weapon);

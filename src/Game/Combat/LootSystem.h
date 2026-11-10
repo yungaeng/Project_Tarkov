@@ -31,6 +31,7 @@ public:
     bool DropNear(glm::vec3 position, ItemStack stack, const CollisionWorld& world);
     std::vector<ItemStack> Nearby(const Player& player, const CollisionWorld& world) const;
     bool TakeNearby(StackId id, Player& player, const CollisionWorld& world, int slot = -100);
+    bool EquipNearby(StackId id, Player& player, const CollisionWorld& world, int clothingSlot = -1);
     void Notify(const std::string& text) { message = text; messageTime = 3; }
 private:
     std::vector<WorldItem> items;
