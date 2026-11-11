@@ -1,4 +1,4 @@
-﻿#include "../Raid/RaidScene.h"
+#include "../Raid/RaidScene.h"
 #include "../Raid/RaidResultScene.h"
 #include "../World/IndustrialDetails.h"
 #include "../World/HideoutMap.h"
@@ -450,6 +450,13 @@ void RaidScene::RenderHideoutMap(int width, int height)
         const auto nextAppearance = hideoutPromptAppearance;
         ImGui::TextUnformatted(hideoutPrompt==1 ? "레이드에 진입하시겠습니까?" :
             nextAppearance == PlayerAppearance::Male ? "남캐로 캐릭터 전환 하시겠습니까?" : "여캐로 캐릭터 전환 하시겠습니까?");
+        if (hideoutPrompt == 1) {
+            ImGui::TextUnformatted(hideout.appearance == PlayerAppearance::Female
+                ? "SCAV: 착용 장비와 휴대품을 창고에 자동 보관하고 무작위 장비로 출격합니다."
+                : "PMC: 현재 착용 장비와 휴대품을 가지고 출격합니다.");
+            if (hideout.appearance == PlayerAppearance::Female)
+                ImGui::TextUnformatted("창고 공간이 부족하면 출격할 수 없습니다.");
+        }
         ImGui::BeginDisabled(!Input::IsFocused());
         if(ImGui::Button("예",{120,36})) {
             if(hideoutPrompt==1) deployRequested=true;

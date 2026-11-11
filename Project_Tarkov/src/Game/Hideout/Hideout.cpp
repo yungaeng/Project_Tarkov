@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <random>
 #include <utility>
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -507,12 +508,56 @@ bool Hideout::HealBodyPart(BodyPart part)
 
 bool Hideout::Depart()
 {
-    Hideout away = *this;
-    away.loadout = Inventory{}; away.rifle = false; away.magazine = 0; away.clothingMask = 0;
+    if (!ready) return false;
+    // Stage the complete departure before touching either the live profile or disk.
+    Hideout departing = *this;
+    if (appearance == PlayerAppearance::Female) {
+        for (auto item : loadout.Items()) {
+            item.id = 0;
+            item.slot = -100;
+            if (!departing.storage.TryAdd(item)) {
+                message = "SCAV 출격 취소: 개인 장비를 보관할 창고 공간이 부족합니다. 창고를 정리하세요.";
+                return false;
+            }
+        }
+        // Worn clothes are represented by bits, not loadout stacks.
+        for (int slot = 0; slot < ClothingSlotCount; ++slot) {
+            if (!(clothingMask & (1u << slot))) continue;
+            if (!departing.storage.TryAdd({ClothingType(slot), 1})) {
+                message = "SCAV 출격 취소: 착용 의류를 보관할 창고 공간이 부족합니다. 창고를 정리하세요.";
+                return false;
+            }
+        }
+        departing.loadout = Inventory{};
+        departing.clothingMask = ClothingBit(ItemType::Shirt) | ClothingBit(ItemType::Trousers)
+            | ClothingBit(ItemType::UnderShirt) | ClothingBit(ItemType::Underpants)
+            | ClothingBit(ItemType::Boots) | ClothingBit(ItemType::Vest);
+        static std::mt19937 random(std::random_device{}());
+        const int kit = std::uniform_int_distribution<int>(0, 2)(random);
+        if (kit == 1) departing.clothingMask |= ClothingBit(ItemType::Helmet);
+        if (kit == 2) departing.clothingMask |= ClothingBit(ItemType::Backpack);
+        const int rounds = std::uniform_int_distribution<int>(10, 30)(random);
+        if (!departing.loadout.ConfigureGear(departing.clothingMask) ||
+            !departing.loadout.TryAdd({ItemType::Rifle, 1, 0, rounds, true, -1}) ||
+            !departing.loadout.TryAdd({ItemType::Magazine, 1, 0, 30, false, 12}) ||
+            !departing.loadout.TryAdd({ItemType::Bandage, kit + 1}) ||
+            !departing.loadout.TryAdd({ItemType::Water, 1})) {
+            message = "SCAV 지급 장비를 구성하지 못해 출격을 취소했습니다.";
+            return false;
+        }
+        departing.RefreshWeapons();
+    }
+    // Persist only safe stash contents. Raid gear is recovered on extraction;
+    // closing the game during a raid must not duplicate the issued kit.
+    Hideout away = departing;
+    away.loadout = Inventory{};
+    away.rifle = false;
+    away.magazine = 0;
+    away.clothingMask = 0;
     if (!away.Save()) { message = away.message; return false; }
+    *this = std::move(departing);
     return true;
 }
-
 bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing,
     bool rescuedSurvivor)
 {
