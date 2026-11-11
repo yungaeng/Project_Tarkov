@@ -52,7 +52,7 @@ https://www.khronos.org/about
 XAudio2/Windows SDK는 Windows 플랫폼 구성 요소다. OS DLL을 임의로 묶어 배포하지 말고
 대상 Windows 버전 및 SDK의 재배포 조건을 따른다.
 
-폰트: src/Game/UI/RaidHud.cpp는 사용자 Windows의 malgun.ttf 또는 gulim.ttc를 읽는다.
+폰트: Project_Tarkov/src/Game/UI/RaidHud.cpp는 사용자 Windows의 malgun.ttf 또는 gulim.ttc를 읽는다.
 현재 방식은 설치된 시스템 폰트 사용이다. 이 폰트 파일을 게임 Assets에 복사해 배포할 권리는
 별도로 확인해야 한다. 문서 임베딩 허가를 게임 폰트 재배포 허가로 해석하지 않는다.
 https://learn.microsoft.com/en-us/typography/fonts/font-faq

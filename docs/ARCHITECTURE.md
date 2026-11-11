@@ -1,23 +1,73 @@
 # 프로젝트 구조와 작업 경계
 
-기준일: 2026-11-10. 현재 소스와 프로젝트 설정을 설명한다. 빌드 출력은 기존 `Project_Tarkov/x64/Debug/`를 유지한다.
+폴더·경로 기준일: 2026-11-12. 현재 소스와 프로젝트 설정을 설명한다. 빌드 출력은 기존 `Project_Tarkov/x64/Debug/`를 유지한다.
+
+## 파일·폴더 관계도
+
+저장소 루트 기준이다. 주요 관리 파일을 표시하며, 생성 폴더의 내용은 빌드·실행 여부에 따라 달라진다.
+
+```text
+Project_Tarkov/                     저장소 루트
+├─ Project_Tarkov.sln               Visual Studio 진입점
+├─ vcpkg.json                       의존성 선언
+├─ README.md                        시작 안내와 문서 링크
+├─ SKILL.md                         개발·문서 관리 규칙
+├─ Open_Source_Licenses.txt         제3자 라이선스 원문
+├─ Project_Tarkov/                  내부 프로젝트 폴더
+│  ├─ src/                         관리하는 소스 코드
+│  │  ├─ Project_Tarkov.vcxproj     빌드 대상·경로 설정
+│  │  ├─ Project_Tarkov.vcxproj.filters
+│  │  ├─ main.cpp
+│  │  ├─ Core/                     실행·입력·경로
+│  │  ├─ Game/                     게임 규칙과 UI
+│  │  │  ├─ Character/  Combat/  Config/
+│  │  │  ├─ Hideout/    Inventory/  Raid/
+│  │  │  └─ UI/         World/
+│  │  ├─ Animation/  Graphics/
+│  │  └─ Physics/    Scene/
+│  ├─ x64/Debug/                   생성되는 실행·빌드 결과
+│  │  ├─ Project_Tarkov.exe, DLL
+│  │  ├─ Assets/                   배포용 복사 자원
+│  │  ├─ obj/                      컴파일 중간 파일
+│  │  └─ Saves/                    사용자 저장 데이터
+│  └─ Project_Tarkov/Saves/        과거 저장 경로, 보존 대상
+├─ Assets/                         관리하는 런타임 자원
+│  ├─ Animations/  Maps/  Models/
+│  └─ Shaders/     UI/
+├─ Tools/                          제작·검증 도구
+│  ├─ Characters/                 캐릭터 변환·의상 제작
+│  └─ Validation/                 별도 C++ 검증 소스
+├─ docs/
+│  ├─ IMPLEMENTED.md              구현 사양·검증·과거 이력
+│  ├─ PLANNED.md                  미완료 작업·완료 기준
+│  ├─ ARCHITECTURE.md             이 관계도·경로·책임
+│  ├─ licenses/README.md          라이선스 확인·교체 계획
+│  └─ img/                        참고 이미지 8개
+├─ .build/                        재생성 캐시와 남겨둔 작업 자료
+├─ vcpkg_installed/               복원된 의존성
+└─ .vs/                           로컬 IDE 상태
+```
+
+`Project_Tarkov.sln` → `Project_Tarkov/src/Project_Tarkov.vcxproj` → `Project_Tarkov/<Platform>/<Configuration>/`이 빌드 연결이다. x64 Debug의 실제 출력은 위 트리와 같이 `Project_Tarkov/x64/Debug/`다. 개발 실행은 루트 `Assets/`를 우선 사용하고, 배포 시 실행 파일 옆 `Assets/`를 사용한다. 세이브 선택 규칙은 아래 절을 따른다.
+
+`ArtSource/`는 삭제되어 현재 트리에 없다. `.build/`에는 원본·백업·세이브 등 보존 자료도 남아 있으므로 폴더 전체를 캐시로 간주해 삭제하지 않는다.
 
 ## 폴더 역할
 
 - `Project_Tarkov.sln`: 저장소 루트의 Visual Studio 진입점.
-- `src/Project_Tarkov.vcxproj`, `.filters`: 컴파일 대상과 솔루션 탐색기 표시 목록.
-- `src/Core/`: 실행 루프·입력·로그·경로 탐색·에셋 카탈로그.
-- `src/Game/Character/`, `Combat/`: 캐릭터와 생존 상태, 전투·AI·루팅.
-- `src/Game/Raid/`: 레이드 진행, 결과 장면, 상태와 결과 데이터.
-- `src/Game/Hideout/`: 저장 프로필, 은신처 상호작용, 가구 명령의 저장·실패 롤백.
-- `src/Game/Inventory/`: 아이템 데이터와 UI에 의존하지 않는 인벤토리 명령.
-- `src/Game/UI/`: RaidHud·HideoutHud·InventoryHud·ResultHud와 공통 HudWidgets·InventoryUi.
-- `src/Game/World/`: 맵 로딩과 절차적 배치 구현. 기본 도형과 배칭은 `src/Graphics/WorldGeometry.*`를 사용한다.
-- `src/Animation/`, `Graphics/`, `Physics/`, `Scene/`: 애니메이션·표현·충돌·장면 기반 코드.
+- `Project_Tarkov/src/Project_Tarkov.vcxproj`, `.filters`: 컴파일 대상과 솔루션 탐색기 표시 목록.
+- `Project_Tarkov/src/Core/`: 실행 루프·입력·로그·경로 탐색·에셋 카탈로그.
+- `Project_Tarkov/src/Game/Character/`, `Combat/`: 캐릭터와 생존 상태, 전투·AI·루팅.
+- `Project_Tarkov/src/Game/Raid/`: 레이드 진행, 결과 장면, 상태와 결과 데이터.
+- `Project_Tarkov/src/Game/Hideout/`: 저장 프로필, 은신처 상호작용, 가구 명령의 저장·실패 롤백.
+- `Project_Tarkov/src/Game/Inventory/`: 아이템 데이터와 UI에 의존하지 않는 인벤토리 명령.
+- `Project_Tarkov/src/Game/UI/`: RaidHud·HideoutHud·InventoryHud·ResultHud와 공통 HudWidgets·InventoryUi.
+- `Project_Tarkov/src/Game/World/`: 맵 로딩과 절차적 배치 구현. 기본 도형과 배칭은 `Project_Tarkov/src/Graphics/WorldGeometry.*`를 사용한다.
+- `Project_Tarkov/src/Animation/`, `Graphics/`, `Physics/`, `Scene/`: 애니메이션·표현·충돌·장면 기반 코드.
 - `Assets/`: 런타임에 읽는 메시·텍스처·모션·셰이더·맵 데이터. [맵 데이터 형식](../Assets/Maps/README.md).
-- `ArtSource/`: 편집 원본과 파생 제작 자료. [원본 관리 안내](../ArtSource/README.md).
+- 기존 `ArtSource/`는 2026-11-12 삭제했다. 현재 런타임 에셋은 `Assets/`에 유지한다. 제작 도구는 실행 시 파생 자료 폴더를 다시 만들 수 있다.
 - `Tools/`: 캐릭터 제작 및 별도 검증 소스. [사용 안내](../Tools/README.md).
-- `docs/IMPLEMENTED.md`: 현재 사양. `docs/PLANNED.md`: 후속 계획과 완료 상태. `docs/history/`: 당시 변경 기록.
+- `docs/IMPLEMENTED.md`: 현재 사양. `docs/PLANNED.md`: 후속 계획과 완료 상태. `docs/IMPLEMENTED.md`의 [과거 변경 이력 부록](IMPLEMENTED.md#change-history): 당시 변경 기록.
 - `Project_Tarkov/x64/Debug/`: EXE·DLL·복사된 Assets, 중간 파일 `obj/Project_Tarkov/`, 기본 `Saves/`, 별도 검증 결과 `qa/`.
 - `.build/`, `vcpkg_installed/`: 의존성 캐시 및 기존 작업 자료. 게임 빌드·테스트 출력 위치를 이쪽으로 옮기지 않는다.
 
@@ -35,7 +85,7 @@
 
 `AssetCatalog.h`는 논리 파일 이름, `RuntimePaths`는 파일 시스템 경로를 담당한다. 로더는 UTF-8 경로를 처리하고 현재 작업 디렉터리를 바꾸지 않는다.
 
-에셋은 `TARKOV_ASSET_ROOT` 절대 경로가 최우선이다. 미지정 시 실행 파일의 상위에서 `vcpkg.json`과 `src/`가 있는 저장소를 찾으면 그 루트의 Assets를 사용하고, 저장소 밖 패키지는 EXE 옆 Assets를 사용한다. 개발 중 출력 폴더의 에셋을 직접 확인하려면 `TARKOV_ASSET_ROOT`를 그 폴더로 지정한다.
+에셋은 `TARKOV_ASSET_ROOT` 절대 경로가 최우선이다. 미지정 시 실행 파일의 상위에서 `vcpkg.json`과 `Project_Tarkov/src/`가 있는 저장소를 찾으면 그 루트의 Assets를 사용하고, 저장소 밖 패키지는 EXE 옆 Assets를 사용한다. 개발 중 출력 폴더의 에셋을 직접 확인하려면 `TARKOV_ASSET_ROOT`를 그 폴더로 지정한다.
 
 `CopyRuntimeAssets`는 셰이더·애니메이션·맵 파일, UI PNG, 무기 OBJ, 공통 리그 FBX, 각 캐릭터의 character.mesh/png를 복사한다. 제작 원본·의상 중간 메시·import.json은 배포 대상이 아니다. 기존 출력 폴더의 오래된 파일을 삭제하는 타깃은 없으므로 배포본은 새 패키지 폴더에 필요한 결과만 구성한다. 실제 사용자 세이브를 배포본에 포함하지 않는다.
 
@@ -59,3 +109,7 @@
 ## 확인 범위
 
 이전 구조 정리 커밋 `27ad256`의 문서에는 Debug/x64 빌드·시작 스모크 테스트·Python 구문 검사 결과가 기록되어 있다. 이번 후속 작업에서는 소스 include 경로, 프로젝트/필터 목록을 대조했고 연결 누락은 발견하지 못했다. 이 대조는 컴파일이나 플레이 검증이 아니다. 이번에는 빌드·테스트·게임 실행을 하지 않았다.
+
+## 2026-11-12 소스 위치 변경
+
+루트의 `src/`를 `Project_Tarkov/src/`로 이동했다. 솔루션은 새 프로젝트 위치를 참조하며, 프로젝트 기준 저장소 루트는 두 단계 상위다. vcpkg 매니페스트·설치·캐시와 런타임 에셋 경로를 이에 맞췄다. RuntimePaths의 저장소 판별도 새 소스 경로를 사용한다. 출력 및 세이브 경로는 유지하며 빌드·테스트·게임 실행은 수행하지 않았다.

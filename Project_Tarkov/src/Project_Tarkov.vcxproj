@@ -5,9 +5,9 @@
     <VcpkgRoot Condition="'$(VcpkgRoot)' == '' and '$(VCPKG_ROOT)' != ''">$(VCPKG_ROOT)\</VcpkgRoot>
     <VcpkgRoot Condition="'$(VcpkgRoot)' == ''">$(UserProfile)\vcpkg\</VcpkgRoot>
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
-    <VcpkgManifestRoot>$(MSBuildThisFileDirectory)..\</VcpkgManifestRoot>
-    <VcpkgInstalledDir>$(MSBuildThisFileDirectory)..\vcpkg_installed\</VcpkgInstalledDir>
-    <VcpkgAdditionalInstallOptions>"--x-buildtrees-root=$(MSBuildThisFileDirectory)..\.build\buildtrees" "--x-packages-root=$(MSBuildThisFileDirectory)..\.build\packages" "--downloads-root=$(MSBuildThisFileDirectory)..\.build\downloads"</VcpkgAdditionalInstallOptions>
+    <VcpkgManifestRoot>$(MSBuildThisFileDirectory)..\..\</VcpkgManifestRoot>
+    <VcpkgInstalledDir>$(MSBuildThisFileDirectory)..\..\vcpkg_installed\</VcpkgInstalledDir>
+    <VcpkgAdditionalInstallOptions>"--x-buildtrees-root=$(MSBuildThisFileDirectory)..\..\.build\buildtrees" "--x-packages-root=$(MSBuildThisFileDirectory)..\..\.build\packages" "--downloads-root=$(MSBuildThisFileDirectory)..\..\.build\downloads"</VcpkgAdditionalInstallOptions>
   </PropertyGroup>
   <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.props" />
   <ItemGroup Label="ProjectConfigurations">
@@ -81,7 +81,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <OutDir>$(MSBuildThisFileDirectory)..\Project_Tarkov\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(MSBuildThisFileDirectory)..\..\Project_Tarkov\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(OutDir)obj\$(ProjectName)\</IntDir>
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
@@ -149,8 +149,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets" />
   <ItemGroup>
-    <RuntimeAsset Include="$(MSBuildThisFileDirectory)..\Assets\Shaders\**\*;$(MSBuildThisFileDirectory)..\Assets\Animations\**\*;$(MSBuildThisFileDirectory)..\Assets\Maps\**\*;$(MSBuildThisFileDirectory)..\Assets\UI\*.png;$(MSBuildThisFileDirectory)..\Assets\Models\Weapons\*.obj;$(MSBuildThisFileDirectory)..\Assets\Models\Player\Ch22_nonPBR.fbx;$(MSBuildThisFileDirectory)..\Assets\Models\Player\*\character.mesh;$(MSBuildThisFileDirectory)..\Assets\Models\Player\*\character.png">
-      <AssetRelativePath>$([MSBuild]::MakeRelative('$(MSBuildThisFileDirectory)..\Assets', '%(FullPath)'))</AssetRelativePath>
+    <RuntimeAsset Include="$(MSBuildThisFileDirectory)..\..\Assets\Shaders\**\*;$(MSBuildThisFileDirectory)..\..\Assets\Animations\**\*;$(MSBuildThisFileDirectory)..\..\Assets\Maps\**\*;$(MSBuildThisFileDirectory)..\..\Assets\UI\*.png;$(MSBuildThisFileDirectory)..\..\Assets\Models\Weapons\*.obj;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\Ch22_nonPBR.fbx;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\*\character.mesh;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\*\character.png">
+      <AssetRelativePath>$([MSBuild]::MakeRelative('$(MSBuildThisFileDirectory)..\..\Assets', '%(FullPath)'))</AssetRelativePath>
     </RuntimeAsset>
     <None Include="@(RuntimeAsset)"><Link>Assets\%(AssetRelativePath)</Link></None>
   </ItemGroup>

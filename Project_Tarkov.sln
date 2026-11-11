@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36401.2 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Project_Tarkov", "src\Project_Tarkov.vcxproj", "{7DA5C884-130A-4C07-9286-AD47187A2753}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Project_Tarkov", "Project_Tarkov\src\Project_Tarkov.vcxproj", "{7DA5C884-130A-4C07-9286-AD47187A2753}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

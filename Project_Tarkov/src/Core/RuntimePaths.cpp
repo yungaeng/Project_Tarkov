@@ -28,7 +28,7 @@ Paths Locate() {
     const auto executable=std::filesystem::path(buffer.data()).parent_path();
     std::filesystem::path repository;
     for(auto candidate=executable; !candidate.empty(); candidate=candidate.parent_path()) {
-        if (std::filesystem::exists(candidate/"vcpkg.json") && std::filesystem::is_directory(candidate/"src")) {
+        if (std::filesystem::exists(candidate/"vcpkg.json") && std::filesystem::is_directory(candidate/"Project_Tarkov"/"src")) {
             repository=candidate; break;
         }
         if(candidate==candidate.parent_path()) break;
