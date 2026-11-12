@@ -8,7 +8,22 @@ namespace InventoryCommands {
 void ApplyRaid(Command command, Player& player, LootSystem& loot, const CollisionWorld& world, InventoryActions& actions, Enemy* corpse) {
     auto& inventory=player.GetInventory();
             bool ok=false;
-            if (command.item.source==3 && command.action==InventoryCommands::Action::Move && command.destination==0)
+            if (command.item.source==2 && command.action==Action::Move && command.destination==3 &&
+                command.item.id==static_cast<StackId>(ClothingSlot(ItemType::Backpack)+1)) {
+                auto nextInventory=inventory;
+                auto nextClothing=player.clothingMask;
+                auto nextLoot=loot;
+                std::vector<ItemStack> removed;
+                ok=nextInventory.DetachBackpack(nextClothing,removed);
+                if (ok) for (const auto& item:removed)
+                    if (!nextLoot.DropNear(player.position,item,world)) { ok=false; break; }
+                if (ok) {
+                    inventory=std::move(nextInventory);
+                    player.clothingMask=nextClothing;
+                    loot=std::move(nextLoot);
+                    loot.Notify("가방과 내용물을 바닥에 내려놓았습니다.");
+                }
+            } else if (command.item.source==3 && command.action==InventoryCommands::Action::Move && command.destination==0)
                 ok=loot.TakeNearby(command.item.id,player,world,command.slot);
             else if (command.item.source==3 && command.action==InventoryCommands::Action::Use)
                 ok=loot.EquipNearby(command.item.id,player,world);

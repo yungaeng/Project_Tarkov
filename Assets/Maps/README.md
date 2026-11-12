@@ -4,14 +4,15 @@
 
 ## 은신처 가구 배치: Hideout/room.layout
 
-한 행: `prefab x z storageId radius`
+한 행: `prefab x z storageId radius [room]`
 
 예: `medicalTable 1.2 -2.5 3 1.7`
 
 - x는 각 방 왼쪽 기준, z는 은신처 좌표다. 방 번호는 코드에서 0부터 시작하고 가로 간격은 6m다.
-- storageId는 저장 데이터와 연결된다. 0=냉장고, 1=무기고, 2=옷장, 3=의료품 탁자, -1=보관함 없음. 기존 ID를 바꾸면 외형과 기존 저장된 물품 종류가 달라질 수 있으므로 유지한다.
+- storageId는 0=냉장고, 3=의료품 탁자, 4=일반 창고를 여는 펠리컨 케이스, -1=보관함 없음이다. 이전 저장 데이터의 1=무기고, 2=옷장 ID는 유지하지만 배치하지 않으며, 내용물은 일반 창고로 이관한다.
+- room은 생략하거나 -1이면 모든 방, 0이면 1번 방에만 배치한다. 펠리컨 케이스는 `pelicanCase 3.65 -6.8 4 1.8 0`으로 1번 방에만 배치한다.
 - radius는 수평 상호작용 거리다. 보관 가구는 1.7m, 침대 자세 상호작용은 기존 1.5m를 유지한다. 의자는 0이다.
-- medicalTable, weaponRack, wardrobe, refrigerator, bed, chair 여섯 이름이 필요하다. 같은 이름 또는 보관함 ID의 중복은 허용하지 않는다.
+- medicalTable, pelicanCase, refrigerator, bed, chair 다섯 이름이 필요하다. 같은 이름 또는 보관함 ID의 중복은 허용하지 않는다.
 - 위치 데이터는 렌더링과 상호작용에서 함께 사용한다. 각 가구의 모양은 `Prefabs/<prefab>.parts`에 있다.
 
 ## 가구 구성: Hideout/Prefabs/*.parts

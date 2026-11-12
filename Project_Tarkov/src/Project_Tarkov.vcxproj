@@ -236,7 +236,6 @@
     <ClCompile Include="Game\World\IndustrialLayout.cpp" />
     <ClCompile Include="Game\World\IndustrialZone.cpp" />
     <ClInclude Include="Game\World\IndustrialZone.h" />
-    <ClInclude Include="Graphics\AssimpHelper.h" />
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClInclude Include="Graphics\Camera.h" />
     <ClCompile Include="Graphics\Mesh.cpp" />

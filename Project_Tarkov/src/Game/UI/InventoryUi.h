@@ -39,7 +39,7 @@ inline void Target(Command& command, int destination, int slot)
 }
 inline void Cell(const ItemStack* item, int source, int slot, ImTextureID texture, Command& command,
     ImVec2 size, float opacity = 1.f, bool showPrice = false, bool male = false,
-    StorageFilter transferFilter = StorageFilter::None, int storageSource = -1)
+    StorageFilter transferFilter = StorageFilter::None, int storageSource = -1, int backpackDestination = 3)
 {
     opacity *= PanelOpacity;
     ImGui::PushID(source); ImGui::PushID(slot);
@@ -75,8 +75,10 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
                     ImGui::MenuItem("착용하기"))
                     command = {Action::Use,{source,item->id}};
             }
-            if (source == 2 && ImGui::MenuItem("해제 → 휴대품"))
-                command = {Action::Move,{source,item->id},0,-100};
+            if (source == 2 && ImGui::MenuItem(item->type == ItemType::Backpack
+                    ? (backpackDestination == 1 ? "해제 → 창고 (내용물 포함)" : "해제 → 바닥 (내용물 포함)")
+                    : "해제 → 휴대품"))
+                command = {Action::Move,{source,item->id},item->type == ItemType::Backpack ? backpackDestination : 0,-100};
             if (source != 2 && (item->type == ItemType::Water || item->type == ItemType::Food ||
                 IsClothing(item->type)) && !(source == 1 && showPrice) &&
                 (storageSource < 0 || source == 0 || item->type == ItemType::Water ||
@@ -111,7 +113,7 @@ inline void Cell(const ItemStack* item, int source, int slot, ImTextureID textur
             } else {
                 if (source == 0 && ImGui::MenuItem("바닥 / 창고로 이동"))
                     command = {Action::Move,{source,item->id},1,-100};
-                if ((source == 1 || source == 5) && ImGui::MenuItem("휴대품으로 이동"))
+                if ((source == 1 || source == 3 || source == 5) && ImGui::MenuItem(source == 3 ? "줍기" : "휴대품으로 이동"))
                     command = {Action::Move,{source,item->id},0,-100};
             }
             ImGui::EndPopup();

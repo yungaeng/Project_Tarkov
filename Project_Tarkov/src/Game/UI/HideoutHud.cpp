@@ -29,11 +29,13 @@
 using namespace HudWidgets;
 
 void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual& visual, Shader& shader,
-    bool mapPanel, bool* exitMenuOpen, int storageRoom, int storageFurniture)
+    bool mapPanel, bool* exitMenuOpen, int storageRoom, int storageFurniture, const CollisionWorld* world)
 {
     if (!rendererReady) return;
     const bool furnitureMode=storageRoom>=0 && storageRoom<Hideout::HideoutRoomCount &&
         storageFurniture>=0 && storageFurniture<Hideout::FurnitureCount;
+    const bool caseOpen=storageRoom==0 && storageFurniture==Hideout::PelicanStorage;
+    const bool storageOpen=furnitureMode || caseOpen;
     const auto furnitureKind=furnitureMode?static_cast<HideoutFurniture>(storageFurniture):HideoutFurniture::Refrigerator;
     const auto furnitureFilter=furnitureMode?Hideout::FilterFor(furnitureKind):StorageFilter::None;
     const int furnitureSource=furnitureMode?Hideout::FurnitureStorageSource(storageRoom,furnitureKind):-1;
@@ -78,8 +80,8 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::EndDisabled();
     ImGui::SameLine();
     ImGui::SetCursorPosX((std::max)(ImGui::GetCursorPosX(),io.DisplaySize.x*.55f));
-    ImGui::TextDisabled(furnitureMode ? "F 보관함 닫기 | Esc 메뉴" :
-        mapPanel ? "F 은신처로 돌아가기 | Esc 메뉴" : "Esc 메뉴");
+    ImGui::TextDisabled(storageOpen ? "Tab / F 보관함 닫기 | Esc 메뉴" :
+        mapPanel ? "Tab / F 닫기 | Esc 메뉴" : "Tab 인벤토리 | Esc 메뉴");
     const auto balance=std::string("보유 루블: ")+std::to_string(hideout.rubles)+" RUB";
     const float balanceWidth=ImGui::CalcTextSize(balance.c_str()).x;
     ImGui::SameLine();
@@ -87,6 +89,7 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::TextColored(accent,"%s",balance.c_str());
     ImGui::Separator();
     if (!hideout.message.empty()) ImGui::TextDisabled("%s",hideout.message.c_str());
+    if (!storageOpen) ImGui::TextDisabled("창고는 1번 방 펠리컨 케이스 앞에서 F로 열 수 있습니다.");
     const bool uiEnabled=hideout.ready && Input::IsFocused() && (!exitMenuOpen || !*exitMenuOpen);
     ImGui::BeginDisabled(!uiEnabled);
 
@@ -121,7 +124,8 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         auto* draw=ImGui::GetWindowDrawList();
         ImGui::SetCursorScreenPos(body);
         if (clothing || weapon) {
-            InventoryUi::Cell(item,clothing?2:0,clothing?clothingSlot:weaponSlot,texture,command,{size.x,size.y-header},.35f);
+            InventoryUi::Cell(item,clothing?2:0,clothing?clothingSlot:weaponSlot,texture,command,{size.x,size.y-header},.35f,
+                false,false,StorageFilter::None,-1,caseOpen?1:3);
         } else {
             ImGui::InvisibleButton("EmptyEquipment",{size.x,size.y-header});
             draw->AddRectFilled(body,bottom,IM_COL32(34,38,38,35));
@@ -167,7 +171,7 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::TextColored({.72f,.86f,.30f,1},"체력 %.0f",hideout.vitals.Health());
         ImGui::TextColored({.39f,.71f,.85f,1},"수분 %.0f",hideout.vitals.Hydration());
         ImGui::SameLine();
-        if (ImGui::SmallButton("물 마시기")) hideout.DrinkWater();
+        if (ImGui::SmallButton("물 마시기")) hideout.DrinkWater(0,false);
         ImGui::SameLine();
         ImGui::Text("스태미나 %.0f",hideout.vitals.Stamina());
         if (ImGui::CollapsingHeader("의상")) {
@@ -195,7 +199,7 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             ImGui::SetCursorScreenPos({rect.x,rect.y});
             ImGui::PushID(700+i);
             ImGui::InvisibleButton("HealDrop",{rect.z-rect.x,rect.w-rect.y});
-            if (ImGui::IsItemClicked()) hideout.HealBodyPart(static_cast<BodyPart>(i));
+            if (ImGui::IsItemClicked()) hideout.HealBodyPart(static_cast<BodyPart>(i),caseOpen);
             if (ImGui::BeginDragDropTarget()) {
                 if (const auto* payload=ImGui::AcceptDragDropPayload("INVENTORY_OBJECT")) {
                     if (payload->DataSize==sizeof(InventoryUi::Drag)) {
@@ -249,12 +253,28 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         ImGui::TextWrapped("탄창 우클릭: 채우기 / 빼내기 · 총기에 끌어 삽입");
         ImGui::EndChild();
     };
+    auto drawFloorPanel=[&](const char* childId) {
+        ImGui::BeginChild(childId,{0,panelHeight},true);
+        ImGui::TextUnformatted("바닥 · 2.5m 이내 접근 가능한 물품");
+        ImGui::Button("여기에 놓아 내려놓기",{-1,45});
+        InventoryUi::Target(command,3,-100);
+        const auto nearby=world ? hideout.floorLoot.Nearby(character,*world) : std::vector<ItemStack>{};
+        const float cell=(std::max)(32.f,(ImGui::GetContentRegionAvail().x-16.f)/3.f);
+        int index=0;
+        for (const auto& item:nearby) {
+            if (index%3) ImGui::SameLine();
+            InventoryUi::Cell(&item,3,index++,texture,command,{cell,cell});
+        }
+        if (nearby.empty()) ImGui::TextDisabled("가까운 물품 없음");
+        ImGui::EndChild();
+    };
     auto drawStashPanel=[&](const char* childId) {
         ImGui::BeginChild(childId,{0,panelHeight},true);
         const char* storageNames[]{"냉장고","무기고","옷장","의료품 탁자"};
         const char* storageItemNames[]{"음식·물","무기·탄약","의류","의료품"};
         if (furnitureMode)
             ImGui::Text("%s · %s",storageNames[storageFurniture],storageItemNames[storageFurniture]);
+        else ImGui::TextUnformatted("펠리컨 케이스 · 창고");
         ImGui::SetNextItemWidth((std::max)(80.f,ImGui::GetContentRegionAvail().x*.5f));
         ImGui::InputTextWithHint("##StashSearch","검색",hideoutStashSearch,sizeof(hideoutStashSearch));
         ImGui::SameLine();
@@ -300,7 +320,8 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
             ImGui::TableNextColumn();
             drawHealthPanel("HealthCharacterPanel");
             ImGui::TableNextColumn();
-            drawStashPanel("HealthStashPanel");
+            if (storageOpen) drawStashPanel("HealthStashPanel");
+            else drawFloorPanel("HealthFloorPanel");
             ImGui::EndTable();
         }
     } else if (ImGui::BeginTable(wide?"HideoutLayout":"HideoutLayoutNarrow",wide?3:2,
@@ -308,26 +329,37 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
         if (wide) {
             ImGui::TableSetupColumn("캐릭터",ImGuiTableColumnFlags_WidthStretch,1.15f);
             ImGui::TableSetupColumn("인벤토리",ImGuiTableColumnFlags_WidthStretch,1.0f);
-            ImGui::TableSetupColumn("창고",ImGuiTableColumnFlags_WidthStretch,1.45f);
+            ImGui::TableSetupColumn(storageOpen?"창고":"바닥",ImGuiTableColumnFlags_WidthStretch,1.45f);
             ImGui::TableNextColumn();
             drawCharacterPanel("CharacterPanel");
             ImGui::TableNextColumn();
             drawLoadoutPanel("LoadoutPanel");
             ImGui::TableNextColumn();
-            drawStashPanel("StashPanel");
+            if (storageOpen) drawStashPanel("StashPanel");
+            else drawFloorPanel("FloorPanel");
         } else {
             ImGui::TableSetupColumn("캐릭터와 인벤토리",ImGuiTableColumnFlags_WidthStretch,1.1f);
-            ImGui::TableSetupColumn("창고",ImGuiTableColumnFlags_WidthStretch,1.0f);
+            ImGui::TableSetupColumn(storageOpen?"창고":"바닥",ImGuiTableColumnFlags_WidthStretch,1.0f);
             ImGui::TableNextColumn();
             drawCharacterPanel("CharacterPanelNarrow");
             drawLoadoutPanel("LoadoutPanelNarrow");
             ImGui::TableNextColumn();
-            drawStashPanel("StashPanelNarrow");
+            if (storageOpen) drawStashPanel("StashPanelNarrow");
+            else drawFloorPanel("FloorPanelNarrow");
         }
         ImGui::EndTable();
     }
     ImGui::EndDisabled();
-    if (uiEnabled) hideout.ApplyInventoryCommand(command,storageRoom,storageFurniture);
+    if (uiEnabled) {
+        const bool floorDrop=command.item.source!=3 && command.action==InventoryUi::Action::Move &&
+            (command.destination==3 || (!storageOpen && command.destination==1));
+        if (command.item.source==3 && command.action!=InventoryUi::Action::None && world)
+            hideout.TakeFromFloor(command,character,*world);
+        else if (floorDrop && world) hideout.DropToFloor(command,character.position,*world);
+        else if (!floorDrop) hideout.ApplyInventoryCommand(command,
+            furnitureMode?storageRoom:-1,furnitureMode?storageFurniture:-1);
+        character.clothingMask=hideout.clothingMask;
+    }
     if (exitMenuOpen && *exitMenuOpen)
         DrawHideoutExitMenu(*exitMenuOpen,io.DisplaySize);
     ImGui::End();
@@ -336,11 +368,11 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
 }
 
 void RaidHud::RenderHideoutStorage(Hideout& hideout, int room, int furniture, Player& character,
-    CharacterVisual& visual, Shader& shader, bool& panelOpen, bool& exitMenuOpen)
+    CharacterVisual& visual, Shader& shader, bool& panelOpen, bool& exitMenuOpen, const CollisionWorld& world)
 {
     if (!panelOpen || room<0 || room>=Hideout::HideoutRoomCount ||
-        furniture<0 || furniture>=Hideout::FurnitureCount) return;
-    RenderHideout(hideout,character,visual,shader,true,&exitMenuOpen,room,furniture);
+        furniture<0 || furniture>Hideout::PelicanStorage || (furniture==Hideout::PelicanStorage && room!=0)) return;
+    RenderHideout(hideout,character,visual,shader,true,&exitMenuOpen,room,furniture,&world);
 }
 
 void RaidHud::RenderHideoutPauseMenu(bool& exitMenuOpen)

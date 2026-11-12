@@ -172,6 +172,26 @@ bool Inventory::UnequipClothing(ItemType type, std::uint32_t& equipped)
     return true;
 }
 
+bool Inventory::DetachBackpack(std::uint32_t& equipped, std::vector<ItemStack>& removed)
+{
+    const auto bit = ClothingBit(ItemType::Backpack);
+    if (!(equipped & bit)) return false;
+    auto next = *this;
+    std::vector<ItemStack> contents{{ItemType::Backpack, 1}};
+    for (const auto& item : items) {
+        if (item.slot < 18 || item.slot >= 30) continue;
+        auto copy = item;
+        copy.slot = -100;
+        contents.push_back(copy);
+        if (!next.Remove(item.id, item.quantity)) return false;
+    }
+    if (!next.ConfigureGear(equipped & ~bit)) return false;
+    *this = std::move(next);
+    equipped &= ~bit;
+    removed = std::move(contents);
+    return true;
+}
+
 bool Inventory::SlotAllowed(ItemType type, int slot) const
 {
     if (slot < 0) return !storage && ((slot==-1 || slot==-2) ? type==ItemType::Rifle : slot==-3 && type==ItemType::Pistol);

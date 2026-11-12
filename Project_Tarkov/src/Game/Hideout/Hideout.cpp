@@ -1,4 +1,7 @@
 #include "Hideout.h"
+#include "../Inventory/InventoryCommands.h"
+#include "../Character/Player.h"
+#include <cmath>
 #include "../../Core/RuntimePaths.h"
 #include <algorithm>
 #include <filesystem>
@@ -100,16 +103,88 @@ bool Hideout::SellFurnitureItem(int room, HideoutFurniture furniture, StackId id
     return true;
 }
 
+bool Hideout::ConsolidateEquipmentStorage()
+{
+    auto nextStorage = storage;
+    for (int room=0; room<HideoutRoomCount; ++room)
+        for (auto kind : {HideoutFurniture::Armory, HideoutFurniture::Wardrobe})
+            for (auto item : FurnitureStorageAt(room,kind).Items()) {
+                item.slot=-100;
+                while (!nextStorage.TryAdd(item))
+                    if (!nextStorage.SetSlotCapacity(nextStorage.SlotCapacity()+10)) return false;
+            }
+    storage=std::move(nextStorage);
+    for (int room=0; room<HideoutRoomCount; ++room)
+        for (auto kind : {HideoutFurniture::Armory, HideoutFurniture::Wardrobe}) {
+            auto& retired=FurnitureStorageAt(room,kind);
+            retired=Inventory{};
+            retired.SetSlotCapacity(80);
+        }
+    return true;
+}
+
+bool Hideout::DropToFloor(const InventoryCommands::Command& command, const glm::vec3& position, const CollisionWorld& world)
+{
+    if (!ready || command.action!=InventoryCommands::Action::Move) return false;
+    auto next=*this;
+    std::vector<ItemStack> dropped;
+    if (command.item.source==2 && command.item.id==static_cast<StackId>(ClothingSlot(ItemType::Backpack)+1)) {
+        if (!next.loadout.DetachBackpack(next.clothingMask,dropped)) return false;
+    } else if (command.item.source==0) {
+        const auto* item=next.loadout.Find(command.item.id);
+        if (!item) return false;
+        dropped.push_back(*item);
+        next.loadout.Remove(item->id,item->quantity);
+    } else return false;
+    for (const auto& item:dropped)
+        if (!next.floorLoot.DropNear(position,item,world)) {
+            message="아이템을 내려놓을 바닥 공간이 없습니다.";
+            return false;
+        }
+    if (!next.Save()) { message=next.message; return false; }
+    *this=std::move(next);
+    message="아이템을 바닥에 내려놓았습니다. 바라보고 F로 회수하세요.";
+    return true;
+}
+
+bool Hideout::TakeFromFloor(const InventoryCommands::Command& command, Player& player, const CollisionWorld& world)
+{
+    if (!ready || command.item.source!=3) return false;
+    auto next=*this;
+    auto candidate=player;
+    candidate.GetInventory()=loadout;
+    candidate.clothingMask=clothingMask;
+    candidate.appearance=appearance;
+    candidate.vitals=vitals;
+    bool taken=false;
+    if (command.action==InventoryCommands::Action::Move && command.destination==0)
+        taken=next.floorLoot.TakeNearby(command.item.id,candidate,world,command.slot);
+    else if (command.action==InventoryCommands::Action::Use)
+        taken=next.floorLoot.EquipNearby(command.item.id,candidate,world);
+    else if (command.action==InventoryCommands::Action::Move && command.destination==2)
+        taken=next.floorLoot.EquipNearby(command.item.id,candidate,world,command.slot);
+    if (!taken) { message="줍기/착용 불가: 거리, 휴대 공간과 장비 종류를 확인하세요."; return false; }
+    next.loadout=candidate.GetInventory();
+    next.clothingMask=candidate.clothingMask;
+    if (!next.Save()) { message=next.message; return false; }
+    *this=std::move(next);
+    player.GetInventory()=loadout;
+    player.clothingMask=clothingMask;
+    message="바닥 아이템을 회수했습니다.";
+    return true;
+}
+
 bool Hideout::Save(bool requireStashSpace)
 {
     if (!ready) { message = "프로필을 사용할 수 없습니다. 저장 파일을 복구한 뒤 다시 실행하세요."; return false; }
+    if (!ConsolidateEquipmentStorage()) { message="기존 장비를 케이스 창고로 옮길 수 없습니다."; return false; }
     RefreshWeapons();
     (void)requireStashSpace;
     std::error_code error;
     std::filesystem::create_directories(RuntimePaths::SaveRoot(), error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out(RuntimePaths::Save("hideout.tmp"), std::ios::trunc);
-    out << "HIDEOUT 19\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
+    out << "HIDEOUT 20\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
         << rubles << ' ' << rescuedSurvivors << ' ' << rescuedRoomMask << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
@@ -122,6 +197,13 @@ bool Hideout::Save(bool requireStashSpace)
     for (const auto& furniture : furnitureStorage) writeInventory(furniture);
     for (float value : vitals.BodyHealth()) out << value << ' ';
     out << vitals.Hydration() << ' ' << vitals.Stamina() << '\n';
+    out << floorLoot.WorldItems().size() << '\n';
+    for (const auto& dropped:floorLoot.WorldItems()) {
+        const auto& item=dropped.stack;
+        out << static_cast<int>(item.type) << ' ' << item.quantity << ' ' << item.rounds << ' '
+            << item.magazineInserted << ' ' << static_cast<int>(item.fireMode) << ' '
+            << dropped.position.x << ' ' << dropped.position.y << ' ' << dropped.position.z << '\n';
+    }
     out << "END\n";
     out.flush();
     const bool written = static_cast<bool>(out);
@@ -227,7 +309,7 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=19)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=20)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
@@ -326,6 +408,27 @@ void Hideout::Load()
         float hydration=0,stamina=0;
         for (auto& value:body) valid=static_cast<bool>(in >> value) && valid;
         valid=static_cast<bool>(in >> hydration >> stamina) && valid;
+        if (valid && savedVersion>=20) {
+            int count=0;
+            valid=static_cast<bool>(in >> count) && count>=0 && count<=1000000;
+            for (int i=0;valid && i<count;++i) {
+                int type=-1,inserted=0,mode=0;
+                ItemStack item{ItemType::Bandage,0};
+                glm::vec3 position{};
+                valid=static_cast<bool>(in >> type >> item.quantity >> item.rounds >> inserted >> mode
+                    >> position.x >> position.y >> position.z) && type>=0 && type<ItemTypeCount &&
+                    inserted>=0 && inserted<=1 && mode>=0 && mode<=2 &&
+                    std::isfinite(position.x) && std::isfinite(position.y) && std::isfinite(position.z);
+                if (!valid) break;
+                item.type=static_cast<ItemType>(type);
+                item.magazineInserted=inserted!=0;
+                item.fireMode=static_cast<FireMode>(mode);
+                Inventory check;
+                check.SetSlotCapacity(80);
+                valid=item.quantity>0 && item.quantity<=GetItemDefinition(item.type).maxStack && check.TryAdd(item);
+                if (valid) next.floorLoot.Spawn(position,item);
+            }
+        }
         std::string end,extra;
         valid=valid && next.vitals.Restore(body,hydration,stamina) && static_cast<bool>(in >> end) && end=="END";
         if (in >> extra) valid=false;
@@ -352,7 +455,7 @@ void Hideout::Load()
             return;
         }
         in.close();
-        if (savedVersion < 18 && !next.Save()) {
+        if (savedVersion < 20 && !next.Save()) {
             message=next.message;
             return;
         }
@@ -495,11 +598,11 @@ bool Hideout::DrinkWater(StackId id, bool fromStash)
     return true;
 }
 
-bool Hideout::HealBodyPart(BodyPart part)
+bool Hideout::HealBodyPart(BodyPart part, bool fromStash)
 {
     if (!ready) return false;
     auto before = *this;
-    Inventory& source = storage.Count(ItemType::Bandage) ? storage : loadout;
+    Inventory& source = fromStash && storage.Count(ItemType::Bandage) ? storage : loadout;
     if (!source.Count(ItemType::Bandage) || !vitals.Heal(part)) { message = "붕대가 없거나 치료할 필요가 없습니다."; return false; }
     source.Take(ItemType::Bandage, 1);
     if (!Save()) { auto failure = message; *this = std::move(before); message = failure; return false; }

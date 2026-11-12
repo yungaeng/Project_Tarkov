@@ -2,6 +2,7 @@
 #include "../Character/PlayerAppearance.h"
 #include "../Inventory/Inventory.h"
 #include "../Character/PlayerVitals.h"
+#include "../Combat/LootSystem.h"
 #include <array>
 #include <cstdint>
 #include <string>
@@ -27,12 +28,15 @@ public:
     int rifles = 0;
     Inventory loadout;
     Inventory storage;
+    LootSystem floorLoot;
     static constexpr int HideoutRoomCount = 4;
     static constexpr int InitialRoomCount = 2;
     static constexpr int MaxRescuedSurvivors = HideoutRoomCount-InitialRoomCount;
     int rescuedSurvivors = 0;
     std::uint32_t rescuedRoomMask = 0;
     static constexpr int FurnitureCount = static_cast<int>(HideoutFurniture::Count);
+    // Interaction ID only; keep the persisted furniture array unchanged.
+    static constexpr int PelicanStorage = FurnitureCount;
     std::array<Inventory, HideoutRoomCount * FurnitureCount> furnitureStorage;
     static constexpr int FurnitureStorageIndex(int room, HideoutFurniture furniture) {
         return room * FurnitureCount + static_cast<int>(furniture);
@@ -66,6 +70,9 @@ public:
         return count;
     }
     bool TransferFurnitureItem(int room, HideoutFurniture furniture, StackId id, bool store, int slot = -100);
+    bool ConsolidateEquipmentStorage();
+    bool DropToFloor(const InventoryCommands::Command& command, const glm::vec3& position, const CollisionWorld& world);
+    bool TakeFromFloor(const InventoryCommands::Command& command, Player& player, const CollisionWorld& world);
     bool SellFurnitureItem(int room, HideoutFurniture furniture, StackId id);
     bool DrinkWater(StackId id = 0, bool fromStash = true);
     void RefreshWeapons();
@@ -78,7 +85,7 @@ public:
     bool ChangeAppearance(PlayerAppearance next, int releasedSurvivorRoom = -1);
     bool Save(bool requireStashSpace = false);
     void ApplyInventoryCommand(const InventoryCommands::Command& command, int storageRoom = -1, int storageFurniture = -1);
-    bool HealBodyPart(BodyPart part);
+    bool HealBodyPart(BodyPart part, bool fromStash = true);
     bool AutoArrangeStash(int room = -1, int furniture = -1);
     bool SellStashItem(StackId id);
     bool Depart();

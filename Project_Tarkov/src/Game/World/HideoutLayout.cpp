@@ -10,7 +10,7 @@
 
 namespace {
 struct Part { WorldGeometry::Block block; bool solid=false, blanket=false, wall=false; };
-struct Placement { std::string name; float x=0,z=0,radius=0; int storage=-1; std::vector<Part> parts; };
+struct Placement { std::string name; float x=0,z=0,radius=0; int storage=-1,room=-1; std::vector<Part> parts; };
 bool Finite(glm::vec3 v) { return std::isfinite(v.x)&&std::isfinite(v.y)&&std::isfinite(v.z); }
 const std::vector<Placement>& Placements() {
     static const auto placements=[] {
@@ -24,8 +24,11 @@ const std::vector<Placement>& Placements() {
             if(placement.name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")!=std::string::npos ||
                 !(row>>placement.x>>placement.z>>placement.storage>>placement.radius) ||
                 !std::isfinite(placement.x)||!std::isfinite(placement.z)||!std::isfinite(placement.radius)||
-                placement.radius<0 || placement.storage < -1 || placement.storage>3)
+                placement.radius<0 || placement.storage < -1 || placement.storage>4)
                 throw std::runtime_error("Invalid hideout placement: "+line);
+            row >> std::ws;
+            if (!row.eof() && (!(row >> placement.room) || placement.room < -1 || placement.room > 3))
+                throw std::runtime_error("Invalid hideout room: "+line);
             for(const auto& previous:result)
                 if(previous.name==placement.name || (placement.storage>=0 && previous.storage==placement.storage))
                     throw std::runtime_error("Duplicate hideout placement: "+placement.name);
@@ -50,7 +53,7 @@ const std::vector<Placement>& Placements() {
             if(placement.parts.empty()) throw std::runtime_error("Empty hideout prefab: "+placement.name);
             result.push_back(std::move(placement));
         }
-        for(const auto* required:{"medicalTable","weaponRack","wardrobe","refrigerator","bed","chair"}) {
+        for(const auto* required:{"medicalTable","pelicanCase","refrigerator","bed","chair"}) {
             if(std::none_of(result.begin(),result.end(),[&](const auto& p){return p.name==required;}))
                 throw std::runtime_error(std::string("Missing hideout placement: ")+required);
         }
@@ -67,6 +70,7 @@ const Placement& Find(const std::string& name) {
 namespace HideoutLayout {
 void AppendFurniture(int room,bool blanket,CollisionWorld& world,std::vector<WorldGeometry::Block>& blocks) {
     for(const auto& placement:Placements()) for(const auto& part:placement.parts) {
+        if(placement.room>=0 && placement.room!=room) continue;
         if(part.blanket&&!blanket) continue;
         auto block=part.block;
         block.center+=glm::vec3(room*6.f+placement.x,0,part.wall?0:placement.z);
@@ -77,8 +81,9 @@ void AppendFurniture(int room,bool blanket,CollisionWorld& world,std::vector<Wor
 int NearestStorage(int room,const glm::vec3& p) {
     int result=-1; float nearest=(std::numeric_limits<float>::max)();
     for(const auto& placement:Placements()) {
-        if(placement.storage<0) continue;
+        if(placement.storage<0 || (placement.room>=0 && placement.room!=room)) continue;
         const auto delta=p-Anchor(room,placement.name);
+        if(placement.name=="pelicanCase" && delta.z<.4f) continue;
         const float distance=delta.x*delta.x+delta.z*delta.z;
         if(distance<placement.radius*placement.radius && distance<nearest) {nearest=distance;result=placement.storage;}
     }

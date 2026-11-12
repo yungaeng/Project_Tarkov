@@ -95,7 +95,6 @@
     <ClCompile Include="Game\World\IndustrialLayout.cpp"><Filter>Game\World</Filter></ClCompile>
     <ClCompile Include="Game\World\IndustrialZone.cpp"><Filter>Game\World</Filter></ClCompile>
     <ClInclude Include="Game\World\IndustrialZone.h"><Filter>Game\World</Filter></ClInclude>
-    <ClInclude Include="Graphics\AssimpHelper.h"><Filter>Graphics</Filter></ClInclude>
     <ClCompile Include="Graphics\Camera.cpp"><Filter>Graphics</Filter></ClCompile>
     <ClInclude Include="Graphics\Camera.h"><Filter>Graphics</Filter></ClInclude>
     <ClCompile Include="Graphics\Mesh.cpp"><Filter>Graphics</Filter></ClCompile>

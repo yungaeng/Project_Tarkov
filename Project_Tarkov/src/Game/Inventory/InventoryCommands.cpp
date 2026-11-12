@@ -11,6 +11,20 @@ bool Execute(Command command, Inventory& carried, Inventory* external, std::uint
         const auto type = ClothingType(static_cast<int>(command.item.id)-1,male);
         const auto bit = ClothingBit(type);
         if (!(clothing & bit)) return false;
+        if (type == ItemType::Backpack && command.destination == 1 && external) {
+            auto next = carried;
+            auto nextExternal = *external;
+            auto nextClothing = clothing;
+            std::vector<ItemStack> removed;
+            if (!next.DetachBackpack(nextClothing, removed)) return false;
+            removed.front().slot = command.slot;
+            for (auto item : removed)
+                if (!nextExternal.TryAdd(item)) return false;
+            carried = std::move(next);
+            *external = std::move(nextExternal);
+            clothing = nextClothing;
+            return true;
+        }
         auto next = carried;
         if (!next.ConfigureGear(clothing & ~bit)) return false;
         ItemStack removed{type,1}; removed.slot=command.slot;

@@ -3,6 +3,7 @@
 #include "../World/IndustrialDetails.h"
 #include "../World/HideoutMap.h"
 #include "../World/HideoutLayout.h"
+#include "../Inventory/InventoryCommands.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -250,7 +251,7 @@ void RaidScene::UpdateHideout(float dt)
         if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
             hideoutExitMenu = true;
             Input::SetCursorCaptured(false);
-        } else if (Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_I)) {
+        } else if (Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_TAB)) {
             hideoutPanel = false;
             hideoutStoragePanel = false;
             player->appearance = hideout.appearance;
@@ -266,7 +267,7 @@ void RaidScene::UpdateHideout(float dt)
         }
         return;
     }
-    if (Input::IsFocused() && Input::GetKeyDown(GLFW_KEY_I)) {
+    if (Input::IsFocused() && Input::GetKeyDown(GLFW_KEY_TAB)) {
         hideoutPanel = true;
         hideoutStoragePanel = false;
         hud.SetHideoutHealthTab(false);
@@ -324,6 +325,14 @@ void RaidScene::UpdateHideout(float dt)
         hideoutCameraModelHidden = true;
     else if (hideoutCameraModelHidden && hideoutCameraBlend <= .02f)
         hideoutCameraModelHidden = false;
+    player->GetInventory()=hideout.loadout;
+    player->clothingMask=hideout.clothingMask;
+    hideout.floorLoot.Update(dt,*player,camera,collisionWorld,Input::IsFocused(),false);
+    if (!hideoutPrompt && hideout.floorLoot.Target() && Input::GetKeyDown(GLFW_KEY_F)) {
+        const auto id=hideout.floorLoot.Target()->stack.id;
+        hideout.TakeFromFloor({InventoryCommands::Action::Move,{3,id},0},*player,collisionWorld);
+        return;
+    }
     int zone = 0;
     if (p.x < -.4f && p.z > .3f) zone = 1;
     if (zone && zone != hideoutZone) {
@@ -354,7 +363,7 @@ void RaidScene::UpdateHideout(float dt)
         }
     }
     hideoutFurniture = -1;
-    if (!nearSwitchNpc && p.x>.2f && p.x<roomRight && p.z < .25f && p.z > -8.f) {
+    if (p.x>.2f && p.x<roomRight && p.z < .25f && p.z > -8.f) {
         hideoutFurnitureRoom = (std::min)(Hideout::HideoutRoomCount-1,
             static_cast<int>(p.x/6.f));
         hideoutFurniture=HideoutLayout::NearestStorage(hideoutFurnitureRoom,p);
@@ -376,7 +385,7 @@ void RaidScene::UpdateHideout(float dt)
         BeginHideoutBedPoseTest(hideoutBedTestRoom);
         return;
     }
-    if (!hideoutPrompt && nearSwitchNpc && Input::GetKeyDown(GLFW_KEY_F)) {
+    if (!hideoutPrompt && nearSwitchNpc && hideoutFurniture<0 && Input::GetKeyDown(GLFW_KEY_F)) {
         hideoutPrompt = 2;
         hideoutPromptAppearance=interactionAppearance;
         hideoutPromptRoom=interactionRoom;
@@ -398,6 +407,7 @@ void RaidScene::RenderHideoutMap(int width, int height)
         if (!Renderer::IsVisible(batch.low,batch.high,glm::mat4(1))) continue;
         Renderer::Draw(shader,batch.mesh,camera,glm::mat4(1),float(width),float(height),batch.color);
     }
+    hideout.floorLoot.Render(shader,cubeMesh,camera,float(width),float(height));
     if (!hideoutCameraModelHidden)
         playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
     hideoutSwitchNpcVisual.Render(hideoutSwitchNpc,shader,camera,float(width),float(height),glm::vec3(1),false);
@@ -407,14 +417,14 @@ void RaidScene::RenderHideoutMap(int width, int height)
     if (hideoutStoragePanel) {
         const bool wasStoragePanelOpen=hideoutStoragePanel;
         hud.RenderHideoutStorage(hideout,hideoutFurnitureRoom,hideoutFurniture,
-            *player,playerVisual,shader,hideoutStoragePanel,hideoutExitMenu);
+            *player,playerVisual,shader,hideoutStoragePanel,hideoutExitMenu,collisionWorld);
         if (wasStoragePanelOpen&&!hideoutStoragePanel)
             Input::SetCursorCaptured(true);
         return;
     }
     if (hideoutPanel) {
         const bool wasExitMenuOpen=hideoutExitMenu;
-        hud.RenderHideout(hideout,*player,playerVisual,shader,true,&hideoutExitMenu);
+        hud.RenderHideout(hideout,*player,playerVisual,shader,true,&hideoutExitMenu,-1,-1,&collisionWorld);
         if (wasExitMenuOpen && !hideoutExitMenu)
             Input::SetCursorCaptured(false);
         return;
@@ -422,6 +432,18 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    if (!hideoutPrompt && !hideoutBedPoseActive && !hideoutExitMenu) {
+        ImGui::SetNextWindowPos({width*.5f,height*.86f},ImGuiCond_Always,{.5f,0.f});
+        ImGui::Begin("은신처 보관함 안내",nullptr,ImGuiWindowFlags_NoDecoration|
+            ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_AlwaysAutoResize);
+        if (const auto* item=hideout.floorLoot.Target())
+            ImGui::Text("[F] %s 회수",GetItemDefinition(item->stack.type).name);
+        else if (hideoutFurniture==Hideout::PelicanStorage)
+            ImGui::TextUnformatted("[F] 펠리컨 케이스 열기 · 창고");
+        else if (hideoutFurniture>=0)
+            ImGui::TextUnformatted("[F] 보관함 열기");
+        ImGui::End();
+    }
     if (hideoutBedPoseActive||hideoutBedTestPrompt) {
         ImGui::SetNextWindowPos({width*.5f,height*.76f},ImGuiCond_Always,{.5f,0.f});
         ImGui::Begin("침대 자세 테스트",nullptr,ImGuiWindowFlags_NoDecoration|

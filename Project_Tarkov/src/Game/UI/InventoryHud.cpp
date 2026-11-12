@@ -48,7 +48,7 @@ void RaidHud::RenderInventoryPanel(Player& player, LootSystem& loot, InventoryAc
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(.30f,.31f,.23f,.8f));
         ImGui::PushStyleColor(ImGuiCol_Border,ImVec4(.28f,.29f,.24f,.8f));
         InventoryUi::PanelOpacity=corpse?.65f:1.f;
-        ImGui::Begin("인벤토리 · I / ESC 닫기",nullptr,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+        ImGui::Begin("인벤토리 · Tab / ESC 닫기",nullptr,ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
         ImGui::BeginDisabled(!Input::IsFocused() || !player.vitals.Alive());
         const float width=(ImGui::GetContentRegionAvail().x-16)/3;
         const float height=ImGui::GetContentRegionAvail().y-36;

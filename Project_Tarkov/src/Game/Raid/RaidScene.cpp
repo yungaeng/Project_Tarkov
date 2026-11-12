@@ -119,7 +119,7 @@ void RaidScene::Update(float dt)
         corpseInteraction=true;
     } else if (lootingCorpse>=0 && corpseLootPanelOpen &&
         (closeLootRequested || !Input::IsFocused() || Input::GetKeyDown(GLFW_KEY_ESCAPE) ||
-         Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_I))) {
+         Input::GetKeyDown(GLFW_KEY_F) || Input::GetKeyDown(GLFW_KEY_TAB))) {
         CloseCorpseLoot();
         corpseInteraction=true;
     }

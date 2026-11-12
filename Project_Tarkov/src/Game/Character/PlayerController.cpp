@@ -6,7 +6,7 @@
 
 void PlayerController::UpdateInterface()
 {
-    if (Input::GetKeyDown(GLFW_KEY_I))
+    if (Input::GetKeyDown(GLFW_KEY_TAB))
     {
         inventoryOpen = !inventoryOpen;
         Input::SetCursorCaptured(!inventoryOpen);

@@ -84,6 +84,7 @@ public:
     bool SetSlotCapacity(int capacity);
     bool EquipClothing(StackId id, std::uint32_t& equipped);
     bool UnequipClothing(ItemType type, std::uint32_t& equipped);
+    bool DetachBackpack(std::uint32_t& equipped, std::vector<ItemStack>& removed);
     const ItemStack* At(int slot) const;
     const ItemStack* Covering(int slot) const;
     int Columns(int slot) const { return storage ? 10 : slot < 12 ? 6 : slot < 18 ? 3 : 4; }

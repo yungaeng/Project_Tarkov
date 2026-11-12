@@ -24,6 +24,7 @@ public:
         bool inputEnabled, bool pickupPressed);
     void Render(Shader& shader, Mesh& mesh, Camera& camera, float width, float height);
     const WorldItem* Target() const;
+    const std::vector<WorldItem>& WorldItems() const { return items; }
     const std::string& Message() const { return message; }
     void Reset();
     bool Drop(Player& player, StackId id, bool all, const Camera& camera, const CollisionWorld& world);
