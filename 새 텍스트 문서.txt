@@ -1251,3 +1251,267 @@ if (!raidState_.isScavRun)
     hideout_.MutableTradingSystem().OnRaidPositionUpdated(player_.GetPosition().x, player_.GetPosition().z);
 }
 5.4 세이브 포맷 확장 (HIDEOUT 21) 및 에셋 등록AssetCatalog.h: trader_weapon → "UI/trader_weapon.png", trader_medical → "UI/trader_medical.png", trader_gear → "UI/trader_gear.png"를 등록합니다. 기존 CopyRuntimeAssets는 Assets/UI/ 아래 PNG를 복사하므로 배포 경로에도 자동 포함됩니다.   Hideout.cpp: 저장 헤더를 HIDEOUT 21로 올리고, END 마커 직전에 상인 3명의 우호도·창고 항목과 임무별 상태·카운트를 직렬화합니다. version <= 20 세이브를 읽을 때는 tradingSystem_.InitializeDefaults() 상태를 유지해 기존 프로필과 호환합니다.   Project_Tarkov.vcxproj / .filters: TradingTypes.h, TradingSystem.h/.cpp, TradingHud.h/.cpp 5개 파일을 컴파일 및 필터 목록에 추가합니다.   코드 적용 중 기존 Hideout이나 InventoryUi의 실제 멤버 함수 시그니처(예: ItemStack, GridItemPlacement, GetUiTexture 이름)가 약간 다르면 해당 헤더 선언부만 붙여주시면 즉시 시그니처를 맞춰 드리겠습니다.
+
+
+요청하신 5가지 규칙을 기존 Hideout 저장 구조, HideoutScene NPC 상호작용, CombatSystem, 그리고 결과 화면(ResultHud)에 통합하기 위한 구조와 C++ 구현 코드입니다.   1. 캐릭터 정의 확장 및 SCAV 출격 잠금 상태 저장 (Hideout)현재 남캐(PMC)·여캐(SCAV) 2종으로 연결된 구조를 PMC 1명 + 해금형 SCAV 3명(총 4종) 기준으로 확장하고, 재시작으로도 잠금이 풀리지 않도록 Hideout 저장 프로필(Saves/hideout.txt)에 잠금 상태를 기록합니다.   C++// Project_Tarkov/src/Game/Hideout/HideoutTypes.h (또는 Hideout.h 상단)
+#pragma once
+#include <array>
+#include <string>
+
+enum class PlayableCharacterId : int
+{
+    PmcMain = 0, // 주인공 PMC
+    Scav1   = 1, // 구조 해금 SCAV 1 (기존 여캐)
+    Scav2   = 2, // 구조 해금 SCAV 2
+    Scav3   = 3  // 구조 해금 SCAV 3
+};
+
+constexpr int kMaxPlayableCharacters = 4;
+constexpr int kMaxScavCharacters = 3;
+
+struct CharacterProfileState
+{
+    PlayableCharacterId id = PlayableCharacterId::PmcMain;
+    std::string displayName;
+    bool unlocked = false;         // PMC는 기본 true, SCAV 1~3은 구조 탈출 시 true
+    bool deployLocked = false;     // SCAV 출격 후 true -> PMC 출격 시 false로 일괄 해제
+    int assignedRoom = -1;         // 은신처 배치 방 번호 (1~4)
+};
+Hideout::Depart() 출격 잠금·해제 규칙SCAV 출격 시: 해당 SCAV의 deployLocked가 true이면 출격을 차단합니다. 출격이 승인되면 기존처럼 개인 장비를 일반 창고에 자동 보관한 뒤, 해당 SCAV의 deployLocked = true를 기록하고 디스크에 저장합니다.   PMC 출격 시: Depart()가 성사되는 즉시 모든 SCAV(Scav1~Scav3)의 deployLocked를 false로 초기화하고 저장합니다. 출격 시점에 이미 해제 및 저장되므로 PMC 레이드 결과(탈출 성공, 사망, MIA, 강제 종료)와 무관하게 모든 SCAV의 잠금이 풀립니다.   C++// Hideout.cpp — Depart() 내부 분기
+bool Hideout::Depart(PlayableCharacterId selectedChar, std::string& outError)
+{
+    const int idx = static_cast<int>(selectedChar);
+    if (idx < 0 || idx >= kMaxPlayableCharacters || !characters_[idx].unlocked)
+    {
+        outError = "선택한 캐릭터를 사용할 수 없습니다.";
+        return false;
+    }
+
+    const bool isScav = (selectedChar != PlayableCharacterId::PmcMain);
+
+    // 1. SCAV 출격 잠금 검사
+    if (isScav && characters_[idx].deployLocked)
+    {
+        outError = "이 SCAV는 대기 중입니다. PMC로 한 번 출격해야 다시 출격할 수 있습니다.";
+        return false;
+    }
+
+    // 2. 기존 생존 상태 및 SCAV 개인 장비 자동 보관 처리 (복사본 시뮬레이션)
+    // ... (기존 Hideout::Depart의 창고 보관 및 무작위 장비 구성 로직 유지) ...
+
+    // 3. 출격 유형에 따른 SCAV 잠금 상태 갱신
+    auto backupCharacters = characters_;
+    if (isScav)
+    {
+        // 해당 SCAV만 출격 잠금
+        characters_[idx].deployLocked = true;
+    }
+    else
+    {
+        // PMC 출격 시 결과에 상관없이 모든 SCAV 출격 잠금 해제
+        for (int s = 1; s < kMaxPlayableCharacters; ++s)
+        {
+            characters_[s].deployLocked = false;
+        }
+    }
+
+    if (!Save())
+    {
+        characters_ = backupCharacters; // 저장 실패 시 롤백
+        outError = "출격 상태 저장에 실패했습니다.";
+        return false;
+    }
+
+    return true;
+}
+2. 은신처 캐릭터 대화 및 개인 미션 수주 (HideoutScene · HideoutHud)현재 은신처 방의 NPC에게 F키를 누르면 곧바로 캐릭터 전환 확인 창이 열립니다. 이를 캐릭터 대화 창으로 변경하여 대사를 출력하고, [개인 미션 확인/수락]과 [이 캐릭터로 전환]을 선택할 수 있게 구성합니다.   C++// Project_Tarkov/src/Game/Trading/PersonalMission.h
+#pragma once
+#include <string>
+#include <vector>
+#include "Game/Hideout/HideoutTypes.h"
+#include "Game/Trading/TradingTypes.h"
+
+struct PersonalMissionDef
+{
+    int missionId = 0;
+    PlayableCharacterId ownerChar = PlayableCharacterId::Scav1;
+    std::string title;
+    std::string introDialogue;    // 수락 전 대화 대사
+    std::string activeDialogue;   // 진행 중 대화 대사
+    std::string completeDialogue; // 완료 시 대화 대사
+
+    Tarkov::Trading::QuestObjectiveType objectiveType = Tarkov::Trading::QuestObjectiveType::DeliverItem;
+    int targetItemId = -1;
+    int requiredCount = 1;
+    float targetX = 0.0f;
+    float targetZ = 0.0f;
+    float targetRadius = 10.0f;
+
+    int rewardRubles = 0;
+    int rewardItemId = -1;
+    int rewardItemCount = 0;
+};
+C++// HideoutHud.cpp — NPC F키 상호작용 시 열리는 대화 UI
+void HideoutHud::RenderCharacterDialogue(Hideout& hideout, PlayableCharacterId targetChar, bool& isOpen)
+{
+    if (!isOpen) return;
+
+    const auto& charState = hideout.GetCharacterState(targetChar);
+    auto* mission = hideout.FindActiveOrNextPersonalMission(targetChar); // 미션 정의 + 진행도 조회
+
+    ImGui::SetNextWindowSize(ImVec2(520.0f, 320.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::Begin(charState.displayName.c_str(), &isOpen, ImGuiWindowFlags_NoCollapse))
+    {
+        // 1. 캐릭터 대사 영역
+        if (mission)
+        {
+            ImGui::TextColored(ImVec4(0.85f, 0.90f, 0.75f, 1.0f), "[개인 미션: %s]", mission->def.title.c_str());
+            ImGui::Spacing();
+            if (mission->progress.status == Tarkov::Trading::QuestStatus::Available)
+                ImGui::TextWrapped("\"%s\"", mission->def.introDialogue.c_str());
+            else if (mission->progress.status == Tarkov::Trading::QuestStatus::Active)
+                ImGui::TextWrapped("\"%s\"", mission->def.activeDialogue.c_str());
+            else if (mission->progress.status == Tarkov::Trading::QuestStatus::ReadyToComplete)
+                ImGui::TextWrapped("\"%s\"", mission->def.completeDialogue.c_str());
+            else
+                ImGui::TextWrapped("\"고마워. 덕분에 한숨 돌렸어.\"");
+
+            ImGui::Spacing();
+            ImGui::Text("진행도: %d / %d", mission->progress.currentCount, mission->def.requiredCount);
+        }
+        else
+        {
+            ImGui::TextWrapped("\"필요한 게 있으면 언제든 말해.\"");
+        }
+
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // 2. 개인 미션 수락 / 납품 / 보상 수령 버튼
+        if (mission)
+        {
+            using Tarkov::Trading::QuestStatus;
+            if (mission->progress.status == QuestStatus::Available)
+            {
+                if (ImGui::Button("개인 미션 수락", ImVec2(160.0f, 32.0f)))
+                    hideout.AcceptPersonalMission(mission->def.missionId);
+            }
+            else if (mission->progress.status == QuestStatus::Active &&
+                     mission->def.objectiveType == Tarkov::Trading::QuestObjectiveType::DeliverItem)
+            {
+                if (ImGui::Button("미션 물품 건네주기", ImVec2(160.0f, 32.0f)))
+                    hideout.DeliverPersonalMissionItem(mission->def.missionId);
+            }
+            else if (mission->progress.status == QuestStatus::ReadyToComplete)
+            {
+                if (ImGui::Button("미션 완료 및 보상 받기", ImVec2(180.0f, 32.0f)))
+                    hideout.CompletePersonalMission(mission->def.missionId);
+            }
+        }
+
+        ImGui::Spacing();
+
+        // 3. 캐릭터 전환 버튼 (SCAV 출격 잠금 상태 안내 포함)
+        if (charState.deployLocked)
+        {
+            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.40f, 1.0f),
+                "상태: 출격 잠금 (PMC로 출격하면 해제됩니다)");
+        }
+
+        if (ImGui::Button("이 캐릭터로 조작 전환", ImVec2(180.0f, 32.0f)))
+        {
+            hideout.SwitchActiveCharacter(targetChar);
+            isOpen = false;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("대화 종료 (Esc/F)", ImVec2(140.0f, 32.0f)))
+        {
+            isOpen = false;
+        }
+    }
+    ImGui::End();
+}
+3. SCAV 출격 시 구조 캐릭터 스폰 및 구조 차단 (RaidScene · CombatSystem)현재 CombatSystem은 출격 시 구조 가능 인원이 남아 있으면 무장하지 않은 여성 NPC를 생성합니다. isScavRun 플래그를 전달해 SCAV 출격일 때는 스폰 자체를 건너뛰고 모든 구조 상호작용·동행 탈출 판정을 비활성화합니다.   C++// CombatSystem.cpp — 레이드 초기화 시 구조 대상 스폰 제어
+void CombatSystem::InitializeRaid(const RaidStartParams& params)
+{
+    // ... (기존 적 AI 5명 스폰 및 초기화) ...
+
+    rescueTarget_.reset();
+
+    // SCAV 출격 시에는 구조 캐릭터 스폰 잠금 및 구조 불가
+    if (params.isScavRun)
+    {
+        return;
+    }
+
+    // PMC 출격이고 아직 해금되지 않은 구조 캐릭터(최대 3명)가 남아 있을 때만 스폰
+    if (params.remainingRescueCount > 0)
+    {
+        SpawnRescueTarget(params.nextRescueCharacterId);
+    }
+}
+추가로 RaidScene.cpp의 F키 상호작용과 RaidHud.cpp의 우측 상단 [테스트] 표시도 if (!raidState_.isScavRun) 조건으로 감싸 SCAV 레이드에서는 구조 프롬프트가 뜨지 않도록 막습니다.   4. 사망 시 탈출 결과 UI 띄우기 및 "탈출실패" 표시 (RaidScene · ResultHud)현재 코드는 Extracted(탈출 성공)일 때만 별도 성공 결과 장면으로 이동하고, Dead(사망)일 때는 사망 애니메이션과 별도의 실패 HUD를 띄웁니다. 이를 통합하여 사망 시에도 탈출 결과 UI(ResultHud)를 띄우고 상단 제목을 "탈출실패"로 표시합니다.   C++// RaidResultData.h (또는 RaidState.h)
+enum class RaidOutcome
+{
+    Extracted, // 탈출 성공
+    Dead,      // 사망 -> UI 표기: "탈출실패"
+    Missing    // 시간 초과(MIA) -> UI 표기: "탈출실패"
+};
+C++// RaidScene.cpp — 사망 판정 처리 변경
+void RaidScene::OnPlayerDied()
+{
+    if (raidFinished_)
+        return;
+
+    raidFinished_ = true;
+
+    // 1. 프로필 정산: 휴대품/출전 장비 제거, 창고 보존, 상태 저장 (기존 Dead 정산 규칙 유지)
+    RaidResultData result = BuildRaidResult(RaidOutcome::Dead);
+    hideout_.ApplyRaidFailure(result); // 사망 상태 저장 (은신처 복귀 시 치료/복구 흐름 연결)
+
+    // 2. 기존 별도 실패 HUD 대신 통합 탈출 결과 장면(ResultHud)으로 전환
+    OpenRaidResultScene(result);
+}
+C++// ResultHud.cpp — 결과 상단 헤더 및 패널 분기
+void ResultHud::Render(const RaidResultData& result, Hideout& hideout)
+{
+    // ... (기존 결과 화면 윈도우 설정) ...
+
+    const bool isSuccess = (result.outcome == RaidOutcome::Extracted);
+
+    if (isSuccess)
+    {
+        ImGui::TextColored(ImVec4(0.40f, 0.90f, 0.55f, 1.0f), "탈출 성공");
+    }
+    else
+    {
+        // 사망(Dead) 또는 MIA 시 탈출 UI에 "탈출실패" 표시
+        ImGui::TextColored(ImVec4(0.95f, 0.30f, 0.30f, 1.0f), "탈출실패");
+    }
+
+    ImGui::Separator();
+    ImGui::Text("생존/교전 시간: %02d:%02d", result.elapsedSeconds / 60, result.elapsedSeconds % 60);
+
+    // 처치 기록 목록은 성공/실패 모두 표시
+    RenderKillLogTable(result.kills);
+
+    if (isSuccess)
+    {
+        // 기존 회수 장비 캐릭터 미리보기 및 새로 획득한 장비 목록 표시
+        RenderExtractedGearPreview(result);
+    }
+    else
+    {
+        // 사망 시 손실된 출전 장비 목록 안내 (창고 보관품은 유지됨)
+        ImGui::TextColored(ImVec4(0.85f, 0.65f, 0.65f, 1.0f), "출전 장비 및 레이드 획득품을 모두 잃었습니다.");
+        RenderLostGearList(result.lostItems);
+    }
+
+    if (ImGui::Button("은신처로 복귀", ImVec2(200.0f, 40.0f)))
+    {
+        ReturnToHideout();
+    }
+}
+5. 수정·연동 체크리스트Hideout.h / Hideout.cpp: characters_[4] 배열의 unlocked, deployLocked, assignedRoom 필드를 Saves/hideout.txt 직렬화에 포함하고, Depart()에서 SCAV 잠금 및 PMC 출격 시 일괄 해제를 처리합니다.   HideoutScene.cpp / HideoutHud.cpp: 방 안의 캐릭터 NPC에게 F키를 눌렀을 때 바로 전환 확인 창을 띄우는 대신 대화 및 개인 미션 창을 먼저 띄우도록 연결합니다.   CombatSystem.cpp / RaidScene.cpp: isScavRun == true일 때 구조 대상 스폰 및 구조 상호작용을 차단합니다.   RaidScene.cpp / ResultHud.cpp: 플레이어 사망 시 RaidOutcome::Dead 결과를 담아 탈출 결과 화면으로 전환하고 제목에 "탈출실패"를 출력합니다.   해금되는 SCAV 3명의 이름·외형(모델 폴더)과 각 캐릭터의 개인 미션 목표/보상 목록을 정해주시면 해당 데이터 테이블과 세이브 직렬화 코드까지 바로 작성해 드리겠습니다.   
