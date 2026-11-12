@@ -1,0 +1,1253 @@
+현재 대화 환경에는 로컬 저장소 파일 쓰기 도구가 연결되어 있지 않고 설계 문서(ARCHITECTURE.md, IMPLEMENTED.md, PLANNED.md)만 첨부되어 있으므로, 현재 Project_Tarkov/src/ 구조에 바로 추가·컴파일할 수 있는 전체 C++17 모듈 코드와 기존 파일 연동 패치를 작성합니다.   1. 추가·수정할 파일 구성신규 생성 파일Project_Tarkov/src/Game/Trading/TradingTypes.h — 상인 3종, 6×4 중앙 대기 격자, 원위치 롤백 추적기, 임무 데이터 구조Project_Tarkov/src/Game/Trading/TradingSystem.h / TradingSystem.cpp — 드래그 이동 검증, 원위치 롤백, 원자적 거래 정산, 레이드 귀환 시 상인 창고 랜덤 리셋, 임무 수락·납품·보상 처리Project_Tarkov/src/Game/UI/TradingHud.h / TradingHud.cpp — 상단([거래 | 임무] 탭 + PNG 초상화·하단 이름) 및 하단(좌측 10×8 내 창고 / 중앙 3단 거래 패널 / 우측 상인 창고·임무) ImGui 화면Assets/UI/trader_weapon.png, trader_medical.png, trader_gear.png — 상인 3명 초상화 PNG (기존 Assets/UI/ 복사 규칙에 자동 포함)   기존 파일 수정 지점Project_Tarkov/src/Core/AssetCatalog.h — 상인 초상화 PNG 3종 논리 경로 등록   Assets/Maps/Hideout/ 및 Project_Tarkov/src/Game/World/HideoutMap.h — 복도 오른쪽 계단실 상호작용 좌표 추가   Project_Tarkov/src/Game/Hideout/Hideout.h / Hideout.cpp — HIDEOUT 21 저장·로드(MoveFileExW 원자적 교체 유지), 레이드 귀환 시 상인 재고 랜덤 리셋 호출   Project_Tarkov/src/Game/Raid/HideoutScene.cpp — 계단실 접근 시 "거래하러 가시겠습니까?" 확인창 및 TradingHud 연결   Project_Tarkov/src/Game/Raid/RaidScene.cpp / CombatSystem.cpp — PMC/SCAV 구분에 따른 임무 진행(처치·구역 방문·탈출) 이벤트 전달   Project_Tarkov/src/Project_Tarkov.vcxproj 및 .filters — 신규 .h/.cpp 등록   2. 데이터 구조 정의 (TradingTypes.h)다중 칸 아이템 점유 크기(1×1~3×3, 회전 미지원)와 원위치 롤백을 정확히 보장하기 위해, 중앙 6×4 위/아래 칸에 올라간 각 아이템의 원래 창고 좌표(originX, originY)를 함께 기록합니다.   C++// Project_Tarkov/src/Game/Trading/TradingTypes.h
+#pragma once
+
+#include <cstdint>
+#include <string>
+#include <vector>
+#include "Game/Inventory/Inventory.h"
+
+namespace Tarkov::Trading
+{
+    constexpr int kTraderCount = 3;
+    constexpr int kTraderStashCols = 10;
+    constexpr int kTraderStashRows = 8;
+    constexpr int kTradeStageCols = 6;
+    constexpr int kTradeStageRows = 4;
+
+    enum class TraderId : int
+    {
+        WeaponAmmo = 0,   // 무기·탄약 상인
+        MedicalFood = 1,  // 의료·식량 상인
+        ClothingGear = 2  // 의류·장구 상인
+    };
+
+    enum class TradingSubTab : int
+    {
+        Trade = 0,
+        Quest = 1
+    };
+
+    struct StagedItem
+    {
+        ItemStack stack;
+        int stageX = 0;   // 중앙 6x4 격자 내 X
+        int stageY = 0;   // 중앙 6x4 격자 내 Y
+        int originX = 0;  // 롤백 시 복귀할 원래 창고 X
+        int originY = 0;  // 롤백 시 복귀할 원래 창고 Y
+    };
+
+    struct TraderState
+    {
+        TraderId id = TraderId::WeaponAmmo;
+        std::string name;
+        std::string portraitAssetKey;
+        int loyaltyLevel = 1;
+        std::vector<GridItemPlacement> stashItems; // 10x8 상인 창고 배치 목록
+    };
+
+    struct TradeSession
+    {
+        bool isOpen = false;
+        TraderId activeTrader = TraderId::WeaponAmmo;
+        TradingSubTab activeTab = TradingSubTab::Trade;
+
+        // 하단 중앙 위칸 (6x4): 상인 창고 -> 내 창고 구매 예정
+        std::vector<StagedItem> buyOffer;
+        // 하단 중앙 아래칸 (6x4): 내 창고 -> 상인 창고 판매 예정
+        std::vector<StagedItem> sellOffer;
+
+        std::string statusMessage;
+    };
+
+    // --- 임무(퀘스트) 데이터 ---
+    enum class QuestStatus : int
+    {
+        Locked = 0,
+        Available = 1,
+        Active = 2,
+        ReadyToComplete = 3,
+        Completed = 4
+    };
+
+    enum class QuestObjectiveType : int
+    {
+        DeliverItem = 0,     // 아이템 수집·납품
+        KillEnemies = 1,     // 적 처치
+        VisitLocation = 2,   // 특정 좌표 반경 방문
+        ExtractSuccess = 3   // 레이드 생존 탈출
+    };
+
+    struct QuestDef
+    {
+        int questId = 0;
+        TraderId trader = TraderId::WeaponAmmo;
+        std::string title;
+        std::string description;
+
+        QuestObjectiveType objectiveType = QuestObjectiveType::DeliverItem;
+        int targetItemId = -1;       // DeliverItem용
+        int requiredCount = 1;
+        float targetX = 0.0f;        // VisitLocation용
+        float targetZ = 0.0f;
+        float targetRadius = 10.0f;
+
+        int rewardRubles = 0;
+        int rewardItemId = -1;
+        int rewardItemCount = 0;
+        int rewardLoyalty = 1;
+    };
+
+    struct QuestProgress
+    {
+        int questId = 0;
+        QuestStatus status = QuestStatus::Available;
+        int currentCount = 0;
+    };
+}
+3. 거래·롤백·랜덤 리셋 로직 (TradingSystem.h / .cpp)핵심 규칙 반영 사항구매가 = 판매가 동일 적용: EvaluateStackPrice()가 아이템 정의의 기본 단가 × 수량을 동일하게 반환합니다.내부 수납물 검사: CanMoveToSellStage()는 내 창고(10×8)의 아이템인지 확인하고, 조끼·배낭 내부에 아이템이 남아 있으면 이동을 차단합니다.   원위치 자동 복귀(롤백): RollbackSession()은 Esc/F로 닫거나 상인 초상화를 바꿀 때 중앙 위/아래칸의 아이템을 originX, originY로 정확히 되돌립니다.   원자적 거래 확정: CommitTrade()는 순 차액 검증, 내 창고 수용 시뮬레이션, 상인 창고 수용 시뮬레이션을 모두 통과한 뒤 Hideout::Save()를 호출하며, 디스크 저장 실패 시 거래 전 스냅샷으로 복구합니다.   C++// Project_Tarkov/src/Game/Trading/TradingSystem.h
+#pragma once
+
+#include <array>
+#include <random>
+#include "TradingTypes.h"
+
+class Hideout;
+
+namespace Tarkov::Trading
+{
+    class TradingSystem
+    {
+    public:
+        TradingSystem();
+
+        void InitializeDefaults();
+        // 레이드 1회 출격·귀환마다 호출하여 상인 3명의 창고를 랜덤 리셋
+        void ResetAllTradersRandom(std::uint32_t seed);
+
+        TraderState& GetTrader(TraderId id);
+        const TraderState& GetTrader(TraderId id) const;
+
+        // 세션 제어
+        void OpenSession(TradeSession& session, TraderId initialTrader = TraderId::WeaponAmmo);
+        void CloseSession(TradeSession& session, Hideout& hideout);
+        void SwitchTrader(TradeSession& session, TraderId nextTrader, Hideout& hideout);
+
+        // 중앙 6x4 격자로 드래그 이동 (위칸: 상인->중앙, 아래칸: 내 창고->중앙)
+        bool StageFromTrader(TradeSession& session, int traderItemIndex, int targetStageX, int targetStageY);
+        bool StageFromPlayer(TradeSession& session, Hideout& hideout, int playerItemIndex, int targetStageX, int targetStageY);
+
+        // 중앙 6x4 격자에서 원래 창고로 개별 복귀 (우클릭 또는 역드래그)
+        bool UnstageBuyItem(TradeSession& session, int stagedIndex);
+        bool UnstageSellItem(TradeSession& session, Hideout& hideout, int stagedIndex);
+
+        // 미확정 물품을 모두 원래 창고 위치로 복귀
+        void RollbackSession(TradeSession& session, Hideout& hideout);
+
+        // 거래 버튼 클릭 시 원자적 정산 및 저장
+        bool CommitTrade(TradeSession& session, Hideout& hideout);
+
+        // 가격 계산 (현재 구매가 == 판매가)
+        int EvaluateStackPrice(const ItemStack& stack) const;
+        int CalculateBuyTotal(const TradeSession& session) const;
+        int CalculateSellTotal(const TradeSession& session) const;
+
+        // 임무(퀘스트) 관리
+        const std::vector<QuestDef>& GetQuestDefs() const { return questDefs_; }
+        QuestProgress* FindQuestProgress(int questId);
+        bool AcceptQuest(int questId, Hideout& hideout);
+        bool DeliverQuestItems(int questId, Hideout& hideout);
+        bool CompleteQuest(int questId, Hideout& hideout);
+
+        // 레이드 이벤트 반영 (PMC 출격일 때만 호출)
+        void OnRaidEnemyKilled();
+        void OnRaidPositionUpdated(float x, float z);
+        void OnRaidExtracted();
+
+        // 직렬화 지원 (HIDEOUT 21)
+        std::vector<QuestProgress>& MutableQuestProgress() { return questProgress_; }
+        const std::vector<QuestProgress>& GetQuestProgress() const { return questProgress_; }
+
+    private:
+        bool CanPlaceInGrid(const std::vector<GridItemPlacement>& grid, int cols, int rows,
+                            int x, int y, int w, int h) const;
+        bool CanPlaceInStage(const std::vector<StagedItem>& staged, int x, int y, int w, int h) const;
+        bool FindFirstFreeSlot(const std::vector<GridItemPlacement>& grid, int cols, int rows,
+                               int w, int h, int& outX, int& outY) const;
+        bool HasContainedItems(const Hideout& hideout, const GridItemPlacement& placement) const;
+
+        std::array<TraderState, kTraderCount> traders_;
+        std::vector<QuestDef> questDefs_;
+        std::vector<QuestProgress> questProgress_;
+    };
+}
+C++// Project_Tarkov/src/Game/Trading/TradingSystem.cpp
+#include "TradingSystem.h"
+#include "Game/Hideout/Hideout.h"
+#include <algorithm>
+
+namespace Tarkov::Trading
+{
+    TradingSystem::TradingSystem()
+    {
+        InitializeDefaults();
+    }
+
+    void TradingSystem::InitializeDefaults()
+    {
+        traders_[0] = { TraderId::WeaponAmmo, "무기·탄약 상인", "trader_weapon", 1, {} };
+        traders_[1] = { TraderId::MedicalFood, "의료·식량 상인", "trader_medical", 1, {} };
+        traders_[2] = { TraderId::ClothingGear, "의류·장구 상인", "trader_gear", 1, {} };
+
+        questDefs_.clear();
+        questDefs_.push_back({
+            101, TraderId::WeaponAmmo, "초기 탄약 확보",
+            "산업단지에서 확보한 공용 탄약 30발을 납품하십시오.",
+            QuestObjectiveType::DeliverItem, /*공용 탄약 ID=*/2, 30,
+            0.0f, 0.0f, 0.0f, 15000, /*소총 탄창 ID=*/12, 1, 1
+        });
+        questDefs_.push_back({
+            102, TraderId::WeaponAmmo, "산업단지 소탕",
+            "PMC로 산업단지의 적대 인원 3명을 처치하십시오.",
+            QuestObjectiveType::KillEnemies, -1, 3,
+            0.0f, 0.0f, 0.0f, 25000, /*소총 ID=*/11, 1, 1
+        });
+        questDefs_.push_back({
+            201, TraderId::MedicalFood, "비상 의료 물자",
+            "붕대 3개를 확보하여 납품하십시오.",
+            QuestObjectiveType::DeliverItem, /*붕대 ID=*/0, 3,
+            0.0f, 0.0f, 0.0f, 12000, /*물 ID=*/1, 2, 1
+        });
+        questDefs_.push_back({
+            301, TraderId::ClothingGear, "중앙 공장 정찰",
+            "PMC로 중앙 공장(0, 0) 내부를 정찰하고 생환하십시오.",
+            QuestObjectiveType::VisitLocation, -1, 1,
+            0.0f, 0.0f, 25.0f, 20000, /*배낭 ID=*/9, 1, 1
+        });
+
+        questProgress_.clear();
+        for (const auto& def : questDefs_)
+        {
+            questProgress_.push_back({ def.questId, QuestStatus::Available, 0 });
+        }
+
+        ResetAllTradersRandom(20261112u);
+    }
+
+    void TradingSystem::ResetAllTradersRandom(std::uint32_t seed)
+    {
+        std::mt19937 rng(seed);
+
+        // 각 상인의 전문 분야 아이템 풀 정의 (기존 아이템 ID 0~14 기준)
+        struct PoolEntry { int itemId; int minCount; int maxCount; int minStacks; int maxStacks; };
+        const std::vector<PoolEntry> weaponPool = {
+            { 11, 1, 1, 1, 2 },   // 소총
+            { 12, 1, 1, 2, 4 },   // 소총 탄창
+            { 13, 1, 1, 1, 2 },   // 권총
+            { 14, 1, 1, 2, 4 },   // 권총 탄창
+            { 2, 15, 30, 2, 5 }   // 공용 탄약
+        };
+        const std::vector<PoolEntry> medFoodPool = {
+            { 0, 1, 5, 3, 6 },    // 붕대
+            { 1, 1, 2, 3, 6 }     // 물
+        };
+        const std::vector<PoolEntry> gearPool = {
+            { 3, 1, 1, 1, 2 },    // 상의
+            { 4, 1, 1, 1, 2 },    // 하의
+            { 7, 1, 1, 1, 2 },    // 조끼
+            { 8, 1, 1, 1, 2 },    // 헬멧
+            { 9, 1, 1, 1, 2 },    // 배낭
+            { 10, 1, 1, 1, 2 }    // 군화
+        };
+
+        auto populateTrader = [&](TraderState& trader, const std::vector<PoolEntry>& pool)
+        {
+            trader.stashItems.clear();
+            for (const auto& entry : pool)
+            {
+                std::uniform_int_distribution<int> stackDist(entry.minStacks, entry.maxStacks);
+                std::uniform_int_distribution<int> countDist(entry.minCount, entry.maxCount);
+                const int stacks = stackDist(rng);
+                for (int s = 0; s < stacks; ++s)
+                {
+                    ItemStack item = MakeDefaultItemStack(entry.itemId, countDist(rng));
+                    int freeX = 0, freeY = 0;
+                    if (FindFirstFreeSlot(trader.stashItems, kTraderStashCols, kTraderStashRows,
+                                          item.width, item.height, freeX, freeY))
+                    {
+                        trader.stashItems.push_back({ item, freeX, freeY });
+                    }
+                }
+            }
+        };
+
+        populateTrader(traders_[0], weaponPool);
+        populateTrader(traders_[1], medFoodPool);
+        populateTrader(traders_[2], gearPool);
+    }
+
+    TraderState& TradingSystem::GetTrader(TraderId id)
+    {
+        return traders_[static_cast<int>(id)];
+    }
+
+    const TraderState& TradingSystem::GetTrader(TraderId id) const
+    {
+        return traders_[static_cast<int>(id)];
+    }
+
+    void TradingSystem::OpenSession(TradeSession& session, TraderId initialTrader)
+    {
+        session.isOpen = true;
+        session.activeTrader = initialTrader;
+        session.activeTab = TradingSubTab::Trade;
+        session.buyOffer.clear();
+        session.sellOffer.clear();
+        session.statusMessage.clear();
+    }
+
+    void TradingSystem::CloseSession(TradeSession& session, Hideout& hideout)
+    {
+        if (!session.isOpen)
+            return;
+        RollbackSession(session, hideout);
+        session.isOpen = false;
+    }
+
+    void TradingSystem::SwitchTrader(TradeSession& session, TraderId nextTrader, Hideout& hideout)
+    {
+        if (session.activeTrader == nextTrader)
+            return;
+        // 다른 상인 초상화 클릭 시 미확정 대기 물품을 원래 창고 위치로 자동 복귀
+        RollbackSession(session, hideout);
+        session.activeTrader = nextTrader;
+        session.statusMessage.clear();
+    }
+
+    bool TradingSystem::StageFromTrader(TradeSession& session, int traderItemIndex, int targetStageX, int targetStageY)
+    {
+        auto& trader = GetTrader(session.activeTrader);
+        if (traderItemIndex < 0 || traderItemIndex >= static_cast<int>(trader.stashItems.size()))
+            return false;
+
+        const GridItemPlacement& src = trader.stashItems[traderItemIndex];
+        if (!CanPlaceInStage(session.buyOffer, targetStageX, targetStageY, src.stack.width, src.stack.height))
+            return false;
+
+        StagedItem staged;
+        staged.stack = src.stack;
+        staged.stageX = targetStageX;
+        staged.stageY = targetStageY;
+        staged.originX = src.gridX;
+        staged.originY = src.gridY;
+
+        session.buyOffer.push_back(staged);
+        trader.stashItems.erase(trader.stashItems.begin() + traderItemIndex);
+        return true;
+    }
+
+    bool TradingSystem::StageFromPlayer(TradeSession& session, Hideout& hideout, int playerItemIndex, int targetStageX, int targetStageY)
+    {
+        auto& playerStash = hideout.MutableMainStash(); // 10x8 일반 창고
+        if (playerItemIndex < 0 || playerItemIndex >= static_cast<int>(playerStash.size()))
+            return false;
+
+        const GridItemPlacement& src = playerStash[playerItemIndex];
+
+        // 내부에 물건이 들어 있는 조끼·배낭은 판매 칸 이동 차단
+        if (HasContainedItems(hideout, src))
+        {
+            session.statusMessage = "내부에 물건이 들어 있는 조끼·배낭은 판매할 수 없습니다.";
+            return false;
+        }
+
+        if (!CanPlaceInStage(session.sellOffer, targetStageX, targetStageY, src.stack.width, src.stack.height))
+            return false;
+
+        StagedItem staged;
+        staged.stack = src.stack;
+        staged.stageX = targetStageX;
+        staged.stageY = targetStageY;
+        staged.originX = src.gridX;
+        staged.originY = src.gridY;
+
+        session.sellOffer.push_back(staged);
+        playerStash.erase(playerStash.begin() + playerItemIndex);
+        session.statusMessage.clear();
+        return true;
+    }
+
+    bool TradingSystem::UnstageBuyItem(TradeSession& session, int stagedIndex)
+    {
+        if (stagedIndex < 0 || stagedIndex >= static_cast<int>(session.buyOffer.size()))
+            return false;
+
+        auto& trader = GetTrader(session.activeTrader);
+        const StagedItem item = session.buyOffer[stagedIndex];
+        int rx = item.originX;
+        int ry = item.originY;
+        if (!CanPlaceInGrid(trader.stashItems, kTraderStashCols, kTraderStashRows, rx, ry, item.stack.width, item.stack.height))
+        {
+            if (!FindFirstFreeSlot(trader.stashItems, kTraderStashCols, kTraderStashRows, item.stack.width, item.stack.height, rx, ry))
+                return false;
+        }
+
+        trader.stashItems.push_back({ item.stack, rx, ry });
+        session.buyOffer.erase(session.buyOffer.begin() + stagedIndex);
+        return true;
+    }
+
+    bool TradingSystem::UnstageSellItem(TradeSession& session, Hideout& hideout, int stagedIndex)
+    {
+        if (stagedIndex < 0 || stagedIndex >= static_cast<int>(session.sellOffer.size()))
+            return false;
+
+        auto& playerStash = hideout.MutableMainStash();
+        const StagedItem item = session.sellOffer[stagedIndex];
+        int rx = item.originX;
+        int ry = item.originY;
+        if (!CanPlaceInGrid(playerStash, 10, 8, rx, ry, item.stack.width, item.stack.height))
+        {
+            if (!FindFirstFreeSlot(playerStash, 10, 8, item.stack.width, item.stack.height, rx, ry))
+                return false;
+        }
+
+        playerStash.push_back({ item.stack, rx, ry });
+        session.sellOffer.erase(session.sellOffer.begin() + stagedIndex);
+        return true;
+    }
+
+    void TradingSystem::RollbackSession(TradeSession& session, Hideout& hideout)
+    {
+        // 원래 창고 좌표(originX, originY)로 역순 복귀시켜 점유 충돌 방지
+        while (!session.buyOffer.empty())
+        {
+            UnstageBuyItem(session, static_cast<int>(session.buyOffer.size()) - 1);
+        }
+        while (!session.sellOffer.empty())
+        {
+            UnstageSellItem(session, hideout, static_cast<int>(session.sellOffer.size()) - 1);
+        }
+    }
+
+    bool TradingSystem::CommitTrade(TradeSession& session, Hideout& hideout)
+    {
+        if (session.buyOffer.empty() && session.sellOffer.empty())
+            return false;
+
+        const int buyTotal = CalculateBuyTotal(session);
+        const int sellTotal = CalculateSellTotal(session);
+        const int currentRubles = hideout.GetRubles();
+        const int nextRubles = currentRubles - buyTotal + sellTotal;
+
+        if (nextRubles < 0)
+        {
+            session.statusMessage = "보유 루블이 부족합니다.";
+            return false;
+        }
+
+        // 1) 스냅샷 생성 (실패 시 원자적 복구 보장)
+        auto& trader = GetTrader(session.activeTrader);
+        const auto backupPlayerStash = hideout.MutableMainStash();
+        const auto backupTraderStash = trader.stashItems;
+        const auto backupBuyOffer = session.buyOffer;
+        const auto backupSellOffer = session.sellOffer;
+
+        auto simulatedPlayerStash = backupPlayerStash;
+        auto simulatedTraderStash = backupTraderStash;
+
+        // 2) 위칸(구매 물품) -> 내 창고(10x8) 수용 검증
+        for (const auto& buyItem : session.buyOffer)
+        {
+            int freeX = 0, freeY = 0;
+            if (!FindFirstFreeSlot(simulatedPlayerStash, 10, 8, buyItem.stack.width, buyItem.stack.height, freeX, freeY))
+            {
+                session.statusMessage = "내 창고에 공간이 부족합니다.";
+                return false;
+            }
+            simulatedPlayerStash.push_back({ buyItem.stack, freeX, freeY });
+        }
+
+        // 3) 아래칸(판매 물품) -> 상인 창고(10x8) 수용 검증
+        for (const auto& sellItem : session.sellOffer)
+        {
+            int freeX = 0, freeY = 0;
+            if (!FindFirstFreeSlot(simulatedTraderStash, kTraderStashCols, kTraderStashRows,
+                                   sellItem.stack.width, sellItem.stack.height, freeX, freeY))
+            {
+                session.statusMessage = "상인 창고에 공간이 부족합니다.";
+                return false;
+            }
+            simulatedTraderStash.push_back({ sellItem.stack, freeX, freeY });
+        }
+
+        // 4) 메모리 상태 반영 후 디스크 원자적 저장
+        hideout.MutableMainStash() = std::move(simulatedPlayerStash);
+        trader.stashItems = std::move(simulatedTraderStash);
+        hideout.SetRubles(nextRubles);
+        session.buyOffer.clear();
+        session.sellOffer.clear();
+
+        if (!hideout.Save())
+        {
+            // 저장 실패 시 거래 전 원본으로 완전 롤백
+            hideout.MutableMainStash() = backupPlayerStash;
+            trader.stashItems = backupTraderStash;
+            hideout.SetRubles(currentRubles);
+            session.buyOffer = backupBuyOffer;
+            session.sellOffer = backupSellOffer;
+            session.statusMessage = "저장에 실패하여 거래가 취소되었습니다.";
+            return false;
+        }
+
+        session.statusMessage = "거래가 완료되었습니다.";
+        return true;
+    }
+
+    int TradingSystem::EvaluateStackPrice(const ItemStack& stack) const
+    {
+        // 현재 단계에서는 구매가와 판매가를 동일하게 계산
+        const int unitPrice = GetItemBasePriceRubles(stack.itemId);
+        return unitPrice * std::max(1, stack.count);
+    }
+
+    int TradingSystem::CalculateBuyTotal(const TradeSession& session) const
+    {
+        int total = 0;
+        for (const auto& item : session.buyOffer)
+            total += EvaluateStackPrice(item.stack);
+        return total;
+    }
+
+    int TradingSystem::CalculateSellTotal(const TradeSession& session) const
+    {
+        int total = 0;
+        for (const auto& item : session.sellOffer)
+            total += EvaluateStackPrice(item.stack);
+        return total;
+    }
+
+    bool TradingSystem::CanPlaceInGrid(const std::vector<GridItemPlacement>& grid, int cols, int rows,
+                                       int x, int y, int w, int h) const
+    {
+        if (x < 0 || y < 0 || x + w > cols || y + h > rows)
+            return false;
+
+        for (const auto& existing : grid)
+        {
+            const bool overlapX = (x < existing.gridX + existing.stack.width) && (x + w > existing.gridX);
+            const bool overlapY = (y < existing.gridY + existing.stack.height) && (y + h > existing.gridY);
+            if (overlapX && overlapY)
+                return false;
+        }
+        return true;
+    }
+
+    bool TradingSystem::CanPlaceInStage(const std::vector<StagedItem>& staged, int x, int y, int w, int h) const
+    {
+        if (x < 0 || y < 0 || x + w > kTradeStageCols || y + h > kTradeStageRows)
+            return false;
+
+        for (const auto& existing : staged)
+        {
+            const bool overlapX = (x < existing.stageX + existing.stack.width) && (x + w > existing.stageX);
+            const bool overlapY = (y < existing.stageY + existing.stack.height) && (y + h > existing.stageY);
+            if (overlapX && overlapY)
+                return false;
+        }
+        return true;
+    }
+
+    bool TradingSystem::FindFirstFreeSlot(const std::vector<GridItemPlacement>& grid, int cols, int rows,
+                                          int w, int h, int& outX, int& outY) const
+    {
+        for (int y = 0; y <= rows - h; ++y)
+        {
+            for (int x = 0; x <= cols - w; ++x)
+            {
+                if (CanPlaceInGrid(grid, cols, rows, x, y, w, h))
+                {
+                    outX = x;
+                    outY = y;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool TradingSystem::HasContainedItems(const Hideout& hideout, const GridItemPlacement& placement) const
+    {
+        // 조끼/배낭 아이템 자체에 저장된 내부 수납물 유무 확인
+        return placement.stack.hasNestedItems || hideout.DoesContainerStackHaveItems(placement.stack.stackId);
+    }
+
+    QuestProgress* TradingSystem::FindQuestProgress(int questId)
+    {
+        for (auto& qp : questProgress_)
+        {
+            if (qp.questId == questId)
+                return &qp;
+        }
+        return nullptr;
+    }
+
+    bool TradingSystem::AcceptQuest(int questId, Hideout& hideout)
+    {
+        QuestProgress* qp = FindQuestProgress(questId);
+        if (!qp || qp->status != QuestStatus::Available)
+            return false;
+
+        qp->status = QuestStatus::Active;
+        qp->currentCount = 0;
+        if (!hideout.Save())
+        {
+            qp->status = QuestStatus::Available;
+            return false;
+        }
+        return true;
+    }
+
+    bool TradingSystem::DeliverQuestItems(int questId, Hideout& hideout)
+    {
+        const QuestDef* def = nullptr;
+        for (const auto& d : questDefs_)
+            if (d.questId == questId) { def = &d; break; }
+
+        QuestProgress* qp = FindQuestProgress(questId);
+        if (!def || !qp || qp->status != QuestStatus::Active)
+            return false;
+        if (def->objectiveType != QuestObjectiveType::DeliverItem)
+            return false;
+
+        const int needed = def->requiredCount - qp->currentCount;
+        if (needed <= 0)
+            return false;
+
+        const auto backupStash = hideout.MutableMainStash();
+        const int backupCount = qp->currentCount;
+        const QuestStatus backupStatus = qp->status;
+
+        const int consumed = hideout.ConsumeFromMainStash(def->targetItemId, needed);
+        if (consumed <= 0)
+            return false;
+
+        qp->currentCount += consumed;
+        if (qp->currentCount >= def->requiredCount)
+        {
+            qp->currentCount = def->requiredCount;
+            qp->status = QuestStatus::ReadyToComplete;
+        }
+
+        if (!hideout.Save())
+        {
+            hideout.MutableMainStash() = backupStash;
+            qp->currentCount = backupCount;
+            qp->status = backupStatus;
+            return false;
+        }
+        return true;
+    }
+
+    bool TradingSystem::CompleteQuest(int questId, Hideout& hideout)
+    {
+        const QuestDef* def = nullptr;
+        for (const auto& d : questDefs_)
+            if (d.questId == questId) { def = &d; break; }
+
+        QuestProgress* qp = FindQuestProgress(questId);
+        if (!def || !qp || qp->status != QuestStatus::ReadyToComplete)
+            return false;
+
+        const auto backupStash = hideout.MutableMainStash();
+        const int backupRubles = hideout.GetRubles();
+        auto& trader = GetTrader(def->trader);
+        const int backupLoyalty = trader.loyaltyLevel;
+
+        if (def->rewardItemId >= 0 && def->rewardItemCount > 0)
+        {
+            ItemStack rewardStack = MakeDefaultItemStack(def->rewardItemId, def->rewardItemCount);
+            int freeX = 0, freeY = 0;
+            if (!FindFirstFreeSlot(hideout.MutableMainStash(), 10, 8, rewardStack.width, rewardStack.height, freeX, freeY))
+                return false; // 창고 공간 부족 시 보상 증발 방지
+            hideout.MutableMainStash().push_back({ rewardStack, freeX, freeY });
+        }
+
+        hideout.SetRubles(backupRubles + def->rewardRubles);
+        trader.loyaltyLevel += def->rewardLoyalty;
+        qp->status = QuestStatus::Completed;
+
+        if (!hideout.Save())
+        {
+            hideout.MutableMainStash() = backupStash;
+            hideout.SetRubles(backupRubles);
+            trader.loyaltyLevel = backupLoyalty;
+            qp->status = QuestStatus::ReadyToComplete;
+            return false;
+        }
+        return true;
+    }
+
+    void TradingSystem::OnRaidEnemyKilled()
+    {
+        for (const auto& def : questDefs_)
+        {
+            if (def.objectiveType != QuestObjectiveType::KillEnemies)
+                continue;
+            QuestProgress* qp = FindQuestProgress(def.questId);
+            if (qp && qp->status == QuestStatus::Active)
+            {
+                qp->currentCount = std::min(def.requiredCount, qp->currentCount + 1);
+                if (qp->currentCount >= def.requiredCount)
+                    qp->status = QuestStatus::ReadyToComplete;
+            }
+        }
+    }
+
+    void TradingSystem::OnRaidPositionUpdated(float x, float z)
+    {
+        for (const auto& def : questDefs_)
+        {
+            if (def.objectiveType != QuestObjectiveType::VisitLocation)
+                continue;
+            QuestProgress* qp = FindQuestProgress(def.questId);
+            if (qp && qp->status == QuestStatus::Active)
+            {
+                const float dx = x - def.targetX;
+                const float dz = z - def.targetZ;
+                if ((dx * dx + dz * dz) <= (def.targetRadius * def.targetRadius))
+                {
+                    qp->currentCount = def.requiredCount;
+                    qp->status = QuestStatus::ReadyToComplete;
+                }
+            }
+        }
+    }
+
+    void TradingSystem::OnRaidExtracted()
+    {
+        for (const auto& def : questDefs_)
+        {
+            if (def.objectiveType != QuestObjectiveType::ExtractSuccess)
+                continue;
+            QuestProgress* qp = FindQuestProgress(def.questId);
+            if (qp && qp->status == QuestStatus::Active)
+            {
+                qp->currentCount = def.requiredCount;
+                qp->status = QuestStatus::ReadyToComplete;
+            }
+        }
+    }
+}
+4. 거래·임무 UI (TradingHud.h / .cpp)요청하신 레이아웃 구성을 그대로 구현합니다.상단 영역: [거래 | 임무] 전환 탭 → 아래에 상인 3명의 PNG 초상화 카드 및 초상화 중앙 하단 이름 표시. 초상화 클릭 시 SwitchTrader()를 호출해 미확정 물품을 롤백한 뒤 우측 패널 전환.하단 좌측: 내 일반 창고(10×8) 고정 표시 → 하단 중앙 아래칸(6×4)으로 드래그 앤 드롭.하단 중앙 (3단):위칸 (6×4): 상인 창고에서 가져온 물품 격자.중앙 바: 위칸 총액(구매가) · [거래] 버튼 · 아래칸 총액(판매가) · 보유 루블 표시.아래칸 (6×4): 내 창고에서 가져온 물품 격자.하단 우측: [거래] 탭일 때 선택된 상인 창고(10×8) / [임무] 탭일 때 해당 상인의 임무 목록·납품·완료 버튼 표시.C++// Project_Tarkov/src/Game/UI/TradingHud.h
+#pragma once
+
+#include "Game/Trading/TradingSystem.h"
+
+class Hideout;
+
+namespace Tarkov::UI
+{
+    class TradingHud
+    {
+    public:
+        void Render(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout);
+
+    private:
+        void RenderTopHeader(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout);
+        void RenderPlayerStashPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height);
+        void RenderCenterDealPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height);
+        void RenderTraderRightPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height);
+        void RenderTraderQuestPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height);
+    };
+}
+C++// Project_Tarkov/src/Game/UI/TradingHud.cpp
+#include "TradingHud.h"
+#include "Game/Hideout/Hideout.h"
+#include "Game/UI/InventoryUi.h"
+#include <imgui.h>
+#include <cstdio>
+
+namespace Tarkov::UI
+{
+    namespace
+    {
+        struct DragPayload
+        {
+            int sourceKind; // 0: PlayerStash, 1: TraderStash, 2: BuyStage, 3: SellStage
+            int index;
+        };
+
+        void DrawGridCells(ImDrawList* drawList, ImVec2 origin, int cols, int rows, float cellSize)
+        {
+            const ImU32 bgCol = IM_COL32(28, 32, 30, 210);
+            const ImU32 lineCol = IM_COL32(75, 85, 80, 220);
+            drawList->AddRectFilled(origin, ImVec2(origin.x + cols * cellSize, origin.y + rows * cellSize), bgCol);
+            for (int r = 0; r <= rows; ++r)
+            {
+                const float y = origin.y + r * cellSize;
+                drawList->AddLine(ImVec2(origin.x, y), ImVec2(origin.x + cols * cellSize, y), lineCol);
+            }
+            for (int c = 0; c <= cols; ++c)
+            {
+                const float x = origin.x + c * cellSize;
+                drawList->AddLine(ImVec2(x, origin.y), ImVec2(x, origin.y + rows * cellSize), lineCol);
+            }
+        }
+    }
+
+    void TradingHud::Render(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout)
+    {
+        if (!session.isOpen)
+            return;
+
+        // Esc 또는 F 입력 시 미확정 물품 원위치 롤백 후 창 닫기
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape) || ImGui::IsKeyPressed(ImGuiKey_F))
+        {
+            trading.CloseSession(session, hideout);
+            return;
+        }
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+
+        const ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.08f, 0.10f, 0.09f, 0.92f));
+
+        if (ImGui::Begin("##TradingMainWindow", nullptr, flags))
+        {
+            RenderTopHeader(trading, session, hideout);
+            ImGui::Separator();
+
+            const ImVec2 avail = ImGui::GetContentRegionAvail();
+            const float spacing = ImGui::GetStyle().ItemSpacing.x;
+            const float leftWidth = avail.x * 0.36f;
+            const float centerWidth = avail.x * 0.28f;
+            const float rightWidth = avail.x - leftWidth - centerWidth - spacing * 2.0f;
+
+            RenderPlayerStashPanel(trading, session, hideout, leftWidth, avail.y);
+            ImGui::SameLine();
+            RenderCenterDealPanel(trading, session, hideout, centerWidth, avail.y);
+            ImGui::SameLine();
+
+            if (session.activeTab == Trading::TradingSubTab::Trade)
+                RenderTraderRightPanel(trading, session, hideout, rightWidth, avail.y);
+            else
+                RenderTraderQuestPanel(trading, session, hideout, rightWidth, avail.y);
+        }
+        ImGui::End();
+        ImGui::PopStyleColor();
+    }
+
+    void TradingHud::RenderTopHeader(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout)
+    {
+        // 상단 [거래 | 임무] 전환 탭
+        auto drawTabButton = [&](const char* label, Trading::TradingSubTab tab)
+        {
+            const bool selected = (session.activeTab == tab);
+            if (selected)
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.24f, 0.42f, 0.30f, 1.0f));
+            if (ImGui::Button(label, ImVec2(110.0f, 32.0f)))
+                session.activeTab = tab;
+            if (selected)
+                ImGui::PopStyleColor();
+        };
+
+        drawTabButton("거래", Trading::TradingSubTab::Trade);
+        ImGui::SameLine();
+        drawTabButton("임무", Trading::TradingSubTab::Quest);
+
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 260.0f);
+        ImGui::Text("보유 루블: %d RUB", hideout.GetRubles());
+        ImGui::SameLine();
+        if (ImGui::Button("닫기 (Esc/F)", ImVec2(110.0f, 32.0f)))
+        {
+            trading.CloseSession(session, hideout);
+            return;
+        }
+
+        ImGui::Spacing();
+
+        // 상단 상인 3명 초상화 + 중앙 하단 이름 표시
+        const float cardWidth = 140.0f;
+        const float portraitSize = 84.0f;
+
+        for (int i = 0; i < Trading::kTraderCount; ++i)
+        {
+            if (i > 0) ImGui::SameLine();
+
+            const auto id = static_cast<Trading::TraderId>(i);
+            const auto& trader = trading.GetTrader(id);
+            const bool isSelected = (session.activeTrader == id);
+
+            ImGui::PushID(i);
+            ImGui::BeginGroup();
+
+            const ImVec2 cursorStart = ImGui::GetCursorScreenPos();
+            if (ImGui::InvisibleButton("##TraderPortraitBtn", ImVec2(cardWidth, portraitSize + 28.0f)))
+            {
+                trading.SwitchTrader(session, id, hideout);
+            }
+
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            const ImU32 cardBg = isSelected ? IM_COL32(48, 78, 58, 240) : IM_COL32(30, 35, 33, 220);
+            const ImU32 border = isSelected ? IM_COL32(130, 210, 155, 255) : IM_COL32(80, 90, 85, 200);
+            dl->AddRectFilled(cursorStart, ImVec2(cursorStart.x + cardWidth, cursorStart.y + portraitSize + 28.0f), cardBg, 6.0f);
+            dl->AddRect(cursorStart, ImVec2(cursorStart.x + cardWidth, cursorStart.y + portraitSize + 28.0f), border, 6.0f, 0, 2.0f);
+
+            // 초상화 PNG 렌더링 (중앙 정렬)
+            const float imgX = cursorStart.x + (cardWidth - portraitSize) * 0.5f;
+            const float imgY = cursorStart.y + 4.0f;
+            const ImTextureID tex = InventoryUi::GetUiTexture(trader.portraitAssetKey);
+            if (tex)
+            {
+                dl->AddImage(tex, ImVec2(imgX, imgY), ImVec2(imgX + portraitSize, imgY + portraitSize));
+            }
+
+            // 상인 이름을 초상화 중앙 하단에 표시
+            const ImVec2 textSize = ImGui::CalcTextSize(trader.name.c_str());
+            const float textX = cursorStart.x + (cardWidth - textSize.x) * 0.5f;
+            const float textY = imgY + portraitSize + 3.0f;
+            dl->AddText(ImVec2(textX, textY), IM_COL32(235, 240, 236, 255), trader.name.c_str());
+
+            ImGui::EndGroup();
+            ImGui::PopID();
+        }
+    }
+
+    void TradingHud::RenderPlayerStashPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height)
+    {
+        ImGui::BeginChild("##LeftPlayerStash", ImVec2(width, height), true);
+        ImGui::Text("내 창고 (10x8)");
+        ImGui::Separator();
+
+        const float cellSize = (ImGui::GetContentRegionAvail().x - 8.0f) / 10.0f;
+        const ImVec2 gridOrigin = ImGui::GetCursorScreenPos();
+        DrawGridCells(ImGui::GetWindowDrawList(), gridOrigin, 10, 8, cellSize);
+
+        auto& playerStash = hideout.MutableMainStash();
+        for (int i = 0; i < static_cast<int>(playerStash.size()); ++i)
+        {
+            const auto& p = playerStash[i];
+            const ImVec2 itemPos(gridOrigin.x + p.gridX * cellSize, gridOrigin.y + p.gridY * cellSize);
+            const ImVec2 itemSize(p.stack.width * cellSize, p.stack.height * cellSize);
+
+            ImGui::SetCursorScreenPos(itemPos);
+            ImGui::PushID(10000 + i);
+            InventoryUi::DrawItemCard(p.stack, itemSize);
+
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+            {
+                DragPayload payload{ 0, i };
+                ImGui::SetDragDropPayload("TRADING_ITEM", &payload, sizeof(payload));
+                ImGui::Text("%s (%d RUB)", GetItemDisplayName(p.stack.itemId), trading.EvaluateStackPrice(p.stack));
+                ImGui::EndDragDropSource();
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("%s\n단가: %d RUB / 합계: %d RUB",
+                    GetItemDisplayName(p.stack.itemId),
+                    GetItemBasePriceRubles(p.stack.itemId),
+                    trading.EvaluateStackPrice(p.stack));
+            }
+            ImGui::PopID();
+        }
+
+        // 중앙 아래칸(판매 대기)에서 내 창고로 드롭 시 원위치 복귀
+        ImGui::SetCursorScreenPos(gridOrigin);
+        ImGui::InvisibleButton("##PlayerStashDropZone", ImVec2(10.0f * cellSize, 8.0f * cellSize));
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("TRADING_ITEM"))
+            {
+                const auto* data = static_cast<const DragPayload*>(payload->Data);
+                if (data->sourceKind == 3)
+                    trading.UnstageSellItem(session, hideout, data->index);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::EndChild();
+    }
+
+    void TradingHud::RenderCenterDealPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height)
+    {
+        ImGui::BeginChild("##CenterDealColumn", ImVec2(width, height), true);
+
+        const float cellSize = (ImGui::GetContentRegionAvail().x - 8.0f) / static_cast<float>(Trading::kTradeStageCols);
+        const float stageHeight = cellSize * static_cast<float>(Trading::kTradeStageRows);
+
+        // 1) 위칸: 상인 창고에서 가져오는 구매 예정 격자 (6x4)
+        ImGui::Text("구매 예정 (상인 -> 내 창고)");
+        const ImVec2 buyOrigin = ImGui::GetCursorScreenPos();
+        DrawGridCells(ImGui::GetWindowDrawList(), buyOrigin, Trading::kTradeStageCols, Trading::kTradeStageRows, cellSize);
+
+        for (int i = 0; i < static_cast<int>(session.buyOffer.size()); ++i)
+        {
+            const auto& item = session.buyOffer[i];
+            const ImVec2 pos(buyOrigin.x + item.stageX * cellSize, buyOrigin.y + item.stageY * cellSize);
+            const ImVec2 sz(item.stack.width * cellSize, item.stack.height * cellSize);
+
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::PushID(20000 + i);
+            InventoryUi::DrawItemCard(item.stack, sz);
+
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+            {
+                trading.UnstageBuyItem(session, i);
+                ImGui::PopID();
+                break;
+            }
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+            {
+                DragPayload payload{ 2, i };
+                ImGui::SetDragDropPayload("TRADING_ITEM", &payload, sizeof(payload));
+                ImGui::Text("%s (복귀)", GetItemDisplayName(item.stack.itemId));
+                ImGui::EndDragDropSource();
+            }
+            ImGui::PopID();
+        }
+
+        ImGui::SetCursorScreenPos(buyOrigin);
+        ImGui::InvisibleButton("##BuyStageDropZone", ImVec2(cellSize * Trading::kTradeStageCols, stageHeight));
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("TRADING_ITEM"))
+            {
+                const auto* data = static_cast<const DragPayload*>(payload->Data);
+                if (data->sourceKind == 1)
+                {
+                    const ImVec2 mouse = ImGui::GetMousePos();
+                    const int gx = static_cast<int>((mouse.x - buyOrigin.x) / cellSize);
+                    const int gy = static_cast<int>((mouse.y - buyOrigin.y) / cellSize);
+                    trading.StageFromTrader(session, data->index, gx, gy);
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        // 2) 중앙 바: 위칸 금액 · 거래 버튼 · 아래칸 금액
+        ImGui::Spacing();
+        ImGui::Separator();
+        const int buyTotal = trading.CalculateBuyTotal(session);
+        const int sellTotal = trading.CalculateSellTotal(session);
+        const int netDelta = sellTotal - buyTotal;
+
+        ImGui::TextColored(ImVec4(0.95f, 0.55f, 0.45f, 1.0f), "구매 금액 (차감): -%d RUB", buyTotal);
+
+        const bool canCommit = (!session.buyOffer.empty() || !session.sellOffer.empty())
+                               && (hideout.GetRubles() + netDelta >= 0);
+        if (!canCommit) ImGui::BeginDisabled();
+        if (ImGui::Button("거래", ImVec2(ImGui::GetContentRegionAvail().x, 38.0f)))
+        {
+            trading.CommitTrade(session, hideout);
+        }
+        if (!canCommit) ImGui::EndDisabled();
+
+        ImGui::TextColored(ImVec4(0.45f, 0.90f, 0.60f, 1.0f), "판매 금액 (증가): +%d RUB", sellTotal);
+        if (!session.statusMessage.empty())
+        {
+            ImGui::TextWrapped("%s", session.statusMessage.c_str());
+        }
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // 3) 아래칸: 내 창고에서 가져오는 판매 예정 격자 (6x4)
+        ImGui::Text("판매 예정 (내 창고 -> 상인)");
+        const ImVec2 sellOrigin = ImGui::GetCursorScreenPos();
+        DrawGridCells(ImGui::GetWindowDrawList(), sellOrigin, Trading::kTradeStageCols, Trading::kTradeStageRows, cellSize);
+
+        for (int i = 0; i < static_cast<int>(session.sellOffer.size()); ++i)
+        {
+            const auto& item = session.sellOffer[i];
+            const ImVec2 pos(sellOrigin.x + item.stageX * cellSize, sellOrigin.y + item.stageY * cellSize);
+            const ImVec2 sz(item.stack.width * cellSize, item.stack.height * cellSize);
+
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::PushID(30000 + i);
+            InventoryUi::DrawItemCard(item.stack, sz);
+
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+            {
+                trading.UnstageSellItem(session, hideout, i);
+                ImGui::PopID();
+                break;
+            }
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+            {
+                DragPayload payload{ 3, i };
+                ImGui::SetDragDropPayload("TRADING_ITEM", &payload, sizeof(payload));
+                ImGui::Text("%s (복귀)", GetItemDisplayName(item.stack.itemId));
+                ImGui::EndDragDropSource();
+            }
+            ImGui::PopID();
+        }
+
+        ImGui::SetCursorScreenPos(sellOrigin);
+        ImGui::InvisibleButton("##SellStageDropZone", ImVec2(cellSize * Trading::kTradeStageCols, stageHeight));
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("TRADING_ITEM"))
+            {
+                const auto* data = static_cast<const DragPayload*>(payload->Data);
+                if (data->sourceKind == 0)
+                {
+                    const ImVec2 mouse = ImGui::GetMousePos();
+                    const int gx = static_cast<int>((mouse.x - sellOrigin.x) / cellSize);
+                    const int gy = static_cast<int>((mouse.y - sellOrigin.y) / cellSize);
+                    trading.StageFromPlayer(session, hideout, data->index, gx, gy);
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::EndChild();
+    }
+
+    void TradingHud::RenderTraderRightPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height)
+    {
+        auto& trader = trading.GetTrader(session.activeTrader);
+        ImGui::BeginChild("##RightTraderStash", ImVec2(width, height), true);
+        ImGui::Text("%s 판매 창고 (우호도 Lv.%d)", trader.name.c_str(), trader.loyaltyLevel);
+        ImGui::Separator();
+
+        const float cellSize = (ImGui::GetContentRegionAvail().x - 8.0f) / static_cast<float>(Trading::kTraderStashCols);
+        const ImVec2 gridOrigin = ImGui::GetCursorScreenPos();
+        DrawGridCells(ImGui::GetWindowDrawList(), gridOrigin, Trading::kTraderStashCols, Trading::kTraderStashRows, cellSize);
+
+        for (int i = 0; i < static_cast<int>(trader.stashItems.size()); ++i)
+        {
+            const auto& p = trader.stashItems[i];
+            const ImVec2 itemPos(gridOrigin.x + p.gridX * cellSize, gridOrigin.y + p.gridY * cellSize);
+            const ImVec2 itemSize(p.stack.width * cellSize, p.stack.height * cellSize);
+
+            ImGui::SetCursorScreenPos(itemPos);
+            ImGui::PushID(40000 + i);
+            InventoryUi::DrawItemCard(p.stack, itemSize);
+
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+            {
+                DragPayload payload{ 1, i };
+                ImGui::SetDragDropPayload("TRADING_ITEM", &payload, sizeof(payload));
+                ImGui::Text("%s (%d RUB)", GetItemDisplayName(p.stack.itemId), trading.EvaluateStackPrice(p.stack));
+                ImGui::EndDragDropSource();
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("%s\n단가: %d RUB / 합계: %d RUB",
+                    GetItemDisplayName(p.stack.itemId),
+                    GetItemBasePriceRubles(p.stack.itemId),
+                    trading.EvaluateStackPrice(p.stack));
+            }
+            ImGui::PopID();
+        }
+
+        // 중앙 위칸(구매 대기)에서 상인 창고로 드롭 시 원위치 복귀
+        ImGui::SetCursorScreenPos(gridOrigin);
+        ImGui::InvisibleButton("##TraderStashDropZone", ImVec2(Trading::kTraderStashCols * cellSize, Trading::kTraderStashRows * cellSize));
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("TRADING_ITEM"))
+            {
+                const auto* data = static_cast<const DragPayload*>(payload->Data);
+                if (data->sourceKind == 2)
+                    trading.UnstageBuyItem(session, data->index);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        ImGui::EndChild();
+    }
+
+    void TradingHud::RenderTraderQuestPanel(Trading::TradingSystem& trading, Trading::TradeSession& session, Hideout& hideout, float width, float height)
+    {
+        const auto& trader = trading.GetTrader(session.activeTrader);
+        ImGui::BeginChild("##RightTraderQuests", ImVec2(width, height), true);
+        ImGui::Text("%s — 거래 임무", trader.name.c_str());
+        ImGui::Separator();
+
+        for (const auto& def : trading.GetQuestDefs())
+        {
+            if (def.trader != session.activeTrader)
+                continue;
+
+            Trading::QuestProgress* qp = trading.FindQuestProgress(def.questId);
+            if (!qp)
+                continue;
+
+            ImGui::PushID(def.questId);
+            ImGui::BeginGroup();
+            ImGui::Text("%s", def.title.c_str());
+            ImGui::TextWrapped("%s", def.description.c_str());
+            ImGui::Text("진행도: %d / %d  |  보상: %d RUB", qp->currentCount, def.requiredCount, def.rewardRubles);
+
+            if (qp->status == Trading::QuestStatus::Available)
+            {
+                if (ImGui::Button("임무 수락"))
+                    trading.AcceptQuest(def.questId, hideout);
+            }
+            else if (qp->status == Trading::QuestStatus::Active)
+            {
+                if (def.objectiveType == Trading::QuestObjectiveType::DeliverItem)
+                {
+                    if (ImGui::Button("창고 물품 납품"))
+                        trading.DeliverQuestItems(def.questId, hideout);
+                }
+                else
+                {
+                    ImGui::TextColored(ImVec4(0.85f, 0.80f, 0.45f, 1.0f), "진행 중 (PMC 레이드에서 수행)");
+                }
+            }
+            else if (qp->status == Trading::QuestStatus::ReadyToComplete)
+            {
+                if (ImGui::Button("임무 완료 및 보상 수령"))
+                    trading.CompleteQuest(def.questId, hideout);
+            }
+            else if (qp->status == Trading::QuestStatus::Completed)
+            {
+                ImGui::TextColored(ImVec4(0.45f, 0.85f, 0.55f, 1.0f), "완료됨");
+            }
+
+            ImGui::EndGroup();
+            ImGui::Separator();
+            ImGui::PopID();
+        }
+
+        ImGui::EndChild();
+    }
+}
+5. 기존 코드 연동 포인트5.1 계단실 상호작용 (HideoutScene.cpp · HideoutMap.h)기존 복도 왼쪽 끝의 레이드 출격 확인 메시지 방식과 동일하게, 복도 오른쪽 계단실 구역 진입 시 F 상호작용 확인 창을 띄웁니다.   C++// HideoutScene.cpp — 계단실 상호작용 처리
+if (!tradeConfirmOpen_ && !tradeSession_.isOpen && IsNearStairwellTrigger(player_.GetPosition()))
+{
+    ShowInteractionPrompt("계단실: 거래하러 가기 [F]");
+    if (input.WasKeyPressed(GLFW_KEY_F))
+    {
+        tradeConfirmOpen_ = true;
+    }
+}
+
+if (tradeConfirmOpen_)
+{
+    // 레이드 출격 확인 모달과 동일한 ImGui 확인 팝업
+    if (RenderConfirmDialog("거래하러 가시겠습니까?"))
+    {
+        tradeConfirmOpen_ = false;
+        tradingSystem_.OpenSession(tradeSession_, Trading::TraderId::WeaponAmmo);
+    }
+}
+5.2 레이드 1회 출격·귀환 시 상인 창고 랜덤 리셋 (Hideout.cpp · RaidScene.cpp)레이드 탈출/사망 후 은신처 복귀(FinishRaid / ReturnToHideout) 시점에 상인 3명의 창고를 랜덤으로 갱신하고 저장합니다.   C++// RaidScene.cpp (은신처 복귀 정산 시)
+const auto seed = static_cast<std::uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+hideout_.MutableTradingSystem().ResetAllTradersRandom(seed);
+hideout_.Save();
+5.3 PMC / SCAV 임무 분리 (CombatSystem.cpp · RaidScene.cpp)여캐(SCAV) 출격 시에는 퀘스트 진행도가 오르지 않도록 분기합니다.   C++// CombatSystem.cpp — 적 처치 판정 시
+if (!raidState_.isScavRun)
+{
+    hideout_.MutableTradingSystem().OnRaidEnemyKilled();
+}
+
+// RaidScene.cpp — 업데이트 및 탈출 정산 시
+if (!raidState_.isScavRun)
+{
+    hideout_.MutableTradingSystem().OnRaidPositionUpdated(player_.GetPosition().x, player_.GetPosition().z);
+}
+5.4 세이브 포맷 확장 (HIDEOUT 21) 및 에셋 등록AssetCatalog.h: trader_weapon → "UI/trader_weapon.png", trader_medical → "UI/trader_medical.png", trader_gear → "UI/trader_gear.png"를 등록합니다. 기존 CopyRuntimeAssets는 Assets/UI/ 아래 PNG를 복사하므로 배포 경로에도 자동 포함됩니다.   Hideout.cpp: 저장 헤더를 HIDEOUT 21로 올리고, END 마커 직전에 상인 3명의 우호도·창고 항목과 임무별 상태·카운트를 직렬화합니다. version <= 20 세이브를 읽을 때는 tradingSystem_.InitializeDefaults() 상태를 유지해 기존 프로필과 호환합니다.   Project_Tarkov.vcxproj / .filters: TradingTypes.h, TradingSystem.h/.cpp, TradingHud.h/.cpp 5개 파일을 컴파일 및 필터 목록에 추가합니다.   코드 적용 중 기존 Hideout이나 InventoryUi의 실제 멤버 함수 시그니처(예: ItemStack, GridItemPlacement, GetUiTexture 이름)가 약간 다르면 해당 헤더 선언부만 붙여주시면 즉시 시그니처를 맞춰 드리겠습니다.
