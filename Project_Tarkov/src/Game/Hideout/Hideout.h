@@ -3,6 +3,7 @@
 #include "../Inventory/Inventory.h"
 #include "../Character/PlayerVitals.h"
 #include "../Combat/LootSystem.h"
+#include "../Trading/TradingSystem.h"
 #include <array>
 #include <cstdint>
 #include <string>
@@ -21,7 +22,7 @@ public:
     static constexpr int StashRows = 8;
     // Legacy item counts used when converting pre-v10 save files.
     std::array<int, ItemTypeCount> stash{{10, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0}};
-    PlayerAppearance appearance = PlayerAppearance::Female;
+    PlayerAppearance appearance = PlayerAppearance::Male;
     PlayerVitals vitals;
     std::int64_t rubles = 0;
     std::uint32_t clothingMask = DefaultClothingMask;
@@ -80,6 +81,14 @@ public:
     int magazine = 30;
     int spawn = 0;
     bool ready = false;
+    // Current prototype has one playable SCAV appearance. The value is saved so
+    // that a restart cannot bypass its one PMC-deployment cooldown.
+    bool scavDeployLocked = false;
+    Trading::TradingSystem trading;
+    std::array<Trading::ScavProfile, 3> scavProfiles{{
+        {"서윤", true, false, 1}, {"지아", false, false, -1}, {"나린", false, false, -1}
+    }};
+    int activeScav = 0;
     std::string message;
     void Load();
     bool ChangeAppearance(PlayerAppearance next, int releasedSurvivorRoom = -1);
@@ -89,6 +98,7 @@ public:
     bool AutoArrangeStash(int room = -1, int furniture = -1);
     bool SellStashItem(StackId id);
     bool Depart();
+    bool SelectScav(int index);
     bool Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing,
         bool rescuedSurvivor = false);
 private:

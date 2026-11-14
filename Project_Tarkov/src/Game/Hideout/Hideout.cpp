@@ -184,8 +184,9 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories(RuntimePaths::SaveRoot(), error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out(RuntimePaths::Save("hideout.tmp"), std::ios::trunc);
-    out << "HIDEOUT 20\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
-        << rubles << ' ' << rescuedSurvivors << ' ' << rescuedRoomMask << '\n';
+    out << "HIDEOUT 22\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
+        << rubles << ' ' << rescuedSurvivors << ' ' << rescuedRoomMask << ' '
+        << scavDeployLocked << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
         out << inventory.SlotCapacity() << ' ' << inventory.Items().size() << '\n';
         for (const auto& item : inventory.Items())
@@ -204,6 +205,10 @@ bool Hideout::Save(bool requireStashSpace)
             << item.magazineInserted << ' ' << static_cast<int>(item.fireMode) << ' '
             << dropped.position.x << ' ' << dropped.position.y << ' ' << dropped.position.z << '\n';
     }
+    trading.Write(out);
+    out << activeScav << '\n';
+    for (const auto& profile : scavProfiles)
+        out << profile.unlocked << ' ' << profile.deployLocked << ' ' << profile.assignedRoom << '\n';
     out << "END\n";
     out.flush();
     const bool written = static_cast<bool>(out);
@@ -309,7 +314,7 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=20)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=22)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
@@ -331,6 +336,11 @@ void Hideout::Load()
         } else {
             if (next.rescuedSurvivors>=0 && next.rescuedSurvivors<=MaxRescuedSurvivors)
                 next.rescuedRoomMask=(1u<<next.rescuedSurvivors)-1u;
+        }
+        if (savedVersion>=21) {
+            int locked=0;
+            valid=valid && static_cast<bool>(in >> locked) && (locked==0 || locked==1);
+            next.scavDeployLocked=locked!=0;
         }
         auto readInventory=[&](Inventory& inventory,bool isStorage) {
             int capacity=0,count=0;
@@ -429,6 +439,32 @@ void Hideout::Load()
                 if (valid) next.floorLoot.Spawn(position,item);
             }
         }
+        if (valid && savedVersion>=22) {
+            valid=next.trading.Read(in);
+            int selected=0;
+            valid=valid && static_cast<bool>(in >> selected) && selected>=0 && selected<3;
+            next.activeScav=selected;
+            for (auto& profile:next.scavProfiles) {
+                int unlocked=0,locked=0;
+                valid=valid && static_cast<bool>(in >> unlocked >> locked >> profile.assignedRoom) &&
+                    (unlocked==0||unlocked==1) && (locked==0||locked==1) && profile.assignedRoom>=-1 && profile.assignedRoom<HideoutRoomCount;
+                profile.unlocked=unlocked!=0;profile.deployLocked=locked!=0;
+            }
+            next.scavDeployLocked=next.scavProfiles[next.activeScav].deployLocked;
+        } else {
+            next.trading.InitializeDefaults();
+            for (int i=0;i<(std::min)(next.rescuedSurvivors,3);++i) {
+                next.scavProfiles[i].unlocked=true;
+                next.scavProfiles[i].assignedRoom=i<MaxRescuedSurvivors ? InitialRoomCount+i : -1;
+            }
+            if(next.appearance==PlayerAppearance::Female) {
+                next.scavProfiles[0].unlocked=true;
+                next.scavProfiles[0].deployLocked=next.scavDeployLocked;
+            }
+        }
+        const bool defaultScavUpdated=!next.scavProfiles[0].unlocked || next.scavProfiles[0].assignedRoom!=1;
+        next.scavProfiles[0].unlocked=true;
+        next.scavProfiles[0].assignedRoom=1;
         std::string end,extra;
         valid=valid && next.vitals.Restore(body,hydration,stamina) && static_cast<bool>(in >> end) && end=="END";
         if (in >> extra) valid=false;
@@ -455,7 +491,7 @@ void Hideout::Load()
             return;
         }
         in.close();
-        if (savedVersion < 20 && !next.Save()) {
+        if ((savedVersion < 22 || defaultScavUpdated) && !next.Save()) {
             message=next.message;
             return;
         }
@@ -531,6 +567,7 @@ void Hideout::Load()
     if (in >> extra) valid = false;
     if (!valid) { ready = false; message = "은신처 저장 파일이 손상되었습니다. 원본은 보존했으며, 플레이 전에 복구해야 합니다."; return; }
     next.rifle = equipped != 0;
+    if(next.appearance==PlayerAppearance::Female)next.scavProfiles[0].unlocked=true;
     // Preserve legacy overflow stock instead of silently discarding it.
     next.storage.SetSlotCapacity(80);
     for (auto& furniture : next.furnitureStorage) furniture.SetSlotCapacity(80);
@@ -612,9 +649,16 @@ bool Hideout::HealBodyPart(BodyPart part, bool fromStash)
 bool Hideout::Depart()
 {
     if (!ready) return false;
+    const bool isScav = appearance == PlayerAppearance::Female;
+    if (isScav && (scavDeployLocked || !scavProfiles[activeScav].unlocked || scavProfiles[activeScav].deployLocked)) {
+        if (!scavProfiles[activeScav].unlocked) message = "아직 해금하지 않은 SCAV입니다.";
+        else
+        message = "이 SCAV는 대기 중입니다. PMC로 한 번 출격해야 다시 출격할 수 있습니다.";
+        return false;
+    }
     // Stage the complete departure before touching either the live profile or disk.
     Hideout departing = *this;
-    if (appearance == PlayerAppearance::Female) {
+    if (isScav) {
         for (auto item : loadout.Items()) {
             item.id = 0;
             item.slot = -100;
@@ -649,6 +693,13 @@ bool Hideout::Depart()
             return false;
         }
         departing.RefreshWeapons();
+        departing.scavDeployLocked = true;
+        departing.scavProfiles[departing.activeScav].deployLocked = true;
+    } else {
+        // PMC departure resets the SCAV cooldown immediately, independent of
+        // how that PMC raid ends.
+        departing.scavDeployLocked = false;
+        for (auto& profile : departing.scavProfiles) profile.deployLocked = false;
     }
     // Persist only safe stash contents. Raid gear is recovered on extraction;
     // closing the game during a raid must not duplicate the issued kit.
@@ -669,6 +720,16 @@ bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint
     updated.loadout=items;
     updated.clothingMask=clothing&AllClothingMask;
     updated.loadout.ConfigureGear(updated.clothingMask);
+    int newlyUnlocked=-1;
+    if (rescuedSurvivor) {
+        for (int i=0;i<static_cast<int>(updated.scavProfiles.size());++i) {
+            auto& profile=updated.scavProfiles[i];
+            if (profile.unlocked) continue;
+            profile.unlocked = true;
+            newlyUnlocked=i;
+            break;
+        }
+    }
     if (rescuedSurvivor && updated.rescuedSurvivors<MaxRescuedSurvivors) {
         int room=InitialRoomCount;
         while (room<HideoutRoomCount && updated.HasRescuedSurvivor(room)) ++room;
@@ -682,6 +743,7 @@ bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint
         }
         updated.rescuedRoomMask|=1u<<(room-InitialRoomCount);
         ++updated.rescuedSurvivors;
+        if(newlyUnlocked>=0)updated.scavProfiles[newlyUnlocked].assignedRoom=room;
     }
     if (!updated.Save()) {
         const auto failure=updated.message;
@@ -689,6 +751,20 @@ bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint
         message=failure;
         return false;
     }
+    *this=std::move(updated);
+    return true;
+}
+
+bool Hideout::SelectScav(int index)
+{
+    if (!ready || index<0 || index>=static_cast<int>(scavProfiles.size()) || !scavProfiles[index].unlocked) {
+        message="선택할 수 없는 SCAV입니다.";
+        return false;
+    }
+    auto updated=*this;
+    updated.activeScav=index;
+    updated.scavDeployLocked=updated.scavProfiles[index].deployLocked;
+    if (!updated.ChangeAppearance(PlayerAppearance::Female)) { message=updated.message; return false; }
     *this=std::move(updated);
     return true;
 }

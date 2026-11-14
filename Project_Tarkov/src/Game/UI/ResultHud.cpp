@@ -43,7 +43,9 @@ bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& charac
     ImGui::SetNextWindowSize(io.DisplaySize);
     ImGui::Begin("탈출 결과", nullptr,
         ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove);
-    ImGui::TextColored(accent, "탈출 성공");
+    const bool extracted = summary.outcome == RaidSummary::Outcome::Extracted;
+    ImGui::TextColored(extracted ? ImVec4(.40f,.90f,.55f,1) : ImVec4(.95f,.30f,.30f,1),
+        extracted ? "탈출 성공" : "탈출실패");
     ImGui::SameLine();
     ImGui::TextDisabled("/ 산업지대 레이드 결과");
     ImGui::Separator();
@@ -102,8 +104,17 @@ bool RaidHud::RenderExtractionSummary(const RaidSummary& summary, Player& charac
     ImGui::EndChild();
 
     ImGui::SameLine();
-    ImGui::BeginChild("획득 장비", {0, detailsHeight}, true);
-    ImGui::TextColored(accent, "획득 장비 (기존 장비 제외)");
+    ImGui::BeginChild(extracted ? "획득 장비" : "손실 안내", {0, detailsHeight}, true);
+    ImGui::TextColored(accent, extracted ? "획득 장비 (기존 장비 제외)" : "레이드 결과");
+    if (!extracted) {
+        ImGui::TextWrapped("출격 장비와 레이드에서 획득한 물품을 잃었습니다. 은신처에 보관한 물품은 유지됩니다.");
+        if (!summary.lostEquipment.empty()) {
+            ImGui::Spacing();
+            ImGui::TextUnformatted("손실 장비");
+            for (const auto& equipment : summary.lostEquipment)
+                ImGui::BulletText("%s", equipment.c_str());
+        }
+    } else
     if (summary.acquiredEquipment.empty()) {
         ImGui::TextUnformatted("새로 획득한 장비가 없습니다.");
     } else {

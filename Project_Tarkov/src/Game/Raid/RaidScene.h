@@ -17,6 +17,7 @@
 #include "RaidStatus.h"
 #include "../Hideout/Hideout.h"
 #include "RaidSummary.h"
+#include "../Trading/TradingTypes.h"
 
 class SceneManager;
 class RaidScene : public Scene
@@ -41,6 +42,7 @@ private:
     std::vector<std::unique_ptr<Character>> hideoutResidentNpcs;
     std::vector<std::unique_ptr<CharacterVisual>> hideoutResidentVisuals;
     std::vector<int> hideoutResidentRooms;
+    std::vector<int> hideoutResidentProfiles;
     PlayerAppearance hideoutSwitchNpcAppearance = PlayerAppearance::Male;
     PlayerAppearance hideoutPromptAppearance = PlayerAppearance::Male;
     Shader shader;
@@ -65,6 +67,8 @@ private:
     Inventory startingInventory;
     std::uint32_t startingClothingMask = 0;
     RaidSummary summary;
+    Trading::TradeSession tradeSession;
+    std::size_t questKillCountSeen = 0;
     int lootingCorpse = -1, corpseTarget = -1;
     bool corpseLootPanelOpen = false;
     bool closeLootRequested = false;
@@ -86,6 +90,7 @@ private:
     void RenderHideoutMap(int width, int height);
     bool hideoutPanel = false;
     bool hideoutStoragePanel = false;
+    bool hideoutTradingPanel = false;
     int hideoutFurnitureRoom = 0;
     int hideoutFurniture = -1;
     bool hideoutExitMenu = false;
@@ -105,6 +110,8 @@ private:
     Camera hideoutBedBeforeCamera;
     int hideoutPrompt = 0;
     int hideoutPromptRoom = -1;
+    int hideoutPromptProfile = -1;
+    int hideoutNearbyScav = -1;
     int hideoutZone = 0;
     bool hideoutCameraInRoom = false;
     bool hideoutCameraModelHidden = false;

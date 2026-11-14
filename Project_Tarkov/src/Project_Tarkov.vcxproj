@@ -201,6 +201,9 @@
     <ClCompile Include="Game\Combat\LootSystem.cpp" />
     <ClInclude Include="Game\Combat\LootSystem.h" />
     <ClInclude Include="Game\Config\RaidConfig.h" />
+    <ClCompile Include="Game\Trading\TradingSystem.cpp" />
+    <ClInclude Include="Game\Trading\TradingSystem.h" />
+    <ClInclude Include="Game\Trading\TradingTypes.h" />
     <ClCompile Include="Game\Hideout\Hideout.cpp" />
     <ClInclude Include="Game\Hideout\Hideout.h" />
     <ClCompile Include="Game\Hideout\HideoutCommands.cpp" />

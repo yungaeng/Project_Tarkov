@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <cstdlib>
 #include <fstream>
 #include <filesystem>
@@ -37,6 +38,12 @@ void RaidScene::Init()
     raid = RaidStatus{};
     if (!hasProvidedHideout)
         hideout.Load();
+    else {
+        const auto seed=static_cast<std::uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+        Hideout before=hideout;
+        hideout.trading.ResetAllTradersRandom(seed);
+        if(!hideout.Save()) { const auto failure=hideout.message;hideout=std::move(before);hideout.message=failure; }
+    }
     player = std::make_unique<Player>();
     player->appearance = hideout.appearance;
     player->SetCollisionWorld(&collisionWorld);
@@ -201,6 +208,13 @@ void RaidScene::Update(float dt)
     if (player->position.y < -30) player->vitals.Damage(100);
     FollowCamera(camera);
     combat.Update(dt, *player, camera, collisionWorld, loot, canLook);
+    if (player->appearance==PlayerAppearance::Male) {
+        while (questKillCountSeen<combat.KillRecords().size()) {
+            hideout.trading.OnRaidEnemyKilled();
+            ++questKillCountSeen;
+        }
+        hideout.trading.OnRaidPosition(player->position.x,player->position.z);
+    }
     if (player->vitals.Alive() && combat.Equipped() && lootingCorpse < 0)
         player->rotation.y = glm::degrees(std::atan2(camera.front.x, camera.front.z));
     FollowCamera(camera);
@@ -289,17 +303,22 @@ void RaidScene::FinishRaid(RaidPhase result)
     combat.CancelInput();
     player->StopMovement();
     Input::SetCursorCaptured(false);
+    if(result!=RaidPhase::Extracted&&player->appearance==PlayerAppearance::Male)
+        hideout.trading.OnRaidFailed();
     if (result == RaidPhase::Extracted) {
         raid.recovered = player->GetInventory();
         raid.recoveredClothing = player->clothingMask;
         const bool rescueAttempted=combat.HasRecruitedRescue();
-        const int rescuedBefore=hideout.rescuedSurvivors;
+        const int unlockedBefore=static_cast<int>(std::count_if(hideout.scavProfiles.begin(),hideout.scavProfiles.end(),[](const auto& p){return p.unlocked;}));
+        if (player->appearance==PlayerAppearance::Male) hideout.trading.OnRaidExtracted();
         hideout.Recover(raid.recovered,combat.HasRifle(),combat.Magazine(),
             player->clothingMask,rescueAttempted);
-        const bool rescuedFemale=rescueAttempted&&hideout.rescuedSurvivors>rescuedBefore;
+        const int unlockedAfter=static_cast<int>(std::count_if(hideout.scavProfiles.begin(),hideout.scavProfiles.end(),[](const auto& p){return p.unlocked;}));
+        const bool rescuedFemale=rescueAttempted&&unlockedAfter>unlockedBefore;
         raid.saveMessage = "탈출 성공: 보급품을 은신처로 반입했습니다.";
 
         summary = RaidSummary{};
+        summary.outcome = RaidSummary::Outcome::Extracted;
         summary.durationSeconds = static_cast<int>(std::round(RaidConfig::RaidDuration - raid.remaining));
         summary.kills = combat.KillRecords();
         summary.recoveredClothing = player->clothingMask;
@@ -330,9 +349,24 @@ void RaidScene::FinishRaid(RaidPhase result)
         hideout.Recover(Inventory{}, false, 0, 0);
         raid.saveMessage = "타이머 종료: MIA 처리되어 장비를 잃었습니다.";
     }
-
+    summary = RaidSummary{};
+    summary.outcome = result == RaidPhase::Dead
+        ? RaidSummary::Outcome::Dead : RaidSummary::Outcome::Missing;
+    summary.durationSeconds = static_cast<int>(std::round(RaidConfig::RaidDuration - raid.remaining));
+    summary.kills = combat.KillRecords();
+    summary.recoveredClothing = 0;
+    summary.recoveredRifle = false;
+    for (const auto& item : startingInventory.Items())
+        summary.lostEquipment.push_back(std::string(GetItemDefinition(item.type).name) + " x" + std::to_string(item.quantity));
+    for (int type=0; type<ItemTypeCount; ++type) {
+        const auto itemType=static_cast<ItemType>(type);
+        if (CanWear(itemType,player->appearance==PlayerAppearance::Male) &&
+            (startingClothingMask & ClothingBit(itemType)))
+            summary.lostEquipment.push_back(std::string(GetItemDefinition(itemType).name) + " x1 (착용 중)");
+    }
     if (!hideout.message.empty())
         raid.saveMessage = hideout.message;
+    sceneManager.RequestLoad(std::make_unique<RaidResultScene>(sceneManager, std::move(hideout), summary));
 }
 
 void RaidScene::StartRaid()
@@ -375,7 +409,9 @@ void RaidScene::StartRaid()
     corpseLootPanelOpen=false;
     lootingCorpse=-1;
     corpseTarget=-1;
-    if (hideout.rescuedSurvivors<Hideout::MaxRescuedSurvivors)
+    questKillCountSeen=0;
+    if (hideout.appearance==PlayerAppearance::Male &&
+        std::any_of(hideout.scavProfiles.begin(),hideout.scavProfiles.end(),[](const auto& p){return !p.unlocked;}))
         combat.SpawnRescueSurvivor(player->position,collisionWorld);
     summary = RaidSummary{};
     playerVisual.Reset();

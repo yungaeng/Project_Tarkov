@@ -5,8 +5,7 @@
 #define STBI_WINDOWS_UTF8
 #include "stb_image.h"
 
-bool Texture::Load(
-    const char* path)
+bool Texture::Load(const char* path, bool srgb)
 {
     int w, h, c;
 
@@ -22,7 +21,7 @@ bool Texture::Load(
 
     glTexImage2D(
         GL_TEXTURE_2D, 0,
-        GL_SRGB8_ALPHA8,
+        srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8,
         w, h, 0,
         GL_RGBA,
         GL_UNSIGNED_BYTE,

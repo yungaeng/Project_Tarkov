@@ -22,7 +22,7 @@ Project_Tarkov/                     저장소 루트
 │  │  ├─ Game/                     게임 규칙과 UI
 │  │  │  ├─ Character/  Combat/  Config/
 │  │  │  ├─ Hideout/    Inventory/  Raid/
-│  │  │  └─ UI/         World/
+│  │  │  ├─ Trading/    UI/         World/
 │  │  ├─ Animation/  Graphics/
 │  │  └─ Physics/    Scene/
 │  ├─ x64/Debug/                   생성되는 실행·빌드 결과
@@ -60,6 +60,7 @@ Project_Tarkov/                     저장소 루트
 - `Project_Tarkov/src/Game/Character/`, `Combat/`: 캐릭터와 생존 상태, 전투·AI·루팅.
 - `Project_Tarkov/src/Game/Raid/`: 레이드 진행, 결과 장면, 상태와 결과 데이터.
 - `Project_Tarkov/src/Game/Hideout/`: 저장 프로필, 은신처 상호작용, 가구 명령의 저장·실패 롤백.
+- `Project_Tarkov/src/Game/Trading/`: 상인 재고, 단계형 거래, 공용·개인 임무 상태와 HIDEOUT 저장 직렬화.
 - `Project_Tarkov/src/Game/Inventory/`: 아이템 데이터와 UI에 의존하지 않는 인벤토리 명령.
 - `Project_Tarkov/src/Game/UI/`: RaidHud·HideoutHud·InventoryHud·ResultHud와 공통 HudWidgets·InventoryUi.
 - `Project_Tarkov/src/Game/World/`: 맵 로딩과 절차적 배치 구현. 기본 도형과 배칭은 `Project_Tarkov/src/Graphics/WorldGeometry.*`를 사용한다.

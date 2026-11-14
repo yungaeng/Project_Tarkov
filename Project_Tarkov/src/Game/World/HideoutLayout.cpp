@@ -122,6 +122,8 @@ void AppendShell(std::uint32_t rescuedRoomMask,CollisionWorld& world,std::vector
     for(const auto& entry:shell) {
         if(!(entry.states&state)) continue;
         const auto& b=entry.block;
+        // The corridor now continues beyond the former right-hand end rail.
+        if(b.center.x>=25.9f && b.center.z>=0.f) continue;
         if(entry.collision!=2) blocks.push_back(b);
         if(entry.collision) world.AddBox({b.center-b.size*.5f,b.center+b.size*.5f});
     }

@@ -10,6 +10,7 @@
     <Filter Include="Game\Hideout" />
     <Filter Include="Game\Inventory" />
     <Filter Include="Game\Raid" />
+    <Filter Include="Game\Trading" />
     <Filter Include="Game\UI" />
     <Filter Include="Game\World" />
     <Filter Include="Graphics" />
@@ -60,6 +61,9 @@
     <ClCompile Include="Game\Combat\LootSystem.cpp"><Filter>Game\Combat</Filter></ClCompile>
     <ClInclude Include="Game\Combat\LootSystem.h"><Filter>Game\Combat</Filter></ClInclude>
     <ClInclude Include="Game\Config\RaidConfig.h"><Filter>Game\Config</Filter></ClInclude>
+    <ClCompile Include="Game\Trading\TradingSystem.cpp"><Filter>Game\Trading</Filter></ClCompile>
+    <ClInclude Include="Game\Trading\TradingSystem.h"><Filter>Game\Trading</Filter></ClInclude>
+    <ClInclude Include="Game\Trading\TradingTypes.h"><Filter>Game\Trading</Filter></ClInclude>
     <ClCompile Include="Game\Hideout\Hideout.cpp"><Filter>Game\Hideout</Filter></ClCompile>
     <ClInclude Include="Game\Hideout\Hideout.h"><Filter>Game\Hideout</Filter></ClInclude>
     <ClCompile Include="Game\Hideout\HideoutCommands.cpp"><Filter>Game\Hideout</Filter></ClCompile>

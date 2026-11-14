@@ -15,8 +15,7 @@ public:
         if (id) glDeleteTextures(1, &id);
         id = 0;
     }
-    bool Load(
-        const char* path);
+    bool Load(const char* path, bool srgb = true);
 
     void Bind(
         int slot = 0);

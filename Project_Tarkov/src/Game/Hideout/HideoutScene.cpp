@@ -48,9 +48,12 @@ void RaidScene::EnterHideout()
     camera = Camera{};
     hideoutPanel = false;
     hideoutStoragePanel = false;
+    hideoutTradingPanel = false;
     hideoutExitMenu = false;
     hideoutPrompt = hideoutZone = 0;
     hideoutPromptRoom = -1;
+    hideoutPromptProfile = -1;
+    hideoutNearbyScav = -1;
     hideoutBedPoseActive=false;
     hideoutBedTestPrompt=false;
     corpseLootPanelOpen=false;
@@ -78,16 +81,21 @@ void RaidScene::ConfigureHideoutSwitchNpc()
     hideoutResidentNpcs.clear();
     hideoutResidentVisuals.clear();
     hideoutResidentRooms.clear();
-    for (int room=Hideout::InitialRoomCount;room<Hideout::HideoutRoomCount;++room) {
-        if (!hideout.HasRescuedSurvivor(room)) continue;
+    hideoutResidentProfiles.clear();
+    for (int profile=0;profile<static_cast<int>(hideout.scavProfiles.size());++profile) {
+        const auto& state=hideout.scavProfiles[profile];
+        if (!state.unlocked || (hideout.appearance==PlayerAppearance::Female && profile==hideout.activeScav)) continue;
+        const int room=state.assignedRoom;
         auto resident=std::make_unique<Character>();
-        resident->position={room*6.f+3.f,0.f,-4.5f};
+        resident->position=room>=0 ? glm::vec3(room*6.f+3.f,0.f,-4.5f)
+            : glm::vec3(20.f+profile*.8f,0.f,-2.2f);
         auto visual=std::make_unique<CharacterVisual>();
         visual->Init(PlayerAppearance::Female);
         visual->Update(0,*resident,npcState);
         hideoutResidentNpcs.push_back(std::move(resident));
         hideoutResidentVisuals.push_back(std::move(visual));
         hideoutResidentRooms.push_back(room);
+        hideoutResidentProfiles.push_back(profile);
     }
 }
 
@@ -247,6 +255,15 @@ void RaidScene::UpdateHideout(float dt)
         }
         return;
     }
+    if (hideoutTradingPanel) {
+        if (Input::GetKeyDown(GLFW_KEY_ESCAPE) || Input::GetKeyDown(GLFW_KEY_F)) {
+            hideout.trading.Rollback(tradeSession,hideout.storage);
+            tradeSession.open=false;
+            hideoutTradingPanel=false;
+            Input::SetCursorCaptured(!hideoutTradingPanel);
+        }
+        return;
+    }
     if (hideoutPanel||hideoutStoragePanel) {
         if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
             hideoutExitMenu = true;
@@ -343,11 +360,13 @@ void RaidScene::UpdateHideout(float dt)
     hideoutZone = zone;
     float nearestNpcDistance=2.25f;
     bool nearSwitchNpc=false;
+    hideoutPromptProfile=-1;
+    hideoutNearbyScav=-1;
     PlayerAppearance interactionAppearance=hideoutSwitchNpcAppearance;
     int interactionRoom=-1;
     const float npcDx=p.x-hideoutSwitchNpc.position.x,npcDz=p.z-hideoutSwitchNpc.position.z;
     const float baseNpcDistance=npcDx*npcDx+npcDz*npcDz;
-    if (baseNpcDistance<nearestNpcDistance) {
+    if (hideoutSwitchNpcAppearance==PlayerAppearance::Male && baseNpcDistance<nearestNpcDistance) {
         nearestNpcDistance=baseNpcDistance;
         nearSwitchNpc=true;
     }
@@ -360,6 +379,8 @@ void RaidScene::UpdateHideout(float dt)
             nearSwitchNpc=true;
             interactionAppearance=PlayerAppearance::Female;
             interactionRoom=hideoutResidentRooms[i];
+            hideoutPromptProfile=hideoutResidentProfiles[i];
+            hideoutNearbyScav=hideoutPromptProfile;
         }
     }
     hideoutFurniture = -1;
@@ -386,9 +407,14 @@ void RaidScene::UpdateHideout(float dt)
         return;
     }
     if (!hideoutPrompt && nearSwitchNpc && hideoutFurniture<0 && Input::GetKeyDown(GLFW_KEY_F)) {
-        hideoutPrompt = 2;
+        hideoutPrompt = hideoutPromptProfile>=0 ? 3 : 2;
         hideoutPromptAppearance=interactionAppearance;
         hideoutPromptRoom=interactionRoom;
+        player->StopMovement();
+        Input::SetCursorCaptured(false);
+    } else if (!hideoutPrompt && !hideoutBedTestPrompt &&
+        HideoutMap::NearTradingStairwell(p.x,p.z,hideout.AvailableRoomCount()) && Input::GetKeyDown(GLFW_KEY_F)) {
+        hideoutPrompt=4;
         player->StopMovement();
         Input::SetCursorCaptured(false);
     } else if (!hideoutPrompt && hideoutFurniture>=0 && Input::GetKeyDown(GLFW_KEY_F)) {
@@ -410,10 +436,22 @@ void RaidScene::RenderHideoutMap(int width, int height)
     hideout.floorLoot.Render(shader,cubeMesh,camera,float(width),float(height));
     if (!hideoutCameraModelHidden)
         playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
-    hideoutSwitchNpcVisual.Render(hideoutSwitchNpc,shader,camera,float(width),float(height),glm::vec3(1),false);
+    const bool defaultScavIsResident=hideout.appearance==PlayerAppearance::Male &&
+        hideout.scavProfiles[0].unlocked && hideout.scavProfiles[0].assignedRoom==1;
+    if(!defaultScavIsResident)
+        hideoutSwitchNpcVisual.Render(hideoutSwitchNpc,shader,camera,float(width),float(height),glm::vec3(1),false);
     for (std::size_t i=0;i<hideoutResidentNpcs.size();++i)
         hideoutResidentVisuals[i]->Render(*hideoutResidentNpcs[i],shader,camera,
             float(width),float(height),glm::vec3(1),false);
+    if (hideoutTradingPanel) {
+        hud.RenderTrading(hideout,tradeSession,hideoutTradingPanel);
+        if (!hideoutTradingPanel) {
+            hideout.trading.Rollback(tradeSession,hideout.storage);
+            tradeSession.open=false;
+            Input::SetCursorCaptured(true);
+        }
+        return;
+    }
     if (hideoutStoragePanel) {
         const bool wasStoragePanelOpen=hideoutStoragePanel;
         hud.RenderHideoutStorage(hideout,hideoutFurnitureRoom,hideoutFurniture,
@@ -433,16 +471,27 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     if (!hideoutPrompt && !hideoutBedPoseActive && !hideoutExitMenu) {
-        ImGui::SetNextWindowPos({width*.5f,height*.86f},ImGuiCond_Always,{.5f,0.f});
-        ImGui::Begin("은신처 보관함 안내",nullptr,ImGuiWindowFlags_NoDecoration|
-            ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_AlwaysAutoResize);
-        if (const auto* item=hideout.floorLoot.Target())
-            ImGui::Text("[F] %s 회수",GetItemDefinition(item->stack.type).name);
-        else if (hideoutFurniture==Hideout::PelicanStorage)
-            ImGui::TextUnformatted("[F] 펠리컨 케이스 열기 · 창고");
-        else if (hideoutFurniture>=0)
-            ImGui::TextUnformatted("[F] 보관함 열기");
-        ImGui::End();
+        const auto* floorItem=hideout.floorLoot.Target();
+        const bool nearTradingStairwell=player && HideoutMap::NearTradingStairwell(
+            player->position.x,player->position.z,hideout.AvailableRoomCount());
+        const bool showInteractionHint=floorItem || hideoutFurniture==Hideout::PelicanStorage ||
+            hideoutFurniture>=0 || hideoutNearbyScav>=0 || nearTradingStairwell;
+        if (showInteractionHint) {
+            ImGui::SetNextWindowPos({width*.5f,height*.86f},ImGuiCond_Always,{.5f,0.f});
+            ImGui::Begin("은신처 보관함 안내",nullptr,ImGuiWindowFlags_NoDecoration|
+                ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_AlwaysAutoResize);
+            if (floorItem)
+                ImGui::Text("[F] %s 회수",GetItemDefinition(floorItem->stack.type).name);
+            else if (hideoutFurniture==Hideout::PelicanStorage)
+                ImGui::TextUnformatted("[F] 펠리컨 케이스 열기 · 창고");
+            else if (hideoutFurniture>=0)
+                ImGui::TextUnformatted("[F] 보관함 열기");
+            else if(hideoutNearbyScav>=0)
+                ImGui::Text("[F] %s와 대화",hideout.scavProfiles[hideoutNearbyScav].name);
+            else if (nearTradingStairwell)
+                ImGui::TextUnformatted("[F] 거래소 · 상인과 거래");
+            ImGui::End();
+        }
     }
     if (hideoutBedPoseActive||hideoutBedTestPrompt) {
         ImGui::SetNextWindowPos({width*.5f,height*.76f},ImGuiCond_Always,{.5f,0.f});
@@ -467,11 +516,27 @@ void RaidScene::RenderHideoutMap(int width, int height)
         ImGui::End();
     }
     if (hideoutPrompt) {
+        if (hideoutPrompt==3) {
+            bool dialogueOpen=true;
+            const auto priorAppearance=hideout.appearance;
+            hud.RenderScavDialogue(hideout,hideoutPromptProfile,dialogueOpen);
+            if (hideout.appearance!=priorAppearance) {
+                player->appearance=hideout.appearance;
+                player->clothingMask=hideout.clothingMask;
+                playerVisual.Reset();playerVisual.Init(hideout.appearance);
+                ConfigureHideoutSwitchNpc();
+            }
+            if (!dialogueOpen) {
+                hideoutPrompt=0;
+                Input::SetCursorCaptured(true);
+            }
+        } else {
         ImGui::SetNextWindowPos({width*.5f,height*.5f},ImGuiCond_Always,{.5f,.5f});
         ImGui::Begin("은신처 상호작용",nullptr,ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
         const auto nextAppearance = hideoutPromptAppearance;
         ImGui::TextUnformatted(hideoutPrompt==1 ? "레이드에 진입하시겠습니까?" :
-            nextAppearance == PlayerAppearance::Male ? "남캐로 캐릭터 전환 하시겠습니까?" : "여캐로 캐릭터 전환 하시겠습니까?");
+            hideoutPrompt==4 ? "거래소에서 상인과 거래하시겠습니까?" :
+            nextAppearance == PlayerAppearance::Male ? "PMC로 전환하시겠습니까?" : "SCAV로 전환하시겠습니까?");
         if (hideoutPrompt == 1) {
             ImGui::TextUnformatted(hideout.appearance == PlayerAppearance::Female
                 ? "SCAV: 착용 장비와 휴대품을 창고에 자동 보관하고 무작위 장비로 출격합니다."
@@ -482,6 +547,11 @@ void RaidScene::RenderHideoutMap(int width, int height)
         ImGui::BeginDisabled(!Input::IsFocused());
         if(ImGui::Button("예",{120,36})) {
             if(hideoutPrompt==1) deployRequested=true;
+            else if(hideoutPrompt==4) {
+                tradeSession=Trading::TradeSession{};
+                tradeSession.open=true;
+                hideoutTradingPanel=true;
+            }
             else if(hideout.ChangeAppearance(nextAppearance,hideoutPromptRoom)) {
                 player->appearance=hideout.appearance;
                 player->clothingMask=hideout.clothingMask;
@@ -495,7 +565,7 @@ void RaidScene::RenderHideoutMap(int width, int height)
             }
             hideoutPrompt=0;
             hideoutPromptRoom=-1;
-            Input::SetCursorCaptured(true);
+            Input::SetCursorCaptured(!hideoutTradingPanel);
         }
         ImGui::SameLine();
         if(ImGui::Button("아니요",{120,36})) {
@@ -505,6 +575,7 @@ void RaidScene::RenderHideoutMap(int width, int height)
         }
         ImGui::EndDisabled();
         ImGui::End();
+        }
     }
     const bool wasExitMenuOpen=hideoutExitMenu;
     if (hideoutExitMenu)

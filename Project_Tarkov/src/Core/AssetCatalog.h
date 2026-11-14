@@ -42,4 +42,7 @@ inline constexpr const char* Animations_Weapons_Holster_anim = "Animations/Weapo
 inline constexpr const char* Shaders_cube_vs = "Shaders/cube.vs";
 inline constexpr const char* Shaders_cube_fs = "Shaders/cube.fs";
 inline constexpr const char* UI_items_png = "UI/items.png";
+inline constexpr const char* UI_trader_weapon_png = "UI/trader_weapon.png";
+inline constexpr const char* UI_trader_medical_png = "UI/trader_medical.png";
+inline constexpr const char* UI_trader_gear_png = "UI/trader_gear.png";
 }

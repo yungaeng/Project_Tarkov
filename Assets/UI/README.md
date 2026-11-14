@@ -13,3 +13,9 @@ Edit prompt (image 1 = generated atlas; image 2 = user reference):
 > Edit image 1 inventory atlas only at row 2 column 3: replace black underwear with the garment in image 2 reference, black thin string thong with triangular front, product only no person. Keep EXACT 4x4 grid positions and all other 14 item photographs unchanged. Same dark charcoal background and detailed realistic product rendering. No text.
 
 The photographs are inventory representations, not exact renders of the existing game meshes. The character underwear mesh is unchanged by this atlas edit.
+
+## Trader portraits
+
+`trader_weapon.png`, `trader_medical.png`, and `trader_gear.png` are square pixel-art portraits displayed in the hideout stairwell trading panel. All three share the weapon trader's coarse 16-bit PC-98-style dots, limited palette, dithered stipple shading, chunky outlines, and stepped pixel edges. Each trader has a serious, unsmiling expression. The weapon trader is an older male arms dealer; the gear trader is an adult female clothing/kit trader. The medical trader is an adult woman in her early twenties, with a Bronya-inspired cool silver palette, realistic loose shoulder-length hair, and a Korean digital-camouflage field medic uniform with a red-cross armband. Her open jacket frames a low-neck black lace-trimmed top. Each portrait keeps a supply-room background suited to its trader's inventory.
+
+The final portraits were generated and refined with the built-in `image_gen` tool on 2026-11-13. They are runtime assets; source generation files remain outside the repository.

@@ -58,6 +58,13 @@ void RaidHud::Init(GLFWwindow* window)
     if (!io.FontDefault)
         throw std::runtime_error("Korean UI requires Malgun Gothic or Gulim in Windows Fonts");
     if (!itemImages.Load(AssetCatalog::UI_items_png)) throw std::runtime_error("Missing inventory image atlas");
+    const std::array<const char*,Trading::TraderCount> traderPortraitPaths{{
+        AssetCatalog::UI_trader_weapon_png,AssetCatalog::UI_trader_medical_png,AssetCatalog::UI_trader_gear_png
+    }};
+    for(std::size_t i=0;i<traderPortraits.size();++i)
+        // ImGui renders to the default non-sRGB framebuffer; keep portrait
+        // bytes in their authored display color instead of decoding as sRGB.
+        if(!traderPortraits[i].Load(traderPortraitPaths[i],false))throw std::runtime_error("Missing trader portrait asset");
     ImGui::StyleColorsDark();
     windowReady = ImGui_ImplGlfw_InitForOpenGL(window, true);
     if (!windowReady) throw std::runtime_error("HUD window initialization failed");
@@ -253,6 +260,7 @@ void RaidHud::Shutdown()
 {
     inventoryPreviewVisual.reset();
     itemImages.Reset();
+    for(auto& portrait:traderPortraits)portrait.Reset();
     if (rendererReady) ImGui_ImplOpenGL3_Shutdown();
     if (windowReady) ImGui_ImplGlfw_Shutdown();
     if (contextReady) ImGui::DestroyContext();

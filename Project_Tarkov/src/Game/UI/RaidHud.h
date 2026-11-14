@@ -1,5 +1,7 @@
 #pragma once
 #include "../Inventory/Inventory.h"
+#include "../Trading/TradingTypes.h"
+#include <array>
 #include <memory>
 #include "../../Graphics/Texture.h"
 struct GLFWwindow;
@@ -38,6 +40,8 @@ public:
     void RenderHideoutStorage(Hideout& hideout, int room, int furniture, Player& character,
         CharacterVisual& visual, Shader& shader, bool& panelOpen, bool& exitMenuOpen, const CollisionWorld& world);
     void RenderHideoutPauseMenu(bool& exitMenuOpen);
+    void RenderTrading(Hideout& hideout, Trading::TradeSession& session, bool& panelOpen);
+    void RenderScavDialogue(Hideout& hideout, int profileIndex, bool& panelOpen);
     void SetHideoutHealthTab(bool health) { hideoutHealthTab = health; }
     bool RenderExtractionSummary(const RaidSummary& summary, Player& character, CharacterVisual& visual, Shader& shader,
         Character* rescuedCharacter = nullptr, CharacterVisual* rescuedVisual = nullptr);
@@ -46,6 +50,7 @@ private:
     void RenderInventoryPanel(Player&, LootSystem&, InventoryActions&, const CollisionWorld&, Enemy*,
         HudWidgets::CharacterPreview&, HudWidgets::CharacterPreview&, bool* takeWeapon, bool* closeLoot);
     Texture itemImages;
+    std::array<Texture, Trading::TraderCount> traderPortraits;
     std::unique_ptr<CharacterVisual> inventoryPreviewVisual;
     float inventoryPreviewRotation = 0.f;
     float enemyPreviewRotation = 0.f;

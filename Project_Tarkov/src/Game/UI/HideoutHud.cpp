@@ -367,6 +367,238 @@ void RaidHud::RenderHideout(Hideout& hideout, Player& character, CharacterVisual
     ImGui::Render(); ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+void RaidHud::RenderScavDialogue(Hideout& hideout,int profileIndex,bool& panelOpen)
+{
+    if(profileIndex<0||profileIndex>=static_cast<int>(hideout.scavProfiles.size())) { panelOpen=false;return; }
+    const int questId=401+profileIndex;
+    const auto profile=hideout.scavProfiles[profileIndex];
+    const auto defs=hideout.trading.QuestDefs();
+    const auto questProgress=hideout.trading.QuestProgresses();
+    const auto defIt=std::find_if(defs.begin(),defs.end(),
+        [&](const auto& q){return q.id==questId;});
+    const auto progressIt=std::find_if(questProgress.begin(),questProgress.end(),
+        [&](const auto& p){return p.questId==questId;});
+    ImGui::SetNextWindowSize({540,360},ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),ImGuiCond_Always,{.5f,.5f});
+    if(ImGui::Begin(profile.name,&panelOpen,ImGuiWindowFlags_NoCollapse)) {
+        if(defIt!=defs.end()&&progressIt!=questProgress.end()) {
+            const auto& def=*defIt;
+            const auto& progress=*progressIt;
+            const char* line=progress.status==Trading::QuestStatus::Available?def.intro.c_str():
+                progress.status==Trading::QuestStatus::Active?def.active.c_str():
+                progress.status==Trading::QuestStatus::ReadyToComplete?def.complete.c_str():"고마워요. 덕분에 한결 나아졌어요.";
+            ImGui::TextWrapped("\"%s\"",line);
+            ImGui::Spacing();ImGui::Separator();
+            ImGui::Text("개인 임무: %s",def.title.c_str());
+            ImGui::TextWrapped("%s",def.description.c_str());
+            ImGui::Text("진행도: %d / %d",progress.count,def.required);
+            if(progress.status==Trading::QuestStatus::Available) {
+                if(ImGui::Button("개인 임무 수락"))hideout.trading.AcceptQuest(questId,hideout);
+            } else if(progress.status==Trading::QuestStatus::Active&&def.objective==Trading::Objective::DeliverItem) {
+                if(ImGui::Button("물품 전달"))hideout.trading.DeliverQuest(questId,hideout);
+            } else if(progress.status==Trading::QuestStatus::ReadyToComplete) {
+                if(ImGui::Button("완료 및 보상 받기"))hideout.trading.CompleteQuest(questId,hideout);
+            } else if(progress.status==Trading::QuestStatus::Completed) ImGui::TextUnformatted("완료됨");
+        }
+        ImGui::Separator();
+        if(profile.deployLocked)ImGui::TextColored({.95f,.45f,.4f,1},"출격 대기 중 · PMC 출격 후 다시 선택할 수 있습니다.");
+        if(ImGui::Button("이 SCAV로 전환",{180,34})) {
+            if(hideout.SelectScav(profileIndex))panelOpen=false;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("대화 종료",{140,34}))panelOpen=false;
+    }
+    ImGui::End();
+}
+
+void RaidHud::RenderTrading(Hideout& hideout,Trading::TradeSession& session,bool& panelOpen)
+{
+    if(!rendererReady)return;
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    struct DragPayload { int source; int index; };
+    auto beginDrag=[](int source,int index) {
+        DragPayload payload{source,index};
+        if(ImGui::BeginDragDropSource()) {
+            ImGui::SetDragDropPayload("TARKOV_TRADE_ITEM",&payload,sizeof(payload));
+            ImGui::TextUnformatted(source==0?"상인 물품":"내 창고 물품");
+            ImGui::EndDragDropSource();
+        }
+    };
+    const auto traderName=[&](int i){return hideout.trading.GetTrader(static_cast<Trading::TraderId>(i)).name.c_str();};
+    const auto displayName=[](const ItemStack& item){return GetItemDefinition(item.type).name;};
+
+    ImGui::PushStyleColor(ImGuiCol_WindowBg,{.035f,.043f,.039f,1});
+    ImGui::PushStyleColor(ImGuiCol_ChildBg,{.055f,.065f,.057f,1});
+    ImGui::PushStyleColor(ImGuiCol_Button,{.16f,.18f,.15f,1});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,{.32f,.33f,.24f,1});
+    ImGui::PushStyleColor(ImGuiCol_Border,{.28f,.30f,.24f,1});
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,0.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{10,8});
+    ImGui::SetNextWindowPos({0,0});ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::Begin("상인 거래",&panelOpen,ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoMove);
+    ImGui::TextColored({.78f,.68f,.42f,1},"거래소");
+    ImGui::SameLine(ImGui::GetWindowWidth()-85);if(ImGui::Button("뒤로",{65,24}))panelOpen=false;
+    for(int i=0;i<Trading::TraderCount;++i) {
+        if(i)ImGui::SameLine();
+        ImGui::PushID(i);
+        ImGui::BeginGroup();
+        ImGui::Image(static_cast<ImTextureID>(traderPortraits[static_cast<std::size_t>(i)].id),{96,96});
+        ImGui::SameLine();
+        if(ImGui::Button(traderName(i),{150,96})) {
+            if(session.trader!=static_cast<Trading::TraderId>(i)) {
+                hideout.trading.Rollback(session,hideout.storage);
+                session.open=true;session.trader=static_cast<Trading::TraderId>(i);session.message.clear();
+            }
+        }
+        ImGui::EndGroup();
+        ImGui::PopID();
+    }
+    ImGui::SameLine();
+    const bool tradeTabActive=session.tab==Trading::Tab::Trade;
+    if(tradeTabActive)ImGui::PushStyleColor(ImGuiCol_Button,{.43f,.39f,.27f,1});
+    if(ImGui::Button("거래",{76,34}))session.tab=Trading::Tab::Trade;
+    if(tradeTabActive)ImGui::PopStyleColor();
+    ImGui::SameLine();
+    const bool questTabActive=session.tab==Trading::Tab::Quests;
+    if(questTabActive)ImGui::PushStyleColor(ImGuiCol_Button,{.43f,.39f,.27f,1});
+    if(ImGui::Button("임무",{76,34})) { hideout.trading.Rollback(session,hideout.storage); session.tab=Trading::Tab::Quests; }
+    if(questTabActive)ImGui::PopStyleColor();
+    ImGui::Separator();
+    auto& currentTrader=hideout.trading.GetTrader(session.trader);
+    if(session.tab==Trading::Tab::Quests) {
+        ImGui::Text("%s · 충성도 %d",currentTrader.name.c_str(),currentTrader.loyalty);
+        ImGui::BeginChild("##TraderQuestList",{0,ImGui::GetContentRegionAvail().y-55},true);
+        const auto questDefs=hideout.trading.QuestDefs();
+        const auto questProgresses=hideout.trading.QuestProgresses();
+        for(const auto& def:questDefs) {
+            if(def.trader!=session.trader||def.personalOwner>=0)continue;
+            const auto pIt=std::find_if(questProgresses.begin(),questProgresses.end(),[&](const auto& p){return p.questId==def.id;});
+            if(pIt==questProgresses.end())continue;
+            const auto& p=*pIt;
+            ImGui::PushID(def.id);ImGui::TextUnformatted(def.title.c_str());ImGui::TextWrapped("%s",def.description.c_str());
+            ImGui::Text("진행도 %d / %d · 보상 %d RUB + %s x%d",p.count,def.required,def.rewardRubles,displayName({def.rewardItem,def.rewardItemCount}),def.rewardItemCount);
+            if(p.status==Trading::QuestStatus::Available) { if(ImGui::Button("수락"))hideout.trading.AcceptQuest(def.id,hideout); }
+            else if(p.status==Trading::QuestStatus::Active&&def.objective==Trading::Objective::DeliverItem) { if(ImGui::Button("창고 물품 납품"))hideout.trading.DeliverQuest(def.id,hideout); }
+            else if(p.status==Trading::QuestStatus::Active) ImGui::TextUnformatted("PMC 레이드에서 목표를 수행하세요.");
+            else if(p.status==Trading::QuestStatus::ReadyToComplete) { if(ImGui::Button("완료 및 보상 수령"))hideout.trading.CompleteQuest(def.id,hideout); }
+            else ImGui::TextUnformatted("완료됨");
+            ImGui::Separator();ImGui::PopID();
+        }
+        ImGui::EndChild();
+    } else {
+        const float areaHeight=(std::max)(220.f,ImGui::GetContentRegionAvail().y-30.f);
+        const float totalWidth=ImGui::GetContentRegionAvail().x;
+        const float outerWidth=(totalWidth-24.f)*.35f;
+        const float middleWidth=totalWidth-outerWidth*2.f-24.f;
+        const auto texture=static_cast<ImTextureID>(itemImages.id);
+        auto drawInventory=[&](const char* id,Inventory& inventory,int source,float panelWidth) {
+            ImGui::BeginChild(id,{panelWidth,areaHeight},true);
+            ImGui::TextUnformatted(source==0?"상점 재고":"창고");
+            ImGui::SameLine();
+            if(source==0)ImGui::TextDisabled("충성도 %d",currentTrader.loyalty);
+            else ImGui::TextColored({.8f,.76f,.55f,1},"%lld RUB",static_cast<long long>(hideout.rubles));
+            ImGui::Separator();
+            ImGui::BeginChild("##StockScroll",{0,0},false,ImGuiWindowFlags_HorizontalScrollbar);
+            const float cell=(std::max)(25.f,(ImGui::GetContentRegionAvail().x-2.f)/10.f);
+            const auto origin=ImGui::GetCursorScreenPos();
+            auto* draw=ImGui::GetWindowDrawList();
+            const int rows=(std::max)(8,(inventory.SlotCapacity()+9)/10);
+            for(int row=0;row<rows;++row)for(int col=0;col<10;++col) {
+                const ImVec2 p(origin.x+col*cell,origin.y+row*cell);
+                draw->AddRectFilled(p,{p.x+cell,p.y+cell},((row+col)&1)?IM_COL32(26,32,28,255):IM_COL32(22,28,24,255));
+                draw->AddRect(p,{p.x+cell,p.y+cell},IM_COL32(63,68,57,150));
+            }
+            const auto items=inventory.Items();
+            for(int i=0;i<static_cast<int>(items.size());++i) {
+                const auto& item=items[i];
+                if(item.slot<0)continue;
+                const auto footprint=ItemFootprint(item.type);
+                const ImVec2 p(origin.x+(item.slot%10)*cell,origin.y+(item.slot/10)*cell);
+                const ImVec2 size(footprint.width*cell-2,footprint.height*cell-2);
+                ImGui::SetCursorScreenPos(p);ImGui::PushID(i);
+                ImGui::InvisibleButton("##StockItem",size);
+                InventoryUi::Picture(draw,texture,item.type,p,size);
+                draw->AddRect(p,{p.x+size.x,p.y+size.y},IM_COL32(119,122,95,190));
+                const auto price=std::to_string(hideout.trading.Price(item));
+                draw->AddText({p.x+2,p.y+1},IM_COL32(235,229,202,255),price.c_str());
+                const auto quantity=std::to_string(item.quantity);
+                draw->AddText({p.x+size.x-ImGui::CalcTextSize(quantity.c_str()).x-3,p.y+size.y-ImGui::GetFontSize()},IM_COL32(238,238,220,255),quantity.c_str());
+                if(ImGui::IsItemHovered())ImGui::SetTooltip("%s x%d\n%s RUB\n거래판으로 드래그",displayName(item),item.quantity,price.c_str());
+                beginDrag(source,i);ImGui::PopID();
+            }
+            ImGui::SetCursorScreenPos(origin);ImGui::Dummy({cell*10,cell*rows});
+            ImGui::EndChild();ImGui::EndChild();
+        };
+        drawInventory("##MyStashTrade",hideout.storage,1,outerWidth);
+        ImGui::SameLine(0,12);
+        ImGui::BeginChild("##TradeStage",{middleWidth,areaHeight},true);
+        ImGui::TextColored({.85f,.79f,.51f,1},"거래 대기");
+        ImGui::Separator();
+        const int buyTotal=hideout.trading.BuyTotal(session),sellTotal=hideout.trading.SellTotal(session);
+        ImGui::Text("구매 %d  /  판매 %d RUB",buyTotal,sellTotal);
+        ImGui::Text("정산 후 %lld RUB",static_cast<long long>(hideout.rubles)-buyTotal+sellTotal);
+        if(ImGui::Button("거래하기",{-1,36}))hideout.trading.Commit(session,hideout);
+        if(ImGui::Button("모두 원위치",{-1,26}))hideout.trading.Rollback(session,hideout.storage);
+        ImGui::BeginChild("##StageScroll",{0,0},false);
+        auto drawStageGrid=[&](const char* label,bool buyGrid) {
+            ImGui::TextUnformatted(label);
+            const float cell=(std::max)(24.f,(ImGui::GetContentRegionAvail().x-4.f)/Trading::StageColumns);
+            const auto origin=ImGui::GetCursorScreenPos();
+            auto* draw=ImGui::GetWindowDrawList();
+            for(int y=0;y<Trading::StageRows;++y)for(int x=0;x<Trading::StageColumns;++x) {
+                ImGui::PushID((buyGrid?4000:5000)+y*Trading::StageColumns+x);
+                const ImVec2 p(origin.x+x*cell,origin.y+y*cell);
+                ImGui::SetCursorScreenPos(p);ImGui::InvisibleButton("##tradeCell",{cell,cell});
+                draw->AddRectFilled(p,{p.x+cell,p.y+cell},((x+y)&1)?IM_COL32(29,35,28,255):IM_COL32(23,29,24,255));
+                draw->AddRect(p,{p.x+cell,p.y+cell},IM_COL32(71,75,58,180));
+                if(ImGui::BeginDragDropTarget()) {
+                    if(const auto* payload=ImGui::AcceptDragDropPayload("TARKOV_TRADE_ITEM")) {
+                        if(payload->DataSize==sizeof(DragPayload)) {
+                            const auto data=*static_cast<const DragPayload*>(payload->Data);
+                            if(buyGrid&&data.source==0)hideout.trading.StageFromTrader(session,data.index,x,y);
+                            else if(!buyGrid&&data.source==1)hideout.trading.StageFromPlayer(session,hideout,data.index,x,y);
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+                ImGui::PopID();
+            }
+            const auto staged=buyGrid?session.buy:session.sell;
+            for(int i=0;i<static_cast<int>(staged.size());++i) {
+                const auto& item=staged[i];const auto footprint=ItemFootprint(item.stack.type);
+                const ImVec2 p(origin.x+item.stageX*cell,origin.y+item.stageY*cell);
+                const ImVec2 size(footprint.width*cell-2,footprint.height*cell-2);
+                InventoryUi::Picture(draw,texture,item.stack.type,p,size);
+                draw->AddRect(p,{p.x+size.x,p.y+size.y},IM_COL32(177,164,102,255));
+                const auto quantity=std::to_string(item.stack.quantity);
+                draw->AddText({p.x+3,p.y+3},IM_COL32(240,236,207,255),quantity.c_str());
+                const auto mouse=ImGui::GetIO().MousePos;
+                if(ImGui::IsWindowHovered()&&mouse.x>=p.x&&mouse.x<p.x+size.x&&mouse.y>=p.y&&mouse.y<p.y+size.y) {
+                    ImGui::SetTooltip("%s x%d\n우클릭: 원위치",displayName(item.stack),item.stack.quantity);
+                    if(ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+                        if(buyGrid)hideout.trading.UnstageBuy(session,i);
+                        else hideout.trading.UnstageSell(session,hideout.storage,i);
+                        break;
+                    }
+                }
+            }
+            ImGui::SetCursorScreenPos(origin);ImGui::Dummy({cell*Trading::StageColumns,cell*Trading::StageRows});
+        };
+        drawStageGrid("구매 · 상점 → 창고",true);
+        ImGui::Spacing();drawStageGrid("판매 · 창고 → 상점",false);
+        ImGui::EndChild();ImGui::EndChild();
+        ImGui::SameLine(0,12);
+        drawInventory("##TraderStock",currentTrader.stash,0,0);
+    }
+    if(!session.message.empty())ImGui::TextWrapped("%s",session.message.c_str());
+    ImGui::End();
+    ImGui::PopStyleVar(2);ImGui::PopStyleColor(5);
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void RaidHud::RenderHideoutStorage(Hideout& hideout, int room, int furniture, Player& character,
     CharacterVisual& visual, Shader& shader, bool& panelOpen, bool& exitMenuOpen, const CollisionWorld& world)
 {
