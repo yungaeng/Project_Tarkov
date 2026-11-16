@@ -1,0 +1,22 @@
+# Room 3 unique bed-search pose: low, asymmetric lunge over the body.
+# The planted leg supports the weight while the opposite leg lifts clear;
+# the right arm reaches across the target and the left arm braces near the waist.
+Root 0 0 0 0 0 0 0
+Hips 0 0 0 0 0 0 0
+Spine 0 0 0 0 37 0 -8
+Spine1 0 0 0 0 12 0 -4
+Spine2 0 0 0 0 -10 0 6
+Neck 0 0 0 0 -12 0 0
+Head 0 0 0 0 -10 0 0
+RightArm 0 0 0 0 78 18 -22
+RightForeArm 0 0 0 0 30 0 -12
+RightHand 0 0 0 0 -14 12 8
+LeftArm 0 0 0 0 48 -42 22
+LeftForeArm 0 0 0 0 72 0 12
+LeftHand 0 0 0 0 -8 -18 4
+RightUpLeg 0 0 0 0 12 8 -5
+RightLeg 0 0 0 0 -105 0 0
+RightFoot 0 0 0 0 26 0 0
+LeftUpLeg 0 0 0 0 -42 -12 10
+LeftLeg 0 0 0 0 46 0 0
+LeftFoot 0 0 0 0 -20 0 0

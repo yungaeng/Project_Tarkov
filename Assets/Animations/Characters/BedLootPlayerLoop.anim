@@ -1,0 +1,22 @@
+# Additive 1.6-second forward/back rock for the room 2 bed searcher.
+# Translation is local to each torso joint; X rotation rocks the pelvis and trunk.
+Hips 0.0 0 0 0 0 0 0
+Hips 0.4 0 0 0 4 0 0
+Hips 0.8 0 0 0 0 0 0
+Hips 1.2 0 0 0 -4 0 0
+Hips 1.6 0 0 0 0 0 0
+Spine 0.0 0 0 0 0 0 0
+Spine 0.4 0 0 0.020 2.5 0 0
+Spine 0.8 0 0 0 0 0 0
+Spine 1.2 0 0 -0.020 -2.5 0 0
+Spine 1.6 0 0 0 0 0 0
+Spine1 0.0 0 0 0 0 0 0
+Spine1 0.4 0 0 0.015 1.5 0 0
+Spine1 0.8 0 0 0 0 0 0
+Spine1 1.2 0 0 -0.015 -1.5 0 0
+Spine1 1.6 0 0 0 0 0 0
+Spine2 0.0 0 0 0 0 0 0
+Spine2 0.4 0 0 0.010 1 0 0
+Spine2 0.8 0 0 0 0 0 0
+Spine2 1.2 0 0 -0.010 -1 0 0
+Spine2 1.6 0 0 0 0 0 0

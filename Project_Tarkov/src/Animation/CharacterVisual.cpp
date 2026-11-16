@@ -80,7 +80,7 @@ struct CharacterVisual::Assets
 {
     Mesh mesh, backpack, backpackDetail;
     Texture texture;
-    MotionClip bedLootEnemyClip, bedLootPlayerClip;
+    MotionClip bedLootEnemyClip, bedLootPlayerClip, bedLootPlayerLoopClip, bedLootThirdClip, bedLootFourthClip;
     MotionClip deathClip, lootClip, lootSearchClip, hideoutKneelClip, holdClip, reloadClip, aimClip, recoilClip;
     MotionClip jumpClip, landClip;
     MotionClip proneClip, crawlClip;
@@ -119,6 +119,9 @@ void CharacterVisual::Init(PlayerAppearance appearance)
         shared->lootSearchClip.Load(AssetCatalog::Animations_Characters_CorpseSearch_anim);
         shared->bedLootEnemyClip.Load(AssetCatalog::Animations_Characters_BedLootEnemy_anim);
         shared->bedLootPlayerClip.Load(AssetCatalog::Animations_Characters_BedLootPlayer_anim);
+        shared->bedLootPlayerLoopClip.Load(AssetCatalog::Animations_Characters_BedLootPlayerLoop_anim);
+        shared->bedLootThirdClip.Load(AssetCatalog::Animations_Characters_BedLootThird_anim);
+        shared->bedLootFourthClip.Load(AssetCatalog::Animations_Characters_BedLootFourth_anim);
         shared->hideoutKneelClip.Load(AssetCatalog::Animations_Characters_HideoutKneel_anim);
         shared->holdClip.Load(AssetCatalog::Animations_Characters_RifleHold_anim);
         shared->reloadClip.Load(AssetCatalog::Animations_Characters_RifleReload_anim);
@@ -173,20 +176,31 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         state.hasWeapon = state.equipped = false;
         weapon.Update(dt,false,false,0,false,false,true);
         animation.Update(0,"idle",false,false);
-        animation.ApplyMotion(roomTwoLootRole == 1 ? assets->bedLootEnemyClip : assets->bedLootPlayerClip,
+        const MotionClip& bedLootClip = roomTwoLootRole == 1 ? assets->bedLootEnemyClip :
+            (roomTwoLootRole == 3 ? assets->bedLootThirdClip :
+                (roomTwoLootRole == 4 ? assets->bedLootFourthClip : assets->bedLootPlayerClip));
+        animation.ApplyMotion(bedLootClip,
             0,1,true,false);
         // Imported rigs do not share the Euler axes assumed by the original preview.
         // Establish the torso and leg directions in model space, parent before child.
         const bool enemy = roomTwoLootRole == 1;
-        animation.AimBoneDirection("Hips","Spine",enemy ? glm::vec3(0,.12f,1) : glm::vec3(0,1,.08f));
-        animation.AimBoneDirection("Spine","Spine1",enemy ? glm::vec3(0,0,1) : glm::vec3(0,1,.15f));
-        animation.AimBoneDirection("Spine1","Spine2",enemy ? glm::vec3(0,0,1) : glm::vec3(0,1,.15f));
-        animation.AimBoneDirection("Spine2","Neck",enemy ? glm::vec3(0,.08f,1) : glm::vec3(0,1,.15f));
-        animation.AimBoneDirection("Neck","Head",enemy ? glm::vec3(0,.4f,1) : glm::vec3(0,1,.1f));
-        for (const std::string side : {"Left", "Right"}) {
-            animation.AimBoneDirection(side + "UpLeg",side + "Leg",glm::vec3(0,-1,.08f));
-            animation.AimBoneDirection(side + "Leg",side + "Foot",glm::vec3(0,.12f,-1));
-            animation.AimBoneDirection(side + "Foot",side + "ToeBase",glm::vec3(0,-.15f,-1));
+        if (roomTwoLootRole != 3 && roomTwoLootRole != 4) {
+            animation.AimBoneDirection("Hips","Spine",enemy ? glm::vec3(0,.12f,1) : glm::vec3(0,1,.08f));
+            animation.AimBoneDirection("Spine","Spine1",enemy ? glm::vec3(0,0,1) : glm::vec3(0,1,.15f));
+            animation.AimBoneDirection("Spine1","Spine2",enemy ? glm::vec3(0,0,1) : glm::vec3(0,1,.15f));
+            animation.AimBoneDirection("Spine2","Neck",enemy ? glm::vec3(0,.08f,1) : glm::vec3(0,1,.1f));
+            animation.AimBoneDirection("Neck","Head",enemy ? glm::vec3(0,.4f,1) : glm::vec3(0,1,.1f));
+            for (const std::string side : {"Left", "Right"}) {
+                const float kneeSpread = enemy ? (side == "Left" ? .20f : -.20f) : 0.f;
+                animation.AimBoneDirection(side + "UpLeg",side + "Leg",
+                    glm::normalize(glm::vec3(kneeSpread,-.98f,.08f)));
+                animation.AimBoneDirection(side + "Leg",side + "Foot",glm::vec3(0,.12f,-1));
+                animation.AimBoneDirection(side + "Foot",side + "ToeBase",glm::vec3(0,-.15f,-1));
+            }
+        }
+        if (roomTwoLootRole == 2 && assets->bedLootPlayerLoopClip.Duration() > 0) {
+            bedLootMotionTime = std::fmod(bedLootMotionTime + dt, assets->bedLootPlayerLoopClip.Duration());
+            animation.ApplyMotion(assets->bedLootPlayerLoopClip,bedLootMotionTime,1.f,false,false,false);
         }
         if (enemy) {
             const float kneeY = .5f * (animation.NodePosition("LeftLeg").y + animation.NodePosition("RightLeg").y);
@@ -737,7 +751,9 @@ void CharacterVisual::SetHideoutBedPose(bool enabled,float surfaceHeight,const g
 
 void CharacterVisual::SetRoomTwoLootPose(int role)
 {
-    roomTwoLootRole = std::clamp(role,0,2);
+    const int nextRole = std::clamp(role,0,4);
+    if (nextRole != roomTwoLootRole) bedLootMotionTime = 0.f;
+    roomTwoLootRole = nextRole;
     roomTwoLootRoot = glm::mat4(1);
 }
 
@@ -804,6 +820,7 @@ void CharacterVisual::Reset()
     lootCorpseFlipped=false;
     flippedDeathRoot=glm::mat4(1);
     roomTwoLootRole=0;
+    bedLootMotionTime=0.f;
     roomTwoLootRoot=glm::mat4(1);
     hideoutBedPose=hideoutBedPoseInitialized=false;
     hideoutBedSurfaceHeight=0.f;

@@ -1,0 +1,21 @@
+# Room 4 unique search pose: low side lean with one arm reaching overhead,
+# the other arm braced across the chest, and asymmetrically folded legs.
+Root 0 0 0 0 0 0 0
+Hips 0 0 0 0 8 -12 0
+Spine 0 0 0 0 31 0 -22
+Spine1 0 0 0 0 13 0 -14
+Spine2 0 0 0 0 -8 0 8
+Neck 0 0 0 0 -16 0 9
+Head 0 0 0 0 -12 0 8
+RightArm 0 0 0 0 -42 18 -28
+RightForeArm 0 0 0 0 -24 0 -18
+RightHand 0 0 0 0 8 18 12
+LeftArm 0 0 0 0 112 -24 18
+LeftForeArm 0 0 0 0 36 0 12
+LeftHand 0 0 0 0 14 -12 -8
+RightUpLeg 0 0 0 0 28 14 -18
+RightLeg 0 0 0 0 -88 0 0
+RightFoot 0 0 0 0 22 0 0
+LeftUpLeg 0 0 0 0 -24 -18 12
+LeftLeg 0 0 0 0 -42 0 0
+LeftFoot 0 0 0 0 14 0 0

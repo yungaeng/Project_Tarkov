@@ -22,6 +22,13 @@
 #include <random>
 #include <utility>
 
+namespace {
+constexpr float BedPoseCameraYaw = 90.f;
+constexpr float BedPoseCameraPitch = 22.f;
+constexpr float BedPoseCameraRadius = 3.f;
+constexpr float BedPoseCameraFieldOfView = 40.f;
+}
+
 void RaidScene::EnterHideout()
 {
     // Recover legacy zero-water incapacitated profiles without clearing ordinary injuries.
@@ -55,6 +62,10 @@ void RaidScene::EnterHideout()
     hideoutPromptProfile = -1;
     hideoutNearbyScav = -1;
     hideoutBedPoseActive=false;
+    hideoutBedScavSelectionOpen=false;
+    hideoutBedScavMoved=false;
+    hideoutBedScavProfile=-1;
+    hideoutBedSelectionRoom=-1;
     hideoutBedTestPrompt=false;
     corpseLootPanelOpen=false;
     hideoutFurniture = -1;
@@ -99,20 +110,79 @@ void RaidScene::ConfigureHideoutSwitchNpc()
     }
 }
 
-void RaidScene::BeginHideoutBedPoseTest(int room)
+std::vector<int> RaidScene::HideoutBedScavProfiles() const
+{
+    std::vector<int> profiles;
+    for (std::size_t i=0;i<hideoutResidentProfiles.size();++i) {
+        const int profile=hideoutResidentProfiles[i];
+        if (profile<0 || profile>=static_cast<int>(hideout.scavProfiles.size())) continue;
+        const int room=hideoutResidentRooms[i];
+        if (!hideout.scavProfiles[profile].unlocked || room<1 || room>=Hideout::HideoutRoomCount) continue;
+        profiles.push_back(profile);
+    }
+    return profiles;
+}
+
+Character* RaidScene::HideoutBedTarget()
+{
+    if (hideoutBedScavProfile>=0) {
+        for (std::size_t i=0;i<hideoutResidentProfiles.size();++i)
+            if (hideoutResidentProfiles[i]==hideoutBedScavProfile) return hideoutResidentNpcs[i].get();
+        return nullptr;
+    }
+    return &hideoutSwitchNpc;
+}
+
+CharacterVisual* RaidScene::HideoutBedTargetVisual()
+{
+    if (hideoutBedScavProfile>=0) {
+        for (std::size_t i=0;i<hideoutResidentProfiles.size();++i)
+            if (hideoutResidentProfiles[i]==hideoutBedScavProfile) return hideoutResidentVisuals[i].get();
+        return nullptr;
+    }
+    return &hideoutSwitchNpcVisual;
+}
+
+void RaidScene::BeginHideoutBedPoseTest(int room, int scavProfile)
 {
     if (!player || room<0 || room>=Hideout::HideoutRoomCount ||
         (room>=Hideout::InitialRoomCount && !hideout.HasRescuedSurvivor(room))) return;
+    if (scavProfile>=0) {
+        const auto profiles=HideoutBedScavProfiles();
+        if (std::find(profiles.begin(),profiles.end(),scavProfile)==profiles.end()) return;
+    }
     hideoutBedBeforePlayerPosition=player->position;
     hideoutBedBeforePlayerRotation=player->rotation.y;
     hideoutBedBeforeNpcPosition=hideoutSwitchNpc.position;
     hideoutBedBeforeNpcRotation=hideoutSwitchNpc.rotation.y;
     hideoutBedBeforeCamera=camera;
     hideoutBedTestRoom=room;
+    hideoutBedScavProfile=scavProfile;
+    hideoutBedScavSelectionOpen=false;
+    hideoutBedSelectionRoom=-1;
     // Mattress top: .58 + (.20 * .9) / 2.
     const glm::vec3 bedPosition=HideoutLayout::Anchor(room,"bed")+glm::vec3(0,.67f,0);
-    hideoutBedNpcMoved=true;
-    if (hideoutBedNpcMoved) {
+    hideoutBedNpcMoved=scavProfile<0;
+    hideoutBedScavMoved=scavProfile>=0;
+    if (hideoutBedScavMoved) {
+        auto* target=HideoutBedTarget();
+        auto* visual=HideoutBedTargetVisual();
+        if (!target || !visual) return;
+        hideoutBedBeforeScavPosition=target->position;
+        hideoutBedBeforeScavRotation=target->rotation.y;
+        target->position=bedPosition;
+        target->rotation.y=0.f;
+        CharacterVisualState targetState;
+        targetState.dead=room!=1;
+        targetState.hasWeapon=false;
+        visual->SetRoomTwoLootPose(room==1?1:0);
+        if (room==1) {
+            target->position.z-=.25f;
+            target->rotation.y=180.f;
+        }
+        visual->Update(room==1?0.f:10.f,*target,targetState);
+        if (room!=1) visual->CenterDeathPoseOnSurface(*target,bedPosition);
+    } else if (hideoutBedNpcMoved) {
         hideoutSwitchNpc.position=bedPosition;
         hideoutSwitchNpc.rotation.y=0.f;
         CharacterVisualState npcState;
@@ -132,8 +202,6 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
     player->SetLooting(false);
     playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
     hideoutBedPoseElapsed=0.f;
-    hideoutBedCameraYaw=33.6901f;
-    hideoutBedCameraPitch=32.37f;
     hideoutBedPoseLooting=false;
     hideoutBedCorpseAligned=false;
     hideoutCameraInRoom=false;
@@ -150,13 +218,34 @@ void RaidScene::BeginHideoutBedPoseTest(int room)
 void RaidScene::BeginHideoutBedLooting()
 {
     const glm::vec3 bedPosition=HideoutLayout::Anchor(hideoutBedTestRoom,"bed")+glm::vec3(0,.67f,0);
+    auto* target=HideoutBedTarget();
+    auto* targetVisual=HideoutBedTargetVisual();
+    if (!target || !targetVisual) return;
     if (hideoutBedTestRoom == 1) {
-        player->position = bedPosition + glm::vec3(0,0,.3f);
+        player->position = bedPosition + glm::vec3(0,0,.1f);
         player->rotation.y = 180.f;
         player->SetLooting(true);
         playerVisual.SetRoomTwoLootPose(2);
         playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
-        playerVisual.FitRoomTwoLootHands(*player,hideoutSwitchNpc,hideoutSwitchNpcVisual);
+        playerVisual.FitRoomTwoLootHands(*player,*target,*targetVisual);
+        hideoutBedPoseLooting=true;
+        return;
+    }
+    if (hideoutBedTestRoom == 2) {
+        player->position = bedPosition + glm::vec3(0,0,.3f);
+        player->rotation.y = 180.f;
+        player->SetLooting(true);
+        playerVisual.SetRoomTwoLootPose(3);
+        playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
+        hideoutBedPoseLooting=true;
+        return;
+    }
+    if (hideoutBedTestRoom == 3) {
+        player->position = bedPosition + glm::vec3(0,0,.3f);
+        player->rotation.y = 180.f;
+        player->SetLooting(true);
+        playerVisual.SetRoomTwoLootPose(4);
+        playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
         hideoutBedPoseLooting=true;
         return;
     }
@@ -173,8 +262,8 @@ void RaidScene::BeginHideoutBedLooting()
     };
     // Keep the raid facing direction and fitted hand targets together.
     // Moving the actor after fitting would move its hands off the corpse.
-    player->position=playerVisual.FitLootPose(*player,hideoutSwitchNpc,
-        hideoutSwitchNpcVisual,placementClear,180.f,bedPosition.y);
+    player->position=playerVisual.FitLootPose(*player,*target,
+        *targetVisual,placementClear,180.f,bedPosition.y);
     player->rotation.y=playerVisual.FittedLootYaw();
     player->SetLooting(true);
     playerVisual.Update(0,*player,{false,false,false,false,0,0,false});
@@ -196,7 +285,24 @@ void RaidScene::EndHideoutBedPoseTest()
         CharacterVisualState npcState;
         hideoutSwitchNpcVisual.Update(0,hideoutSwitchNpc,npcState);
     }
+    if (hideoutBedScavMoved) {
+        if (auto* target=HideoutBedTarget()) {
+            target->position=hideoutBedBeforeScavPosition;
+            target->rotation.y=hideoutBedBeforeScavRotation;
+        }
+        if (auto* visual=HideoutBedTargetVisual()) {
+            visual->Reset();
+            visual->Init(PlayerAppearance::Female);
+            CharacterVisualState scavState;
+            scavState.hasWeapon=false;
+            if (auto* target=HideoutBedTarget()) visual->Update(0,*target,scavState);
+        }
+    }
     hideoutBedNpcMoved=false;
+    hideoutBedScavMoved=false;
+    hideoutBedScavProfile=-1;
+    hideoutBedScavSelectionOpen=false;
+    hideoutBedSelectionRoom=-1;
     hideoutBedTestRoom=-1;
     hideoutBedPoseElapsed=0.f;
     hideoutBedPoseLooting=false;
@@ -217,6 +323,14 @@ void RaidScene::EndHideoutBedPoseTest()
 void RaidScene::UpdateHideout(float dt)
 {
     dt = std::clamp(std::isfinite(dt) ? dt : 0.f, 0.f, .1f);
+    if (hideoutBedScavSelectionOpen) {
+        if (Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
+            hideoutBedScavSelectionOpen=false;
+            hideoutBedSelectionRoom=-1;
+            Input::SetCursorCaptured(true);
+        }
+        return;
+    }
     if (hideoutBedPoseActive) {
         if (Input::GetKeyDown(GLFW_KEY_F)||Input::GetKeyDown(GLFW_KEY_ESCAPE)) {
             EndHideoutBedPoseTest();
@@ -226,25 +340,21 @@ void RaidScene::UpdateHideout(float dt)
         hideoutBedPoseElapsed+=dt;
         CharacterVisualState npcState;
         npcState.dead=hideoutBedTestRoom != 1;
-        hideoutSwitchNpcVisual.Update(dt,hideoutSwitchNpc,npcState);
+        npcState.hasWeapon=false;
+        auto* target=HideoutBedTarget();
+        auto* targetVisual=HideoutBedTargetVisual();
+        if (target && targetVisual) targetVisual->Update(dt,*target,npcState);
         playerVisual.Update(dt,*player,{false,false,false,false,0,0,false});
-        if (hideoutBedTestRoom == 1)
-            playerVisual.FitRoomTwoLootHands(*player,hideoutSwitchNpc,hideoutSwitchNpcVisual);
+        if (hideoutBedTestRoom == 1 && target && targetVisual)
+            playerVisual.FitRoomTwoLootHands(*player,*target,*targetVisual);
         const glm::vec3 center=HideoutLayout::Anchor(hideoutBedTestRoom,"bed")+glm::vec3(0,.9f,0);
-        if (Input::IsFocused() &&
-            (Input::GetKey(GLFW_KEY_LEFT_ALT) || Input::GetKey(GLFW_KEY_RIGHT_ALT))) {
-            const auto delta=Input::GetMouseDelta();
-            hideoutBedCameraYaw-=delta.x*.2f;
-            hideoutBedCameraPitch=std::clamp(hideoutBedCameraPitch-delta.y*.2f,-10.f,80.f);
-        }
-        const float yaw=glm::radians(hideoutBedCameraYaw);
-        const float pitch=glm::radians(hideoutBedCameraPitch);
-        const float radius=5.9657f;
-        camera.position=center+radius*glm::vec3(std::cos(pitch)*std::sin(yaw),
+        const float yaw=glm::radians(BedPoseCameraYaw);
+        const float pitch=glm::radians(BedPoseCameraPitch);
+        camera.position=center+BedPoseCameraRadius*glm::vec3(std::cos(pitch)*std::sin(yaw),
             std::sin(pitch),std::cos(pitch)*std::cos(yaw));
         camera.front=glm::normalize(center-camera.position);
         camera.up={0,1,0};
-        camera.fieldOfView=48.f;
+        camera.fieldOfView=BedPoseCameraFieldOfView;
         return;
     }
     if (deployRequested) { deployRequested = false; StartRaid(); return; }
@@ -358,7 +468,8 @@ void RaidScene::UpdateHideout(float dt)
         Input::SetCursorCaptured(false);
     }
     hideoutZone = zone;
-    float nearestNpcDistance=2.25f;
+    constexpr float npcInteractionRadius=1.2f;
+    float nearestNpcDistance=npcInteractionRadius*npcInteractionRadius;
     bool nearSwitchNpc=false;
     hideoutPromptProfile=-1;
     hideoutNearbyScav=-1;
@@ -403,7 +514,13 @@ void RaidScene::UpdateHideout(float dt)
     }
     hideoutBedTestPrompt=hideoutBedTestRoom>=0;
     if (!hideoutPrompt && hideoutBedTestPrompt && Input::GetKeyDown(GLFW_KEY_F)) {
-        BeginHideoutBedPoseTest(hideoutBedTestRoom);
+        const auto scavProfiles=HideoutBedScavProfiles();
+        if (!scavProfiles.empty()) {
+            hideoutBedSelectionRoom=hideoutBedTestRoom;
+            hideoutBedScavSelectionOpen=true;
+            player->StopMovement();
+            Input::SetCursorCaptured(false);
+        } else BeginHideoutBedPoseTest(hideoutBedTestRoom);
         return;
     }
     if (!hideoutPrompt && nearSwitchNpc && hideoutFurniture<0 && Input::GetKeyDown(GLFW_KEY_F)) {
@@ -438,11 +555,16 @@ void RaidScene::RenderHideoutMap(int width, int height)
         playerVisual.Render(*player,shader,camera,float(width),float(height),glm::vec3(1),false);
     const bool defaultScavIsResident=hideout.appearance==PlayerAppearance::Male &&
         hideout.scavProfiles[0].unlocked && hideout.scavProfiles[0].assignedRoom==1;
-    if(!defaultScavIsResident)
+    const bool defaultScavBedTest=defaultScavIsResident && hideoutBedPoseActive &&
+        hideoutBedScavProfile<0;
+    const bool selectedScavBedTest=hideoutBedPoseActive && hideoutBedScavProfile>=0;
+    if(!selectedScavBedTest && (!defaultScavIsResident || defaultScavBedTest))
         hideoutSwitchNpcVisual.Render(hideoutSwitchNpc,shader,camera,float(width),float(height),glm::vec3(1),false);
-    for (std::size_t i=0;i<hideoutResidentNpcs.size();++i)
+    for (std::size_t i=0;i<hideoutResidentNpcs.size();++i) {
+        if(defaultScavBedTest && hideoutResidentProfiles[i]==0) continue;
         hideoutResidentVisuals[i]->Render(*hideoutResidentNpcs[i],shader,camera,
             float(width),float(height),glm::vec3(1),false);
+    }
     if (hideoutTradingPanel) {
         hud.RenderTrading(hideout,tradeSession,hideoutTradingPanel);
         if (!hideoutTradingPanel) {
@@ -470,7 +592,36 @@ void RaidScene::RenderHideoutMap(int width, int height)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    if (!hideoutPrompt && !hideoutBedPoseActive && !hideoutExitMenu) {
+    const auto bedScavChoices=HideoutBedScavProfiles();
+    if (hideoutBedScavSelectionOpen) {
+        ImGui::SetNextWindowPos({width*.5f,height*.5f},ImGuiCond_Always,{.5f,.5f});
+        ImGui::Begin("파밍 대상 스캐브 선택",nullptr,ImGuiWindowFlags_AlwaysAutoResize|
+            ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_NoSavedSettings);
+        ImGui::TextUnformatted("방 2~4에 있는 스캐브를 선택하세요.");
+        for (const int profile : bedScavChoices) {
+            const auto& scav=hideout.scavProfiles[profile];
+            const auto resident=std::find(hideoutResidentProfiles.begin(),hideoutResidentProfiles.end(),profile);
+            if (resident==hideoutResidentProfiles.end()) continue;
+            const auto index=static_cast<std::size_t>(resident-hideoutResidentProfiles.begin());
+            if (index>=hideoutResidentRooms.size()) continue;
+            const int room=hideoutResidentRooms[index];
+            const std::string label="방 "+std::to_string(room+1)+" · "+scav.name;
+            if (ImGui::Button(label.c_str(),{280,36})) {
+                const int bedRoom=hideoutBedSelectionRoom;
+                hideoutBedScavSelectionOpen=false;
+                Input::SetCursorCaptured(true);
+                BeginHideoutBedPoseTest(bedRoom,profile);
+            }
+        }
+        if (ImGui::Button("취소",{120,36})) {
+            hideoutBedScavSelectionOpen=false;
+            hideoutBedSelectionRoom=-1;
+            Input::SetCursorCaptured(true);
+        }
+        ImGui::End();
+    }
+    if (!hideoutPrompt && !hideoutBedPoseActive && !hideoutBedScavSelectionOpen &&
+        !hideoutBedTestPrompt && !hideoutExitMenu) {
         const auto* floorItem=hideout.floorLoot.Target();
         const bool nearTradingStairwell=player && HideoutMap::NearTradingStairwell(
             player->position.x,player->position.z,hideout.AvailableRoomCount());
@@ -493,18 +644,25 @@ void RaidScene::RenderHideoutMap(int width, int height)
             ImGui::End();
         }
     }
-    if (hideoutBedPoseActive||hideoutBedTestPrompt) {
+    if (hideoutBedPoseActive||(hideoutBedTestPrompt&&!hideoutBedScavSelectionOpen)) {
         ImGui::SetNextWindowPos({width*.5f,height*.76f},ImGuiCond_Always,{.5f,0.f});
         ImGui::Begin("침대 자세 테스트",nullptr,ImGuiWindowFlags_NoDecoration|
             ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs|
             ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::TextUnformatted(hideoutBedPoseActive
-            ? "[F/Esc] 자세 종료 · [Alt + 마우스] 카메라 회전"
-            : (hideoutBedTestRoom == 1 ? "[F] 새 파밍 자세 테스트" : "[F] 레이드 파밍 자세 테스트"));
+        if (hideoutBedPoseActive) ImGui::TextUnformatted("[F/Esc] 자세 종료");
+        else if (!bedScavChoices.empty()) ImGui::TextUnformatted("[F] 파밍할 스캐브 선택");
+        else if (hideoutBedTestRoom==1) ImGui::TextUnformatted("[F] 새 파밍 자세 테스트");
+        else if (hideoutBedTestRoom==2) ImGui::TextUnformatted("[F] 세 번째 고유 모션 테스트");
+        else if (hideoutBedTestRoom==3) ImGui::TextUnformatted("[F] 네 번째 고유 모션 테스트");
+        else ImGui::TextUnformatted("[F] 레이드 파밍 자세 테스트");
         if (hideoutBedPoseActive)
             ImGui::TextUnformatted(hideoutBedPoseLooting
-                ? (hideoutBedTestRoom == 1 ? "적: 손·무릎 지지 / 플레이어: 뒤에서 장비 수색" : "침대 위 적 시체 파밍 중")
+                ? (hideoutBedTestRoom == 1 ? "적: 손·무릎 지지 / 플레이어: 뒤에서 장비 수색" :
+                    (hideoutBedTestRoom == 2 ? "3번 방 고유 런지 파밍 자세" :
+                        (hideoutBedTestRoom == 3 ? "4번 방 고유 비대칭 스트레치 파밍 자세" : "침대 위 적 시체 파밍 중")))
                 : "침대 위 적 사망 · 파밍 준비 중");
+        if (hideoutBedPoseActive && hideoutBedScavProfile>=0)
+            ImGui::Text("파밍 대상: %s",hideout.scavProfiles[hideoutBedScavProfile].name);
         ImGui::End();
     }
     if (hideout.HasRescuedSurvivor(Hideout::InitialRoomCount)) {

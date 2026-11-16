@@ -37,7 +37,7 @@ public:
         const glm::vec3& bedCenter = glm::vec3(0));
     float HideoutBedYaw() const { return hideoutBedYaw; }
     void SetHideoutKneelPose(bool enabled);
-    // Room 2 preview: 0=off, 1=enemy on hands/knees, 2=kneeling searcher.
+    // Bed pose preview: 0=off, 1=room 2 enemy, 2=room 2 searcher, 3/4=room 3/4 unique searcher.
     void SetRoomTwoLootPose(int role);
     void FitRoomTwoLootHands(const Character& character, const Character& target,
         const CharacterVisual& targetVisual);
@@ -64,6 +64,7 @@ private:
     GLuint paletteBuffer = 0, paletteTexture = 0;
     float poseElapsed = 0;
     float backpackClock = 0, backpackMotion = 0;
+    float bedLootMotionTime = 0;
     int roomTwoLootRole = 0;
     glm::mat4 roomTwoLootRoot{1};
     bool lootPoseValid = false;

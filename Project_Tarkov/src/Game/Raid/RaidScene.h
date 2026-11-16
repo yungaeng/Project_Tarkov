@@ -18,6 +18,7 @@
 #include "../Hideout/Hideout.h"
 #include "RaidSummary.h"
 #include "../Trading/TradingTypes.h"
+#include <vector>
 
 class SceneManager;
 class RaidScene : public Scene
@@ -83,7 +84,10 @@ private:
     void StartRaid();
     void EnterHideout();
     void ConfigureHideoutSwitchNpc();
-    void BeginHideoutBedPoseTest(int room);
+    std::vector<int> HideoutBedScavProfiles() const;
+    Character* HideoutBedTarget();
+    CharacterVisual* HideoutBedTargetVisual();
+    void BeginHideoutBedPoseTest(int room, int scavProfile = -1);
     void BeginHideoutBedLooting();
     void EndHideoutBedPoseTest();
     void UpdateHideout(float dt);
@@ -97,16 +101,20 @@ private:
     bool hideoutBedPoseActive = false;
     bool hideoutBedPoseLooting = false;
     bool hideoutBedCorpseAligned = false;
+    bool hideoutBedScavSelectionOpen = false;
+    bool hideoutBedScavMoved = false;
     float hideoutBedPoseElapsed = 0.f;
-    float hideoutBedCameraYaw = 33.6901f;
-    float hideoutBedCameraPitch = 32.37f;
     bool hideoutBedTestPrompt = false;
     int hideoutBedTestRoom = -1;
+    int hideoutBedSelectionRoom = -1;
+    int hideoutBedScavProfile = -1;
     bool hideoutBedNpcMoved = false;
     glm::vec3 hideoutBedBeforePlayerPosition{0};
     float hideoutBedBeforePlayerRotation = 0.f;
     glm::vec3 hideoutBedBeforeNpcPosition{0};
     float hideoutBedBeforeNpcRotation = 0.f;
+    glm::vec3 hideoutBedBeforeScavPosition{0};
+    float hideoutBedBeforeScavRotation = 0.f;
     Camera hideoutBedBeforeCamera;
     int hideoutPrompt = 0;
     int hideoutPromptRoom = -1;
