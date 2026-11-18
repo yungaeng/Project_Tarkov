@@ -224,7 +224,10 @@ void RaidScene::Update(float dt)
     CharacterVisualState visualState{!player->vitals.Alive(), combat.Equipped(), combat.Aiming(),
         combat.Fired(), combat.ReloadTime(), camera.pitch, combat.HasWeapon()};
     visualState.magazineInserted = combat.ActiveWeapon() && combat.ActiveWeapon()->magazineInserted;
+    visualState.hit=combat.HitReceived();
+    visualState.meleeRemaining=combat.MeleeTime();
     playerVisual.Update(dt, *player, visualState);
+    combat.ResolveMelee(*player,playerVisual,collisionWorld);
     // Resolve against this frame's animated pose, including stance transitions.
     if (firstPerson && lootingCorpse < 0) FollowCamera(camera);
     if (freeLook)

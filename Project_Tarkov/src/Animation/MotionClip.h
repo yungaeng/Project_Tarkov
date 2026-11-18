@@ -16,7 +16,8 @@ class MotionClip
 {
 public:
     void Load(const std::string& path);
-    MotionPose Sample(const std::string& channel, float time) const;
+    // Continuous mode preserves velocity across interior keys without overshoot.
+    MotionPose Sample(const std::string& channel, float time, bool continuous = false) const;
     float Duration() const { return duration; }
     const auto& Tracks() const { return tracks; }
 private:

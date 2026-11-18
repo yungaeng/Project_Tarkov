@@ -1,6 +1,6 @@
 # 프로젝트 구조와 작업 경계
 
-폴더·경로 기준일: 2026-11-12. 현재 소스와 프로젝트 설정을 설명한다. 빌드 출력은 기존 `Project_Tarkov/x64/Debug/`를 유지한다.
+폴더·경로 갱신일: 2026-11-19. 현재 소스와 프로젝트 설정을 설명한다. 빌드 출력은 기존 `Project_Tarkov/x64/Debug/`를 유지한다.
 
 ## 파일·폴더 관계도
 
@@ -33,9 +33,12 @@ Project_Tarkov/                     저장소 루트
 │  └─ Project_Tarkov/Saves/        과거 저장 경로, 보존 대상
 ├─ Assets/                         관리하는 런타임 자원
 │  ├─ Animations/  Maps/  Models/
-│  └─ Shaders/     UI/
+│  ├─ Shaders/     UI/
+│  ├─ Licenses/                    게임에 동봉하는 외부 모션 고지/원문
+│  └─ _Archive/                    취득 원본·미사용/이전 에셋, 배포 제외
 ├─ Tools/                          제작·검증 도구
 │  ├─ Characters/                 캐릭터 변환·의상 제작
+│  ├─ Animations/                 취득·정적 검사·에셋 이동 도구
 │  └─ Validation/                 별도 C++ 검증 소스
 ├─ docs/
 │  ├─ IMPLEMENTED.md              구현 사양·검증·과거 이력
@@ -66,7 +69,7 @@ Project_Tarkov/                     저장소 루트
 - `Project_Tarkov/src/Game/World/`: 맵 로딩과 절차적 배치 구현. 기본 도형과 배칭은 `Project_Tarkov/src/Graphics/WorldGeometry.*`를 사용한다.
 - `Project_Tarkov/src/Animation/`, `Graphics/`, `Physics/`, `Scene/`: 애니메이션·표현·충돌·장면 기반 코드.
 - `Assets/`: 런타임에 읽는 메시·텍스처·모션·셰이더·맵 데이터. [맵 데이터 형식](../Assets/Maps/README.md).
-- 기존 `ArtSource/`는 2026-11-12 삭제했다. 현재 런타임 에셋은 `Assets/`에 유지한다. 제작 도구는 실행 시 파생 자료 폴더를 다시 만들 수 있다.
+- 기존 `ArtSource/`는 2026-11-12 삭제했다. 이후 보관 자료는 `Assets/_Archive/`에 모으며 캐릭터 제작 중간 자료도 그 아래 `Characters/`에 쓴다. 런타임 사용본과 보관본을 구분한다.
 - `Tools/`: 캐릭터 제작 및 별도 검증 소스. [사용 안내](../Tools/README.md).
 - `docs/IMPLEMENTED.md`: 현재 사양. `docs/PLANNED.md`: 후속 계획과 완료 상태. `docs/IMPLEMENTED.md`의 [과거 변경 이력 부록](IMPLEMENTED.md#change-history): 당시 변경 기록.
 - `Project_Tarkov/x64/Debug/`: EXE·DLL·복사된 Assets, 중간 파일 `obj/Project_Tarkov/`, 기본 `Saves/`, 별도 검증 결과 `qa/`.
@@ -88,9 +91,9 @@ Project_Tarkov/                     저장소 루트
 
 에셋은 `TARKOV_ASSET_ROOT` 절대 경로가 최우선이다. 미지정 시 실행 파일의 상위에서 `vcpkg.json`과 `Project_Tarkov/src/`가 있는 저장소를 찾으면 그 루트의 Assets를 사용하고, 저장소 밖 패키지는 EXE 옆 Assets를 사용한다. 개발 중 출력 폴더의 에셋을 직접 확인하려면 `TARKOV_ASSET_ROOT`를 그 폴더로 지정한다.
 
-`CopyRuntimeAssets`는 셰이더·애니메이션·맵 파일, UI PNG, 무기 OBJ, 공통 리그 FBX, 각 캐릭터의 character.mesh/png를 복사한다. 제작 원본·의상 중간 메시·import.json은 배포 대상이 아니다. 기존 출력 폴더의 오래된 파일을 삭제하는 타깃은 없으므로 배포본은 새 패키지 폴더에 필요한 결과만 구성한다. 실제 사용자 세이브를 배포본에 포함하지 않는다.
+`CopyRuntimeAssets`는 셰이더 확장자(.vs/.fs), 애니메이션(.anim/.fbx/.glb), 맵(.layout/.parts), UI PNG, 무기 OBJ, 공통 리그 FBX, 캐릭터 character.mesh/png 및 `Assets/Licenses/`를 명시적으로 복사한다. 취득 ZIP·HTML·편집 원본·`Assets/_Archive/`는 포함하지 않는다. 기존 출력 폴더의 오래된 파일을 자동 삭제하는 타깃은 없다. 이번 정리에서 현재 원본에 없거나 배포 형식이 아닌 이전 출력 에셋은 `Assets/_Archive/BuildCopies/`로 이동했고, 앞으로도 배포본은 새 패키지 폴더에 필요한 결과만 구성한다. 사용자 세이브는 포함하지 않는다.
 
-네 기본 FBX는 `Assets/Animations/Characters/Locomotion/`에 보존되어 있다. Idle·Walking·Fast Run·Crouched Walking은 실제 로딩 대상이므로 제거하지 않는다.
+실제 외부 모션은 `Assets/Animations/Characters/Imported/`의 Mixamo FBX 51개와 Quaternius GLB 1개다. 카탈로그와 상태 선택 코드가 이 경로를 사용한다. 기존 `Locomotion/` FBX 4종과 대체된 보조 `.anim` 9종은 `Assets/_Archive/LegacyAssets/`로 이동했다. 취득 팩·미사용 모션과 출처 기록은 `Assets/_Archive/Animations/ThirdParty/`에 보관한다. [사용/취득 구분](../Assets/Animations/Characters/Imported/README.md)을 참고한다.
 
 ## 세이브 선택
 

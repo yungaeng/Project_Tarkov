@@ -23,9 +23,15 @@ public:
     SkeletalAnimation& operator=(const SkeletalAnimation&) = delete;
     bool LoadModel(const std::string& path);
     bool LoadAppearance(const std::string& path);
-    bool LoadClip(const std::string& name, const std::string& path);
+    bool LoadClip(const std::string& name, const std::string& path, const std::string& take = {});
     void Update(float dt, const std::string& clip, bool playing, bool skin = true, float playbackSpeed = 1.f);
     float CyclePhase() const;
+    float ClipDuration(const std::string& name) const;
+    // Sample at an explicit time; one-shots clamp and overlays can mask the legs.
+    void ApplyClip(const std::string& name, float seconds, float weight = 1.f,
+        bool upperBodyOnly = false, bool loop = false, bool frozen = false);
+    glm::mat4 NodeTransform(const std::string& name) const;
+    // Lazily skins the current pose; cached until the next pose change.
     const std::vector<AnimatedVertex>& Vertices() const;
     const std::vector<unsigned int>& Indices() const;
     const std::string& Error() const;
@@ -38,6 +44,8 @@ public:
     const std::vector<glm::mat4>& Palette() const;
     glm::vec3 BoundsMin() const;
     glm::vec3 BoundsMax() const;
+    // Conservative support height from bone envelopes, without CPU vertex skinning.
+    float MinimumHeight(const glm::mat4& model) const;
     void CreateMesh(Mesh& mesh) const;
     glm::vec3 NodePosition(const std::string& name) const;
     // Aim a bone toward a model-space direction, independent of its bind axes.

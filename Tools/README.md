@@ -28,12 +28,20 @@ python .\Tools\Characters\<script>.py --help
 python .\Tools\Characters\validate_character.py .\Assets\Models\Player\여캐 --preview .\Project_Tarkov\x64\Debug\qa\여캐-preview.png
 ```
 
-`Tools/Characters/paths.py`는 기본 입력 루트 `Assets/`와 원본/파생 자료 루트 `ArtSource/`를 정의한다. 게임에 사용하는 결과는 `Assets/Models/Player/`에 두고, 원본과 제작 메타데이터는 `ArtSource/Characters/<캐릭터>/`에 보관한다. 스크립트 실행은 게임 빌드나 런타임 검증을 대신하지 않는다.
+`Tools/Characters/paths.py`는 기본 입력 루트 `Assets/`와 원본/파생 자료 루트 `Assets/_Archive/`를 정의한다. 게임에 사용하는 결과는 `Assets/Models/Player/`에 두고, 원본과 제작 메타데이터는 `Assets/_Archive/Characters/<캐릭터>/`에 보관한다. 스크립트 실행은 게임 빌드나 런타임 검증을 대신하지 않는다.
 
 ## 출력 경로와 원본 보존
 
 기본 게임·테스트 작업 위치는 `Project_Tarkov/x64/Debug/`다. 위 검증 명령은 사용자가 이후 실행할 예시이며 이번 후속 작업에서는 실행하지 않았다. C++ 자세 도구는 별도 빌드 대상이고, 첫 번째 인자로 이미지 출력 폴더를 지정할 수 있다. 미지정 시 해당 도구 EXE 옆 `qa/`에 쓴다. 별도 도구도 `Project_Tarkov/x64/Debug/`에 배치하면 같은 출력 위치를 유지한다. 컴파일 시 `src` include 경로와 도구가 참조하는 게임 구현·런타임 라이브러리가 필요하며, 메인 게임의 main.cpp와 함께 링크하지 않는다.
 
-표준 캐릭터의 메타데이터와 의상 중간 파일은 `ArtSource/Characters/<캐릭터>/Derived/`, 실제 게임용 합성 메시·텍스처는 `Assets/Models/Player/<캐릭터>/`에 쓴다. 별도 출력 디렉터리를 지정한 경우 그 디렉터리 내부에 부속 자료도 유지한다. 제작 스크립트는 대상 파일을 갱신하므로 수동 실행 전 보존할 원본을 구분한다.
+표준 캐릭터의 메타데이터와 의상 중간 파일은 `Assets/_Archive/Characters/<캐릭터>/Derived/`, 실제 게임용 합성 메시·텍스처는 `Assets/Models/Player/<캐릭터>/`에 쓴다. 별도 출력 디렉터리를 지정한 경우 그 디렉터리 내부에 부속 자료도 유지한다. 제작 스크립트는 대상 파일을 갱신하므로 수동 실행 전 보존할 원본을 구분한다.
+
+## 애니메이션 취득·정리 도구
+
+`Tools/Animations/`에 취득, 파일 구조 검사와 정적 경로 확인 도구를 모았다. `DownloadCommercialAnimations.ps1`는 CC0 무료팩 원본을 보관 폴더로 받고, `InventoryCommercialAnimations.cjs`·`InspectFbxAnimations.cjs`는 보관 원본의 목록·해시·키 데이터를 읽는다. Mixamo 원본은 공식 로그인 다운로드로 취득하며 자동 취득 스크립트에 계정 정보를 넣지 않는다.
+
+`StageImportedAnimations.ps1`는 사용하는 파일만 런타임 폴더로 복사하고 취득 원본을 보관 폴더로 옮긴다. `ArchiveUnusedAssets.ps1`는 확정한 이전 모션과 남은 빌드 복사본을 해시와 함께 이동한다. `CollectDownloadedAnimations.ps1`는 이번에 받은 이름/해시가 일치하는 10개 파일만 Downloads에서 회수한다. 이동 기록은 `Assets/_Archive/` 아래에 남기며 덮어쓰지 않는다.
+
+`node Tools/Animations/AuditRuntimeAssets.cjs`는 카탈로그 경로, 원본과 게임용 파일의 SHA-256, 선택한 GLB 클립 이름을 정적으로 대조하고 런타임 출처 목록을 생성한다. 게임을 빌드하거나 실행하지 않는다. 런타임 사용 목록은 [모션 안내](../Assets/Animations/Characters/Imported/README.md)를 참고한다.
 
 이전 작업 기록에 따르면 Python 구문 검사는 수행됐지만 NumPy가 없어 --help 실행은 확인되지 않았다. 이는 도구 실행 검증 완료를 뜻하지 않는다. NumPy·Pillow 설치 및 실제 에셋 변환은 이번 후속 작업에 포함하지 않았다.

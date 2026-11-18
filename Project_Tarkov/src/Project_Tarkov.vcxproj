@@ -149,7 +149,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(VcpkgRoot)\scripts\buildsystems\msbuild\vcpkg.targets" />
   <ItemGroup>
-    <RuntimeAsset Include="$(MSBuildThisFileDirectory)..\..\Assets\Shaders\**\*;$(MSBuildThisFileDirectory)..\..\Assets\Animations\**\*;$(MSBuildThisFileDirectory)..\..\Assets\Maps\**\*;$(MSBuildThisFileDirectory)..\..\Assets\UI\*.png;$(MSBuildThisFileDirectory)..\..\Assets\Models\Weapons\*.obj;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\Ch22_nonPBR.fbx;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\*\character.mesh;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\*\character.png">
+    <RuntimeAsset Include="$(MSBuildThisFileDirectory)..\..\Assets\Shaders\*.vs;$(MSBuildThisFileDirectory)..\..\Assets\Shaders\*.fs;$(MSBuildThisFileDirectory)..\..\Assets\Animations\**\*.anim;$(MSBuildThisFileDirectory)..\..\Assets\Animations\**\*.fbx;$(MSBuildThisFileDirectory)..\..\Assets\Animations\**\*.glb;$(MSBuildThisFileDirectory)..\..\Assets\Maps\**\*.layout;$(MSBuildThisFileDirectory)..\..\Assets\Maps\**\*.parts;$(MSBuildThisFileDirectory)..\..\Assets\Licenses\**\*;$(MSBuildThisFileDirectory)..\..\Assets\UI\*.png;$(MSBuildThisFileDirectory)..\..\Assets\Models\Weapons\*.obj;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\Ch22_nonPBR.fbx;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\*\character.mesh;$(MSBuildThisFileDirectory)..\..\Assets\Models\Player\*\character.png">
       <AssetRelativePath>$([MSBuild]::MakeRelative('$(MSBuildThisFileDirectory)..\..\Assets', '%(FullPath)'))</AssetRelativePath>
     </RuntimeAsset>
     <None Include="@(RuntimeAsset)"><Link>Assets\%(AssetRelativePath)</Link></None>

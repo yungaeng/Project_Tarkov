@@ -38,4 +38,4 @@ Windows / C++17 / OpenGL 3.3 기반의 싱글플레이 타르코프형 게임 �
 
 원작의 탄도·방탄·의료·경제·퀘스트·은신처 제작 및 온라인 시스템과는 구현 범위가 다릅니다. 상세 차이와 후속 작업은 [개발할 내용](docs/PLANNED.md)에 정리했습니다.
 
-현재 소스는 `Project_Tarkov/src/`, 런타임 자원은 `Assets/`, 제작 도구는 `Tools/`에 있습니다. 기존 `ArtSource/`는 캐릭터 교체 예정에 따라 삭제했습니다. [폴더 관계도](docs/ARCHITECTURE.md#파일폴더-관계도)와 [정리 기록](docs/IMPLEMENTED.md#cleanup-history)을 참고하세요.
+현재 소스는 `Project_Tarkov/src/`, 런타임 자원은 `Assets/`, 제작 도구는 `Tools/`에 있습니다. 미사용 에셋·취득 원본은 `Assets/_Archive/`에 보관하며 게임 복사 대상에서 제외합니다. 외부 모션의 사용 목록은 [게임용 모션 안내](Assets/Animations/Characters/Imported/README.md), 게임에 동봉하는 출처·이용 조건은 [애니메이션 고지](Assets/Licenses/ANIMATION_NOTICES.txt)에 있습니다. [폴더 관계도](docs/ARCHITECTURE.md#파일폴더-관계도)와 [정리 기록](docs/IMPLEMENTED.md#cleanup-history)을 참고하세요.

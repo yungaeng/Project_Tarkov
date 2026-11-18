@@ -1,0 +1,805 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <meta name="HandheldFriendly" content="true"/>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=2">
+        <title>Buy 3D animation: Rifle Crouch Shooting</title>
+    <meta name="description" content="Sale of 3D animation - Rifle Crouch Shooting). Watch the rig demo right in your browser to see the quality of the rig and skin.">
+<meta name="csrf-param" content="_csrf">
+<meta name="csrf-token" content="MzUEris5WrgPzwSvkZRhAkTa9pFF1A1511RuSv5bYQJkVlLlQUEs30G9d87-4QpWDYzG1CCsbh--Bgh4jC8WcA==">
+
+<link href="/css/normalize.css" rel="stylesheet" async="async">
+<link href="/css/animation.css" rel="stylesheet" async="async">
+<link href="/css/main.css?v=22" rel="stylesheet" async="async">
+<link href="/css/media.css?v=3" rel="stylesheet" async="async"></head>
+<body>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-014Q5JSTYB"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-014Q5JSTYB');
+</script>
+
+
+<div class="flash-messages-wrapper">
+
+    <div class="error-flash-message flash-message ">
+        <span></span>
+        <img src="/images/close-white.png" alt="Закрыть" class="close-flash">
+    </div>
+
+    <div class="success-flash-message flash-message ">
+        <span></span>
+        <img src="/images/close-white.png" alt="Закрыть" class="close-flash">
+    </div>
+
+    <div class="info-flash-message flash-message ">
+        <span></span>
+        <img src="/images/close-white.png" alt="Закрыть" class="close-flash">
+    </div>
+
+</div>
+
+<div class="modal-loop" style="display: none;">
+
+    <div class="modal-ovarlay" onclick="modal_close(); return false;"></div>
+
+    <div class="modal" id="modal-close" style="display: none;">
+        <div class="modal-close-text">
+            DO YOU WANT TO DELETE A SELECTION OF <span id="modal-close-text-collection-name">mars operation</span>?
+            <br>
+            IT WILL NOT BE AVAILABLE TO CANCEL THIS ACTION.
+        </div>
+        <div class="modal-close-btn">
+            <a href="#" onclick="modal_close(); return false;">Cancel</a>
+            <a href="#" id="modal-close-delete-collection-button" data-id="">Delete</a>
+        </div>
+    </div>
+
+    
+<div class="modal" id="modal-add" style="width: 512px; display: none;">
+
+    <div class="modal-add">
+
+        <div class="modal-add-title">
+            CREATING A SELECTION            <div class="modal-add-close" onclick="modal_close(); return false;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.67578 3.33691L3.70345 9.30924" stroke="black" stroke-width="1.125"/><path d="M3.70312 3.33691L9.67545 9.30924" stroke="black" stroke-width="1.125"/></svg></div>
+        </div>
+
+        <div class="modal-add-cont">
+
+            <form id="form-create-collection" action="/animation/58" method="post" data-id="">
+<input type="hidden" name="_csrf" value="MzUEris5WrgPzwSvkZRhAkTa9pFF1A1511RuSv5bYQJkVlLlQUEs30G9d87-4QpWDYzG1CCsbh--Bgh4jC8WcA==">
+            <div class="form-group field-input-create-collection-name required">
+
+<input type="text" id="input-create-collection-name" class="modal-add-inp" name="Collections[name]" maxlength="25" placeholder="ENTER THE TITLE" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+            <div class="center">
+                <button class="modal-add-btn" type="submit">
+                    SAVE                </button>
+            </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+    
+<div class="modal" id="modal-edit" style="width: 512px; display: none;">
+
+    <div class="modal-add">
+
+        <div class="modal-add-title">
+            EDIT SELECTION            <div class="modal-add-close" onclick="modal_close(); return false;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.67578 3.33691L3.70345 9.30924" stroke="black" stroke-width="1.125"/><path d="M3.70312 3.33691L9.67545 9.30924" stroke="black" stroke-width="1.125"/></svg></div>
+        </div>
+
+        <div class="modal-add-cont">
+
+            <form id="form-update-collection" action="/animation/58" method="post" data-id="">
+<input type="hidden" name="_csrf" value="MzUEris5WrgPzwSvkZRhAkTa9pFF1A1511RuSv5bYQJkVlLlQUEs30G9d87-4QpWDYzG1CCsbh--Bgh4jC8WcA==">
+            <div class="form-group field-input-update-collection-name required">
+
+<input type="text" id="input-update-collection-name" class="modal-add-inp" name="Collections[name]" maxlength="25" placeholder="ENTER THE TITLE" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+            <div class="center">
+                <button class="modal-add-btn" type="submit">
+                    SAVE                </button>
+            </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+<div class="modal-ovarlay2" onclick="ajax_close(); return false;" style="display: none;"></div>
+<div class="modal-ovarlay3" style="display: none;"></div>
+<div class="modal-ovarlay4" style="display: none;"></div>
+
+
+<div class="modal-ovarlay5" style="display: none;"></div>
+<div class="modal-add modal-new-pass modal-new-password modal_new" style="display: none;">
+   <div class="modal-add-title">
+       Change password       <div class="modal-add-close" style="left: calc(100% - 51px);" onclick="new_ajax_close(); return false;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.67578 3.33691L3.70345 9.30924" stroke="black" stroke-width="1.125"></path><path d="M3.70312 3.33691L9.67545 9.30924" stroke="black" stroke-width="1.125"></path></svg></div>
+   </div>
+   <div class="modal-add-cont new-infopovod-pass infopovod-text">
+
+       <form id="change-password-form" action="/auth/change-password" method="post">
+<input type="hidden" name="_csrf" value="MzUEris5WrgPzwSvkZRhAkTa9pFF1A1511RuSv5bYQJkVlLlQUEs30G9d87-4QpWDYzG1CCsbh--Bgh4jC8WcA==">
+           <div class="form-group field-changepasswordform-current_password required">
+
+<input type="password" id="changepasswordform-current_password" class="auth-input-bg" name="ChangePasswordForm[current_password]" placeholder="Current password" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+           <div class="form-group field-changepasswordform-new_password required">
+
+<input type="password" id="changepasswordform-new_password" class="auth-input-bg" name="ChangePasswordForm[new_password]" maxlength="40" placeholder="New password" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+           <div class="form-group field-changepasswordform-new_password_again required">
+
+<input type="password" id="changepasswordform-new_password_again" class="auth-input-bg" name="ChangePasswordForm[new_password_again]" placeholder="New password again" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+           <div class="lostpassword">
+               <a href="#" onclick="new_ajax_close(); return false;">Cancel</a>
+           </div>
+
+           <div class="center">
+               <button class="modal-add-btn" type="submit">SAVE</button>
+           </div>
+
+       </form>   </div>
+</div>
+
+
+<header>
+    <div class="container-adaptive head-adaptive">
+        <ul class="adaptive-menu" style="display:none;" onclick="adaptive();">
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+        <div class="grid-left-column">
+                            <a href="/" class="header-logo-wrapper">
+                    <img src="/images/logo.svg" alt="Logo" class="header-logo">
+                </a>
+                    </div>
+
+        <div class="grid-center-column">
+            <div class="header-menu">
+
+                <a href="/" class="header-menu-link" data-id="index">Animations</a>
+                <a href="/rental" class="header-menu-link" data-id="rental">MOCAP RENT</a>
+                <a href="/order-animation" class="header-menu-link" data-id="order-animation">ONLINE MOCAP</a>
+                <a href="/how-to-use" class="header-menu-link" data-id="how-to-use">How to use</a>
+                <a href="/about" class="header-menu-link" data-id="about">About us</a>
+                <a href="/help" class="header-menu-link" data-id="help">Help</a>
+                <a href="https://monterfilm.com/" class="header-menu-link" data-id="studio" target="_blank">OUR STUDIO</a>
+
+            </div>
+            <ul class="header-lang " onclick="lang_js('/site/change-language', 'ru')">
+                <li class="en">EN</li>
+                <li class="ru">RU</li>
+            </ul>
+        </div>
+
+        <div class="grid-right-column">
+                           <div class="modal-add modal-header modal-auth" style="display: none;">
+                   <div class="modal-add-title">
+                       AUTHORIZATION                       <div class="modal-add-close" onclick="ajax_close(); return false;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.67578 3.33691L3.70345 9.30924" stroke="black" stroke-width="1.125"/><path d="M3.70312 3.33691L9.67545 9.30924" stroke="black" stroke-width="1.125"/></svg></div>
+                   </div>
+                   <div class="modal-add-cont">
+                        <div class="tg-text">
+                            BY PROCEEDING, I AGREE TO THE <a href="/police">PRIVACY POLICY</a>, <a href="/agreement">END-USER LICENSE AGREEMENT</a> AND CONSENT TO THE PROCESSING OF PERSONAL DATA                        </div>
+                       <div style="text-align: center;"><script async src="https://telegram.org/js/telegram-widget.js?19" data-telegram-login="animmade_bot" data-size="large" data-userpic="false" data-auth-url="/auth/tg-login" data-request-access="write" data-lang="en"></script></div>
+                       <div class="ili">Or</div>
+
+                       <form id="login-form" action="/animation/58" method="post">
+<input type="hidden" name="_csrf" value="MzUEris5WrgPzwSvkZRhAkTa9pFF1A1511RuSv5bYQJkVlLlQUEs30G9d87-4QpWDYzG1CCsbh--Bgh4jC8WcA==">
+                           <div class="form-group field-users-email required">
+
+<input type="text" id="users-email" class="auth-input-bg" name="Users[email]" maxlength="255" placeholder="Email" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                           <div class="form-group field-users-password required">
+
+<input type="password" id="users-password" class="auth-input-bg" name="Users[password]" maxlength="255" placeholder="Password" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                           <div class="lostpassword">
+                               <a href="#" onclick="$('.modal-auth').removeClass('active'); ajax_open('create'); return false;">CREATE AN ACCOUNT</a>
+                               <a href="#" onclick="$('.modal-auth').removeClass('active'); ajax_open('lost'); return false;">RESET PASSWORD</a>
+                           </div>
+
+                            <div class="center"> <button class="modal-add-btn" type="submit">Log in</button></div>
+
+                       </form>
+                   </div>
+               </div>
+               <div class="modal-add modal-header modal-create" style="display: none;">
+                   <div class="modal-add-title">
+                       Registration                       <div class="modal-add-close" onclick="ajax_close(); return false;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.67578 3.33691L3.70345 9.30924" stroke="black" stroke-width="1.125"/><path d="M3.70312 3.33691L9.67545 9.30924" stroke="black" stroke-width="1.125"/></svg></div>
+                   </div>
+                   <div class="modal-add-cont mc-type-1">
+                        <div class="tg-text">
+                            BY PROCEEDING, I AGREE TO THE <a href="/police">PRIVACY POLICY</a>, <a href="/agreement">END-USER LICENSE AGREEMENT</a> AND CONSENT TO THE PROCESSING OF PERSONAL DATA                        </div>
+
+                       <form id="registration-form" action="/animation/58" method="post">
+<input type="hidden" name="_csrf" value="MzUEris5WrgPzwSvkZRhAkTa9pFF1A1511RuSv5bYQJkVlLlQUEs30G9d87-4QpWDYzG1CCsbh--Bgh4jC8WcA==">
+                       <div class="form-group field-registrationform-email required">
+
+<input type="text" id="registrationform-email" class="auth-input-bg" name="RegistrationForm[email]" placeholder="Email" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                       <div class="form-group field-registrationform-password required">
+
+<input type="password" id="registrationform-password" class="auth-input-bg" name="RegistrationForm[password]" maxlength="40" placeholder="Password" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                       <div class="form-group field-registrationform-password_again required">
+
+<input type="password" id="registrationform-password_again" class="auth-input-bg" name="RegistrationForm[password_again]" placeholder="Password again" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                       <div class="lostpassword">
+                           <a href="#" onclick="$('.modal-create').removeClass('active'); ajax_open('auth'); return false;">GO BACK TO LOGIN</a>
+                       </div>
+                       <div class="center"> <button class="modal-add-btn" type="submit">CREATE AN ACCOUNT</button></div>
+
+                       </form>
+                   </div>
+                   <div class="modal-add-cont mc-type-2" style="display: none;">
+                       WE ARE PLEASED THAT YOU ARE JOINING US NOW!<br><br><br>PLEASE, VERIFY THE CONFIRMATION EMAIL IN YOUR EMAIL FOR COMPLETING THE REGISTRATION PROCESS.                   </div>
+               </div>
+               <div class="modal-add modal-header modal-lost" style="display: none;">
+                   <div class="modal-add-title">
+                       RESET PASSWORD                       <div class="modal-add-close" onclick="ajax_close(); return false;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.67578 3.33691L3.70345 9.30924" stroke="black" stroke-width="1.125"/><path d="M3.70312 3.33691L9.67545 9.30924" stroke="black" stroke-width="1.125"/></svg></div>
+                   </div>
+                   <div class="modal-add-cont ls-1">
+                        <div class="tg-text">
+                            BY PROCEEDING, I AGREE TO THE <a href="/police">PRIVACY POLICY</a>, <a href="/agreement">END-USER LICENSE AGREEMENT</a> AND CONSENT TO THE PROCESSING OF PERSONAL DATA                        </div>
+
+                       <form id="recovery-pass-form" action="/animation/58" method="post">
+<input type="hidden" name="_csrf" value="MzUEris5WrgPzwSvkZRhAkTa9pFF1A1511RuSv5bYQJkVlLlQUEs30G9d87-4QpWDYzG1CCsbh--Bgh4jC8WcA==">
+                       <div class="form-group field-recoverypasswordform-email required">
+
+<input type="text" id="recoverypasswordform-email" class="auth-input-bg" name="RecoveryPasswordForm[email]" placeholder="Email" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                       <div class="form-group field-recoverypasswordform-password required">
+
+<input type="password" id="recoverypasswordform-password" class="auth-input-bg" name="RecoveryPasswordForm[password]" maxlength="40" placeholder="New password" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                       <div class="form-group field-recoverypasswordform-password_again required">
+
+<input type="password" id="recoverypasswordform-password_again" class="auth-input-bg" name="RecoveryPasswordForm[password_again]" placeholder="New password again" aria-required="true">
+
+<div class="help-block"></div>
+</div>
+                       <div class="lostpassword">
+                           <a href="#" onclick="$('.modal-lost').removeClass('active'); ajax_open('auth'); return false;">GO BACK TO LOGIN</a>
+                       </div>
+
+                       <div class="center"> <button class="modal-add-btn" type="submit">Reset</button></div>
+
+                       </form>
+                   </div>
+                   <div class="modal-add-cont ls-2" style="display:none;">
+                       PLEASE, VERIFY THE CONFIRMATION EMAIL IN YOUR EMAIL FOR COMPLETING THE RECOVERY PASSWORD PROCESS                   </div>
+               </div>
+                       <div class="modal-add modal-header modal-basket" style="display: none;">
+               <div class="modal-add-title">
+                   Cart                   <div class="modal-add-close" onclick="ajax_close(); return false;"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.67578 3.33691L3.70345 9.30924" stroke="black" stroke-width="1.125"/><path d="M3.70312 3.33691L9.67545 9.30924" stroke="black" stroke-width="1.125"/></svg></div>
+               </div>
+               <div class="modal-add-cont">
+                  <div class="modal-basket-scroll">
+
+                      <div id="buffer-modal-basket-item" class="modal-basket-item" style="display: none;" data-id="">
+                          <div class="modal-basket-name"></div>
+                          <div class="modal-basket-x" data-type="basket-button" data-page="modal-basket"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.74219 3.11133L3.76986 9.08366" stroke="#5F5F5F" stroke-width="1.125"/><path d="M3.76953 3.11475L9.74186 9.08707" stroke="#5F5F5F" stroke-width="1.125"/></svg></div>
+                          <div class="modal-basket-price"></div>
+                      </div>
+
+                      
+                  </div>
+
+                   <div id="modal-basket-empty-title"  >Your cart is empty :(</div>
+
+                  <div class="basket-btn">
+                      <a href="/basket">Go to cart</a>
+                      <div>
+                          <p>TOTAL:</p>
+                          <p id="modal-basket-total-price">$0.00</p>
+                      </div>
+                  </div>
+               </div>
+           </div>
+            <a href="" class="user-menu-icon-link" data-ico="basket" style="visibility: hidden;">
+                <img src="/svg/8.svg" alt="basket" class="user-menu-icon" width="16px" height="20px" style="opacity: 0.5;">
+                <div class="header-basket-count-number ">0</div>
+            </a>
+            <a href="/account" class="user-menu-icon-link ex" onclick="ajax_open('auth'); return false;" data-ico="auth">
+                <img src="/svg/10.svg" alt="profile" class="user-menu-icon" width="14px" style="opacity: 0.5;">
+            </a>
+            <a href="/favorites" class="user-menu-icon-link" data-ico="favorites">
+                <img src="/svg/5.svg" alt="favorites" class="user-menu-icon"  width="16px" height="14px" style="opacity: 0.5;">
+            </a>
+        </div>
+
+    </div>
+</header>
+
+<main>
+    <div class="container-adaptive">
+        
+<div class="animation-full" >
+    <div class="animation-fl">
+
+        <h1 class="animation-full-title">Rifle Crouch Shooting </h1>
+
+        <h3 class="animation-full-cat">
+            <a href="/">Animations</a> /
+            <a href="/?category=5">Military</a>
+             / <a href="/?subcategory=5"><span>Automatic rifles</span></a>         </h3>
+
+        <div class="animation-full-dop">
+
+            <h3>
+                Gender                <div class="tags-wrapper">
+                <a href="/?genders%5B%5D=1" class="tag-item">Man</a>
+                </div>
+            </h3>
+
+            <h3>
+                Duration                <div class="tags-wrapper">
+                <a class="tag-item" href="/?min-duration=6&max-duration=6">6 s</a>
+                </div>
+            </h3>
+
+            
+                <h3>Mood                    <div class="tags-wrapper">
+                                                    <a href="/?moods%5B%5D=6" class="tag-item">Aggressive</a>
+                                            </div>
+                </h3>
+
+            
+            
+                <h3>Tags                    <div class="tags-wrapper">
+                                                    <a href="/?catalog-search=shoots" class="tag-item">shoots</a>
+                                                    <a href="/?catalog-search=shots" class="tag-item">shots</a>
+                                                    <a href="/?catalog-search=shooter" class="tag-item">shooter</a>
+                                                    <a href="/?catalog-search=shootout" class="tag-item">shootout</a>
+                                                    <a href="/?catalog-search=war" class="tag-item">war</a>
+                                                    <a href="/?catalog-search=shooter" class="tag-item">shooter</a>
+                                                    <a href="/?catalog-search=military" class="tag-item">military</a>
+                                                    <a href="/?catalog-search=army" class="tag-item">army</a>
+                                                    <a href="/?catalog-search=soldier" class="tag-item">soldier</a>
+                                                    <a href="/?catalog-search=machine gun" class="tag-item">machine gun</a>
+                                                    <a href="/?catalog-search=assault rifle" class="tag-item">assault rifle</a>
+                                                    <a href="/?catalog-search=automatic rifle" class="tag-item">automatic rifle</a>
+                                                    <a href="/?catalog-search=rifle" class="tag-item">rifle</a>
+                                                    <a href="/?catalog-search=kalashnikov rifle" class="tag-item">kalashnikov rifle</a>
+                                                    <a href="/?catalog-search=ak-47" class="tag-item">ak-47</a>
+                                                    <a href="/?catalog-search=m4a1" class="tag-item">m4a1</a>
+                                                    <a href="/?catalog-search=m4a4" class="tag-item">m4a4</a>
+                                                    <a href="/?catalog-search=special forces" class="tag-item">special forces</a>
+                                                    <a href="/?catalog-search=weapons" class="tag-item">weapons</a>
+                                                    <a href="/?catalog-search=firearms" class="tag-item">firearms</a>
+                                                    <a href="/?catalog-search=shot" class="tag-item">shot</a>
+                                            </div>
+                </h3>
+
+            
+            
+                <h3>Position                    <div class="tags-wrapper">
+                                                    <a href="/?positions%5B%5D=2" class="tag-item">Sitting</a>
+                                            </div>
+                </h3>
+
+                    </div>
+
+        
+            <h3 class="animation-full-price">
+                Free            </h3>
+        
+        <div class="animation-full-btn">
+            
+                
+                <a class="button full-anim-btn-down" data-type="down-button" data-id="58">Download                    <div class="item-ico item-ico-4"></div>
+                </a>
+
+                
+                <div class="catalog-ajax catalog-ajax-down" ajaxs="down-58" data-id="58" style="display: none;">
+                    <div class="ajax-close" data-type="down-close-button"></div>
+                    <ul class="catalog-window-collections-list">
+                        <li data-type="download-animation-file-button" data-link="https://drive.google.com/uc?export=download&id=1nX2cROSnIU9sLa1wLm9dz4sSoHx04E3i">
+                            24 FPS
+                        </li>
+                        <li data-type="download-animation-file-button" data-link="https://drive.google.com/uc?export=download&id=1W37H_rGQ6Bta1fpCWExw1eo13tXbN3jF">
+                            30 FPS
+                        </li>
+                        <li data-type="download-animation-file-button" data-link="https://drive.google.com/uc?export=download&id=1RuAcNcC8i0qZMTOu_diFplUbPic8UUp3">
+                            60 FPS
+                        </li>
+                        <li data-type="download-animation-file-button" data-link="https://drive.google.com/uc?export=download&id=198MGucQwMdFmkcAdY2uCCxoTZJNa3fl0">
+                            240 FPS
+                        </li>
+                        <li data-type="download-animation-file-button" data-link="https://drive.google.com/uc?export=download&id=1Dlm9PSYjwP7v1R6f1PhQ8fODS7CIKgJk">
+                            T-POSE+MESH
+                        </li>
+                    </ul>
+                </div>
+
+                
+                    </div>
+
+        <div class="animation-full-id">ID: <span>58</span></div>
+        <div class="animation-full-id">ESTABLISHED: <span>September 2022</span></div>
+    </div>
+
+    <div class="animation-fr" style="background-image: url('https://imgur.com/3OMhRwa.gif')">
+        <ul class="animation-info">
+            <li>
+                .fbx
+                <span>
+                    ANIMATION IS PRESENTED IN FBX FORMAT FEATURING AN ANIMATED SKELETON WITHOUT A MANNEQUIN MESH.                </span>
+            </li>
+            <li>
+                24/30/60/240 <br>fps
+                <span>
+                    ANIMATION IS RECORDED AT 240 FPS, ALLOWING EVERY MICRO-MOVEMENT TO BE RETAINED EVEN AT THE FASTEST SLOW MOTION.                </span>
+            </li>
+            <li>
+                Deep<br> level of cleaning                <span>
+                    ANIMATION PASSED MVN ANIMATE PROCESSING, MANUAL REFINEMENT AND CLEANING BY ANIMATORS, THEREFORE THE ANIMATION IS JITTER-FREE AND READY TO USE.                </span>
+            </li>
+            <li>
+                License <br>royalty free
+                <span>
+                    THE ANIMATION IS LICENSED ROYALTY FREE, MEANING IT CAN BE USED IN ANY COMMERCIAL AND NON-COMMERCIAL PROJECTS, WITH NO COPYRIGHT.                </span>
+            </li>
+        </ul>
+        <div class="animation-ico">
+
+            <div class="animation-i item-ico-5" data-type="copy-button" data-text="https://animmade.com/animation/58" data-message="Link copied"></div>
+
+            
+            <div class="animation-i item-ico-2 " data-type="favorites-button" data-id="58" data-page="animation"></div>
+
+                    </div>
+        <div class="sketchfab-embed-wrapper"> <iframe title="Shooting In A Crouch" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/3890f2c599f446d5a1aa40c7d59676c2/embed?autostart=1&camera=0&ui_hint=0&ui_theme=dark"> </iframe> </div>    </div>
+
+    
+        <div class="animation-right">
+            <div class="animation-right-title">Similar</div>
+            <ul class="animation-right-item">
+                                    <li>
+                        <a href="/animation/57">
+                            <img data-src="https://imgur.com/hZsOUca.gif" loading="lazy" class="lazyload" alt="Animation">
+                        </a>
+                    </li>
+                                    <li>
+                        <a href="/animation/61">
+                            <img data-src="https://imgur.com/SfmntKi.gif" loading="lazy" class="lazyload" alt="Animation">
+                        </a>
+                    </li>
+                                    <li>
+                        <a href="/animation/62">
+                            <img data-src="https://imgur.com/ZTrhJtn.gif" loading="lazy" class="lazyload" alt="Animation">
+                        </a>
+                    </li>
+                                    <li>
+                        <a href="/animation/63">
+                            <img data-src="https://imgur.com/Yn5Zr7m.gif" loading="lazy" class="lazyload" alt="Animation">
+                        </a>
+                    </li>
+                            </ul>
+        </div>
+
+    
+</div>
+
+
+    <div class="full-title">WITH THIS ANIMATION, USERS HAVE ALSO CHOSEN:</div>
+
+    <div class="full-show">
+
+        
+<a  href="/animation/57" class="catalog-item " data-id="57">
+    <img width="auto" height="90%" data-src="https://imgur.com/hZsOUca.gif" loading="lazy"  alt="Анимация" class="catalog-item-image lazyload">
+
+    
+            <span class="catalog-item-price-free ">free</span>
+    
+    <div class="catalog-item-description">Butt and gunfire</div>
+
+    <div class="catalog-item-ico">
+
+        
+                    <div class="item-ico item-ico-2 " data-type="favorites-button" data-id="57" data-page="animation"></div>
+        
+        
+        
+    </div>
+
+    
+    
+</a>
+<a  href="/animation/59" class="catalog-item " data-id="59">
+    <img width="auto" height="90%" data-src="https://imgur.com/wxCD3Hq.gif" loading="lazy"  alt="Анимация" class="catalog-item-image lazyload">
+
+    
+            <span class="catalog-item-price-free ">free</span>
+    
+    <div class="catalog-item-description">The butt blow at the interrogation</div>
+
+    <div class="catalog-item-ico">
+
+        
+                    <div class="item-ico item-ico-2 " data-type="favorites-button" data-id="59" data-page="animation"></div>
+        
+        
+        
+    </div>
+
+    
+    
+</a>
+<a  href="/animation/60" class="catalog-item " data-id="60">
+    <img width="auto" height="90%" data-src="https://imgur.com/iZCA21P.gif" loading="lazy"  alt="Анимация" class="catalog-item-image lazyload">
+
+    
+            <span class="catalog-item-price-free ">free</span>
+    
+    <div class="catalog-item-description"> Circle defense</div>
+
+    <div class="catalog-item-ico">
+
+        
+                    <div class="item-ico item-ico-2 " data-type="favorites-button" data-id="60" data-page="animation"></div>
+        
+        
+        
+    </div>
+
+    
+    
+</a>
+<a  href="/animation/61" class="catalog-item " data-id="61">
+    <img width="auto" height="90%" data-src="https://imgur.com/SfmntKi.gif" loading="lazy"  alt="Анимация" class="catalog-item-image lazyload">
+
+    
+            <span class="catalog-item-price-free ">free</span>
+    
+    <div class="catalog-item-description">Butt and gunfire 2</div>
+
+    <div class="catalog-item-ico">
+
+        
+                    <div class="item-ico item-ico-2 " data-type="favorites-button" data-id="61" data-page="animation"></div>
+        
+        
+        
+    </div>
+
+    
+    
+</a>
+<a  href="/animation/62" class="catalog-item " data-id="62">
+    <img width="auto" height="90%" data-src="https://imgur.com/ZTrhJtn.gif" loading="lazy"  alt="Анимация" class="catalog-item-image lazyload">
+
+    
+            <span class="catalog-item-price-free ">free</span>
+    
+    <div class="catalog-item-description">Butt and gunfire 3</div>
+
+    <div class="catalog-item-ico">
+
+        
+                    <div class="item-ico item-ico-2 " data-type="favorites-button" data-id="62" data-page="animation"></div>
+        
+        
+        
+    </div>
+
+    
+    
+</a>
+<a  href="/animation/63" class="catalog-item " data-id="63">
+    <img width="auto" height="90%" data-src="https://imgur.com/Yn5Zr7m.gif" loading="lazy"  alt="Анимация" class="catalog-item-image lazyload">
+
+    
+            <span class="catalog-item-price-free ">free</span>
+    
+    <div class="catalog-item-description">Butt and gunfire 4</div>
+
+    <div class="catalog-item-ico">
+
+        
+                    <div class="item-ico item-ico-2 " data-type="favorites-button" data-id="63" data-page="animation"></div>
+        
+        
+        
+    </div>
+
+    
+    
+</a>
+        <a href="/?category=5" class="catalog-item nw">
+            VIEW OTHER ANIMATIONS WITHIN CATEGORY <br> Military        </a>
+    </div>
+
+
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement":
+        [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "item":
+                {
+                    "@id": "https://animmade.com/",
+                    "name": "Анимации"
+                }
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "item":
+                {
+                    "@id": "/?category=5",
+                    "name": "Military"
+                }
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "item":
+                {
+                    "@id": "/?subcategory=5",
+                    "name": "Automatic rifles"
+                }
+            }
+
+        ]
+    }
+</script>
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "description": "Buy 3D animation: Rifle Crouch Shooting",
+        "name": "Rifle Crouch Shooting",
+        "image": "https://imgur.com/3OMhRwa.gif",
+        "offers": {
+            "@type": "Offer",
+            "availability": "https://schema.org/InStock",
+            "price": "0.00>",
+            "priceCurrency": "USD>"
+        }
+    }
+</script>    </div>
+</main>
+
+<footer>
+    <div class="container-adaptive">
+        <div class="footer-links-block">
+
+            <div class="footer-menu-wrapper">
+                <a href="/" class="footer-menu-link">Store</a>
+                <a href="/rental" class="footer-menu-link">MOCAP RENT</a>
+                <a href="/order-animation" class="footer-menu-link">ONLINE MOCAP</a>
+                <a href="/how-to-use" class="footer-menu-link">How to use</a>
+                <a href="/about" class="footer-menu-link">About us</a>
+                <a href="/help" class="footer-menu-link">Help</a>
+                <a href="/account" class="footer-menu-link">Account</a>
+                <a href="/favorites" class="footer-menu-link">Favorites</a>
+
+                <!-- 
+                <a href="/basket" class="footer-menu-link">Cart</a>
+                <a href="/police" class="footer-menu-link">PRIVACY POLICY</a>
+                <a href="/agreement" class="footer-menu-link">End-user license agreement</a>
+
+               -->
+
+                <a href="https://monterfilm.com/" class="footer-menu-link" target="_blank">OUR STUDIO</a>
+            </div>
+
+            <div class="social-links-wrapper">
+
+                <a href="https://www.youtube.com/@monterfilm">
+                    <img src="/images/youtube-icon.svg" alt="youtube" style="width: 22px;">
+                </a>
+
+                <!--
+                <a href="#">
+                    <img src="/images/instagram-icon.svg" alt="instagram" style="width: 22px;">
+                </a>
+                -->
+
+                <a href="https://t.me/animmade">
+                    <img src="/images/telegram-icon.svg" alt="telegram" style="width: 18px;">
+                </a>
+
+                <!--
+                <a href="#">
+                    <img src="/images/vk-icon.svg" alt="vk" style="width: 21px;">
+                </a>
+                -->
+
+            </div>
+
+        </div>
+        <div class="footer-info-block">
+            <div>© 2026 ANIMMADE. ALL RIGHTS RESERVED</div>
+            <div style="color: #DDDDDD;">info@animmade.com</div>
+        </div>
+    </div>
+</footer>
+
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript" >
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+    ym(91883999, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true,
+        webvisor:true
+    });
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/91883999" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
+<script src="/assets/81b9f65d/jquery.js"></script>
+<script src="/assets/67bcc81f/yii.js"></script>
+<script src="/js/parallax.min.js"></script>
+<script src="/js/lightzoom.js"></script>
+<script src="/js/main.js?v=30"></script>
+<script src="https://afarkas.github.io/lazysizes/lazysizes.min.js"></script>
+<script src="/assets/67bcc81f/yii.validation.js"></script>
+<script src="/assets/67bcc81f/yii.activeForm.js"></script>
+<script>jQuery(function ($) {
+jQuery('#form-create-collection').yiiActiveForm([{"id":"collections-name","name":"name","container":".field-input-create-collection-name","input":"#input-create-collection-name","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Title cannot be blank."});yii.validation.string(value, messages, {"message":"Title must be a string.","max":25,"tooLong":"Title should contain at most 25 characters.","skipOnEmpty":1});}}], []);
+jQuery('#form-update-collection').yiiActiveForm([{"id":"collections-name","name":"name","container":".field-input-update-collection-name","input":"#input-update-collection-name","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Title cannot be blank."});yii.validation.string(value, messages, {"message":"Title must be a string.","max":25,"tooLong":"Title should contain at most 25 characters.","skipOnEmpty":1});}}], []);
+jQuery('#change-password-form').yiiActiveForm([{"id":"changepasswordform-current_password","name":"current_password","container":".field-changepasswordform-current_password","input":"#changepasswordform-current_password","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Current password cannot be blank."});}},{"id":"changepasswordform-new_password","name":"new_password","container":".field-changepasswordform-new_password","input":"#changepasswordform-new_password","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"New password cannot be blank."});yii.validation.string(value, messages, {"message":"New password must be a string.","min":4,"tooShort":"New password should contain at least 4 characters.","max":40,"tooLong":"New password should contain at most 40 characters.","skipOnEmpty":1});}},{"id":"changepasswordform-new_password_again","name":"new_password_again","container":".field-changepasswordform-new_password_again","input":"#changepasswordform-new_password_again","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"New password again cannot be blank."});yii.validation.compare(value, messages, {"operator":"==","type":"string","compareAttribute":"changepasswordform-new_password","compareAttributeName":"ChangePasswordForm[new_password]","skipOnEmpty":1,"message":"New password again must be equal to \"New password\"."}, $form);}}], []);
+jQuery('#login-form').yiiActiveForm([{"id":"users-email","name":"email","container":".field-users-email","input":"#users-email","validate":function (attribute, value, messages, deferred, $form) {yii.validation.string(value, messages, {"message":"Email must be a string.","max":255,"tooLong":"Email should contain at most 255 characters.","skipOnEmpty":1});yii.validation.email(value, messages, {"pattern":/^[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/,"fullPattern":/^[^@]*<[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?>$/,"allowName":false,"message":"Email is not a valid email address.","enableIDN":false,"skipOnEmpty":1});yii.validation.required(value, messages, {"message":"Email cannot be blank."});}},{"id":"users-password","name":"password","container":".field-users-password","input":"#users-password","validate":function (attribute, value, messages, deferred, $form) {yii.validation.string(value, messages, {"message":"Password must be a string.","max":255,"tooLong":"Password should contain at most 255 characters.","skipOnEmpty":1});yii.validation.required(value, messages, {"message":"Password cannot be blank."});}}], []);
+jQuery('#registration-form').yiiActiveForm([{"id":"registrationform-email","name":"email","container":".field-registrationform-email","input":"#registrationform-email","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Email cannot be blank."});yii.validation.email(value, messages, {"pattern":/^[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/,"fullPattern":/^[^@]*<[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?>$/,"allowName":false,"message":"Email is not a valid email address.","enableIDN":false,"skipOnEmpty":1});}},{"id":"registrationform-password","name":"password","container":".field-registrationform-password","input":"#registrationform-password","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Password cannot be blank."});yii.validation.string(value, messages, {"message":"Password must be a string.","min":4,"tooShort":"Password should contain at least 4 characters.","max":40,"tooLong":"Password should contain at most 40 characters.","skipOnEmpty":1});}},{"id":"registrationform-password_again","name":"password_again","container":".field-registrationform-password_again","input":"#registrationform-password_again","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Password again cannot be blank."});yii.validation.compare(value, messages, {"operator":"==","type":"string","compareAttribute":"registrationform-password","compareAttributeName":"RegistrationForm[password]","skipOnEmpty":1,"message":"Password again must be equal to \"Password\"."}, $form);}}], []);
+jQuery('#recovery-pass-form').yiiActiveForm([{"id":"recoverypasswordform-email","name":"email","container":".field-recoverypasswordform-email","input":"#recoverypasswordform-email","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"Email cannot be blank."});yii.validation.email(value, messages, {"pattern":/^[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/,"fullPattern":/^[^@]*<[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?>$/,"allowName":false,"message":"Email is not a valid email address.","enableIDN":false,"skipOnEmpty":1});}},{"id":"recoverypasswordform-password","name":"password","container":".field-recoverypasswordform-password","input":"#recoverypasswordform-password","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"New password cannot be blank."});yii.validation.string(value, messages, {"message":"New password must be a string.","min":4,"tooShort":"New password should contain at least 4 characters.","max":40,"tooLong":"New password should contain at most 40 characters.","skipOnEmpty":1});}},{"id":"recoverypasswordform-password_again","name":"password_again","container":".field-recoverypasswordform-password_again","input":"#recoverypasswordform-password_again","validate":function (attribute, value, messages, deferred, $form) {yii.validation.required(value, messages, {"message":"New password again cannot be blank."});yii.validation.compare(value, messages, {"operator":"==","type":"string","compareAttribute":"recoverypasswordform-password","compareAttributeName":"RecoveryPasswordForm[password]","skipOnEmpty":1,"message":"New password again must be equal to \"New password\"."}, $form);}}], []);
+});</script></body>
+</html>
+

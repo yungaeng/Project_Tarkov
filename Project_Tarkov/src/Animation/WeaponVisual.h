@@ -10,9 +10,10 @@ class WeaponVisual
 {
 public:
     void Init();
-    void Update(float dt, bool equipped, bool aiming, float reloadRemaining, bool fired, bool moving, bool dead, bool sprinting = false, bool crouching = false);
+    void Update(float dt, bool equipped, bool aiming, float reloadRemaining, bool fired, bool moving, bool dead,
+        bool sprinting = false, bool crouching = false, bool skeletalHandling = false, float handlingDuration = .3f);
     void Render(const glm::mat4& grip, Shader& shader, Camera& camera, float width, float height);
-    glm::mat4 ModelMatrix(const glm::mat4& shoulder) const;
+    glm::mat4 ModelMatrix(const glm::mat4& shoulder,bool skipHandling = false) const;
     glm::vec3 SupportGrip() const;
     static glm::vec3 FiringGrip() { return {-0.045f, -0.025f, -0.048f}; }
     void Reset();
@@ -24,4 +25,6 @@ private:
     float sprintWeight = 0, crouchWeight = 0;
     bool visible = false, wasEquipped = false, dead = false;
     bool magazineInserted = true;
+    bool skeletalHandling = false;
+    bool equipmentInitialized = false;
 };

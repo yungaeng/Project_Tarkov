@@ -21,9 +21,11 @@ struct Enemy
     Inventory wornEquipment;
     bool rifle = true;
     float deadTime = 0;
+    float rifleDropRetry = 0;
     EnemyState state = EnemyState::Patrol;
     std::unique_ptr<CharacterVisual> visual;
     bool fired = false;
+    bool hit = false;
     float aimPitch = 0;
 };
 struct RescueSurvivor
@@ -35,6 +37,7 @@ struct RescueSurvivor
     float moveTimer = 0;
     bool available = false;
     bool recruited = false;
+    bool hit = false;
 };
 class CombatSystem
 {
@@ -43,6 +46,8 @@ public:
     bool SpawnRescueSurvivor(const glm::vec3& playerSpawn, const CollisionWorld& world);
     void Update(float dt, Player& player, Camera& camera, const CollisionWorld& world, LootSystem& loot, bool enabled);
     void Render(Shader& shader, Camera& camera, float width, float height);
+    // Called after the current frame's skeletal pose has been evaluated.
+    void ResolveMelee(Player& player,const CharacterVisual& visual,const CollisionWorld& world);
     bool CanInteractWithRescue(const Player& player, const CollisionWorld& world) const;
     bool RecruitRescue() { if (!rescue.available || rescue.recruited || rescue.health <= 0) return false; rescue.recruited = true; rescue.target = rescue.body.position; return true; }
     bool HasRecruitedRescue() const { return rescue.recruited && rescue.health > 0; }
@@ -58,6 +63,8 @@ public:
     bool Aiming() const { return aiming; }
     bool Fired() const { return fired; }
     float ReloadTime() const { return reload; }
+    bool HitReceived() const { return hitReceived; }
+    float MeleeTime() const { return melee; }
     const std::string& Message() const { return message; }
     int LivingEnemies() const;
     const std::vector<KillRecord>& KillRecords() const { return kills; }
@@ -67,7 +74,7 @@ public:
     bool TakeCorpseItem(int index, StackId id, Player& player);
     bool TakeCorpseRifle(int index, Player& player);
     bool LootSpaceClear(const glm::vec3& center, int ignoredCorpse) const;
-    void CancelInput() { reload = 0; aiming = false; }
+    void CancelInput() { reload = melee = handling = 0; aiming = false; meleeStrikePending=false; }
     void Reset() { carried = nullptr; gunshotAudio.Reset(); enemies.clear(); kills.clear(); rescue = RescueSurvivor{}; elapsedSeconds = 0; CancelInput(); }
 private:
     GunshotAudio gunshotAudio;
@@ -80,6 +87,11 @@ private:
     int magazine = 30;
     bool equipped = true, aiming = false;
     bool fired = false;
+    bool hitReceived = false;
+    float melee = 0, handling = 0;
+    glm::vec3 meleeDirection{0,0,1};
+    bool meleeStrikePending = false;
+    void DamageEnemy(int index,float amount,const glm::vec3& impact,const glm::vec3& attacker);
     float fireModeDisplayTime = 0;
     float cooldown = 0, reload = 0, messageTime = 0, elapsedSeconds = 0;
     std::string message;

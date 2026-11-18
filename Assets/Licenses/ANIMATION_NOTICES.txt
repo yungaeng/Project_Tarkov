@@ -1,0 +1,28 @@
+Project_Tarkov animation asset notices
+Acquired and integrated: 2026-11-19
+
+Adobe Mixamo
+Source: https://www.mixamo.com/
+Terms/FAQ: https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html
+Additional terms: Mixamo-Additional-Terms-20210623.pdf in this directory.
+The imported Mixamo animations are used as game content under Adobe/Mixamo
+terms permitting royalty-free commercial video-game use. These assets are
+not CC0. Do not redistribute them as standalone animation files, asset packs,
+templates, or an animation library. Adobe retains rights in its content.
+No Adobe/Mixamo credit is required by the published licensing FAQ.
+This notice is retained voluntarily with the game files.
+
+Quaternius - Universal Animation Library (Standard)
+Creator: Quaternius, https://quaternius.com/
+Source: https://quaternius.itch.io/universal-animation-library
+License: CC0 1.0 Universal, https://creativecommons.org/publicdomain/zero/1.0/
+Original license notice: Quaternius-CC0.txt in this directory.
+Used for unarmed movement, punch, and hit reaction. The game's importer
+retargets the source skeleton to the game character's reference rig.
+Attribution is not required; this acknowledgement is voluntary.
+
+Unused acquisition archives are excluded from the runtime asset copy list.
+AnimationSources.json records hashes and development-source archive paths;
+the source archives themselves are not included in the game package.
+Character models, textures, UI images, and third-party software have separate
+rights and license records. These animation notices do not clear those assets.

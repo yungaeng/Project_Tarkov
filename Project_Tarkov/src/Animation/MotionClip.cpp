@@ -43,7 +43,7 @@ void MotionClip::Load(const std::string& path)
     if (tracks.empty()) throw std::runtime_error("Empty motion asset: " + path);
 }
 
-MotionPose MotionClip::Sample(const std::string& channel, float time) const
+MotionPose MotionClip::Sample(const std::string& channel, float time, bool continuous) const
 {
     const auto found = tracks.find(channel);
     if (found == tracks.end()) return {};
@@ -54,6 +54,33 @@ MotionPose MotionClip::Sample(const std::string& channel, float time) const
         [](float t, const Key& key) { return t < key.time; });
     const auto& previous = *(next - 1);
     float alpha = (time - previous.time) / (next->time - previous.time);
+    if (continuous) {
+        // Monotone cubic Hermite interpolation: retain momentum at intermediate
+        // fall keys, but stop at endpoints and direction changes (ground impact).
+        const size_t index = static_cast<size_t>(next - keys.begin());
+        auto sample = [&](auto member) {
+            auto tangent = [&](size_t i, int axis) {
+                if (i == 0 || i + 1 == keys.size()) return 0.f;
+                const float before = keys[i].time - keys[i - 1].time;
+                const float after = keys[i + 1].time - keys[i].time;
+                const float a = ((keys[i].pose.*member)[axis] - (keys[i - 1].pose.*member)[axis]) / before;
+                const float b = ((keys[i + 1].pose.*member)[axis] - (keys[i].pose.*member)[axis]) / after;
+                if (a * b <= 0.f) return 0.f;
+                const float w1 = 2.f * after + before, w2 = after + 2.f * before;
+                return (w1 + w2) / (w1 / a + w2 / b);
+            };
+            const float t2 = alpha * alpha, t3 = t2 * alpha;
+            const float span = next->time - previous.time;
+            glm::vec3 result;
+            for (int axis = 0; axis < 3; ++axis)
+                result[axis] = (2.f * t3 - 3.f * t2 + 1.f) * (previous.pose.*member)[axis] +
+                    (t3 - 2.f * t2 + alpha) * span * tangent(index - 1, axis) +
+                    (-2.f * t3 + 3.f * t2) * (next->pose.*member)[axis] +
+                    (t3 - t2) * span * tangent(index, axis);
+            return result;
+        };
+        return {sample(&MotionPose::position), sample(&MotionPose::rotation)};
+    }
     alpha = alpha * alpha * (3 - 2 * alpha);
     return {glm::mix(previous.pose.position, next->pose.position, alpha),
         glm::mix(previous.pose.rotation, next->pose.rotation, alpha)};

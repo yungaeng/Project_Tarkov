@@ -33,18 +33,18 @@ namespace
             if (RayBox(from, delta / length, box.min, box.max, length, hit)) return false;
         return true;
     }
-    bool HitBody(const Character& body, glm::vec3 origin, glm::vec3 direction, float limit, float& hit)
+    bool HitBody(const Character& body, glm::vec3 origin, glm::vec3 direction, float limit, float& hit,float padding=0)
     {
         if (body.IsLooting()) {
             const float yaw = glm::radians(body.rotation.y);
             const glm::vec3 forward(std::sin(yaw), 0, std::cos(yaw));
             const auto center = body.position + forward * .55f + glm::vec3(0, .6f, 0);
-            const auto extent = glm::abs(forward) * .65f + glm::vec3(.35f, .6f, .35f);
+            const auto extent = glm::abs(forward) * .65f + glm::vec3(.35f, .6f, .35f)+glm::vec3(padding);
             return RayBox(origin, direction, center - extent, center + extent, limit, hit);
         }
-        const float radius = body.GetSettings().bodyRadius;
-        return RayBox(origin, direction, body.position - glm::vec3(radius, 0, radius),
-            body.position + glm::vec3(radius, body.GetBodyHeight(), radius), limit, hit);
+        const float radius = body.GetSettings().bodyRadius+padding;
+        return RayBox(origin, direction, body.position - glm::vec3(radius, padding, radius),
+            body.position + glm::vec3(radius, body.GetBodyHeight()+padding, radius), limit, hit);
     }
 }
 
@@ -77,6 +77,7 @@ void CombatSystem::Init(const CollisionWorld& world)
     aiming = false;
     fired = false;
     cooldown = reload = messageTime = elapsedSeconds = 0;
+    melee=handling=0;hitReceived=false;meleeStrikePending=false;
     message.clear();
 }
 
@@ -124,16 +125,36 @@ int CombatSystem::LivingEnemies() const
     return count;
 }
 
+void CombatSystem::DamageEnemy(int index,float amount,const glm::vec3& impact,const glm::vec3& attacker)
+{
+    auto& enemy=enemies.at(static_cast<std::size_t>(index));
+    if(enemy.health<=0) return;
+    enemy.health=(std::max)(0.f,enemy.health-amount);enemy.hit=true;
+    enemy.lastSeen=attacker;enemy.state=enemy.health==0?EnemyState::Dead:EnemyState::Chase;enemy.searchTimer=5;
+    if(enemy.health>0) return;
+    for(int slot=0;slot<ClothingSlotCount;++slot) {
+        const auto type=ClothingType(slot);
+        if(enemy.body.clothingMask&ClothingBit(type)) enemy.wornEquipment.TryAdd({type,1});
+    }
+    const int seconds=static_cast<int>(elapsedSeconds);std::ostringstream timestamp,location;
+    timestamp<<std::setfill('0')<<std::setw(2)<<seconds/60<<':'<<std::setw(2)<<seconds%60;
+    location<<"X "<<static_cast<int>(std::round(enemy.body.position.x))<<" / Z "<<static_cast<int>(std::round(enemy.body.position.z));
+    kills.push_back({"적 #"+std::to_string(index+1),timestamp.str(),location.str(),
+        impact.y-enemy.body.position.y>enemy.body.GetBodyHeight()*.75f?"머리":"몸통"});
+}
+
 void CombatSystem::Update(float dt, Player& player, Camera& camera, const CollisionWorld& world, LootSystem& loot, bool enabled)
 {
     elapsedSeconds += dt;
     fireModeDisplayTime = (std::max)(0.f,fireModeDisplayTime-dt);
     fired = false;
+    hitReceived=false;rescue.hit=false;
+    handling=(std::max)(0.f,handling-dt);
     cooldown = (std::max)(0.0f, cooldown - dt);
     messageTime = (std::max)(0.0f, messageTime - dt);
     if (messageTime == 0) message.clear();
     enabled = enabled && player.vitals.Alive();
-    if (!enabled) reload = 0;
+    if (!enabled) {reload = melee = handling = 0;meleeStrikePending=false;}
     auto& inventory = player.GetInventory();
     carried = &inventory;
     for (int key = 0; key < 3; ++key) {
@@ -142,11 +163,22 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             if (activeSlot == slot && equipped) equipped = false;
             else { activeSlot = slot; equipped = inventory.At(slot) != nullptr; }
             reload = 0;
+            melee=0;handling=CharacterVisual::WeaponHandlingSeconds;
         }
     }
     auto* weapon = inventory.At(activeSlot) ? inventory.Edit(inventory.At(activeSlot)->id) : nullptr;
     if (!weapon) { equipped = false; reload = 0; }
     magazine = weapon ? weapon->rounds : 0;
+    const float previousMelee=melee;
+    melee=(std::max)(0.f,melee-dt);
+    if(enabled&&previousMelee>.35f&&melee<=.35f) meleeStrikePending=true;
+    if(enabled&&!equipped&&!player.IsProne()&&!player.IsLooting()&&handling==0&&melee==0&&Input::GetKeyDown(GLFW_KEY_X)) {
+        melee=CharacterVisual::MeleeSeconds;
+        meleeDirection=glm::vec3(camera.front.x,0,camera.front.z);
+        if(glm::length(meleeDirection)>.001f) meleeDirection=glm::normalize(meleeDirection);
+        else meleeDirection={0,0,1};
+        player.rotation.y=glm::degrees(std::atan2(meleeDirection.x,meleeDirection.z));
+    }
     if (enabled && equipped && weapon && Input::GetKeyDown(GLFW_KEY_B)) {
         weapon->fireMode = static_cast<FireMode>((static_cast<int>(weapon->fireMode) + 1) % 3);
         fireModeDisplayTime=2.f;
@@ -161,14 +193,14 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             magazine = weapon ? weapon->rounds : 0;
         }
     }
-    if (enabled && equipped && weapon && Input::GetKeyDown(GLFW_KEY_R) && reload == 0) {
+    if (enabled && equipped && weapon && handling==0 && Input::GetKeyDown(GLFW_KEY_R) && reload == 0) {
         reloadMagazine = inventory.BestMagazine(weapon->type, player.clothingMask);
         if (reloadMagazine) { reloadWeapon = weapon->id; reload = 2; }
         else { message = "조끼에 호환되는 탄창이 없습니다"; messageTime = 2; }
     }
-    aiming = enabled && equipped && reload == 0 && Input::Mouse(GLFW_MOUSE_BUTTON_RIGHT);
+    aiming = enabled && equipped && handling==0 && melee==0 && reload == 0 && Input::Mouse(GLFW_MOUSE_BUTTON_RIGHT);
     camera.fieldOfView = aiming ? 50.0f : 75.0f;
-    if (enabled && equipped && reload == 0 && cooldown == 0 && weapon && weapon->fireMode != FireMode::Safe &&
+    if (enabled && equipped && handling==0 && melee==0 && reload == 0 && cooldown == 0 && weapon && weapon->fireMode != FireMode::Safe &&
         (weapon->fireMode == FireMode::Auto ? Input::Mouse(GLFW_MOUSE_BUTTON_LEFT) : Input::MouseDown(GLFW_MOUSE_BUTTON_LEFT)))
     {
         if (!weapon->magazineInserted || magazine == 0) { message = "탄약 소진 - R키로 재장전하세요"; messageTime = 2; }
@@ -210,31 +242,7 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             else message = "엄폐물이 사격을 가로막고 있습니다";
             if (victim >= 0)
             {
-                auto& enemy = enemies[static_cast<std::size_t>(victim)];
-                enemy.health = (std::max)(0.0f, enemy.health - 34);
-                enemy.lastSeen = player.position;
-                enemy.state = enemy.health == 0 ? EnemyState::Dead : EnemyState::Chase;
-                enemy.searchTimer = 5;
-                if (enemy.health == 0) {
-                    for (int slot = 0; slot < ClothingSlotCount; ++slot) {
-                        const auto type = ClothingType(slot);
-                        if (enemy.body.clothingMask & ClothingBit(type)) enemy.wornEquipment.TryAdd({type, 1});
-                    }
-                    message.clear();
-                    const int killSeconds = static_cast<int>(elapsedSeconds);
-                    std::ostringstream timestamp;
-                    timestamp << std::setfill('0') << std::setw(2) << killSeconds / 60
-                        << ':' << std::setw(2) << killSeconds % 60;
-                    std::ostringstream location;
-                    location << "X " << static_cast<int>(std::round(enemy.body.position.x))
-                        << " / Z " << static_cast<int>(std::round(enemy.body.position.z));
-                    kills.push_back({
-                        "적 #" + std::to_string(victim + 1),
-                        timestamp.str(),
-                        location.str(),
-                        impactPosition.y - enemy.body.position.y > enemy.body.GetBodyHeight() * 0.75f ? "머리" : "몸통"
-                    });
-                }
+                DamageEnemy(victim,34.f,impactPosition,player.position);
             }
             messageTime = 1;
             camera.pitch = std::clamp(camera.pitch + (aiming ? 0.7f : 1.6f), -89.0f, 89.0f);
@@ -304,8 +312,13 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         {
             enemy.state = EnemyState::Dead;
             enemy.body.Update(dt);
-            if (enemy.rifle && loot.DropNear(enemy.body.position, {ItemType::Rifle,1,0,30,true},world))
-                enemy.rifle = false;
+            enemy.rifleDropRetry = (std::max)(0.f, enemy.rifleDropRetry - dt);
+            if (enemy.rifle && enemy.rifleDropRetry <= 0.f) {
+                if (loot.DropNear(enemy.body.position, {ItemType::Rifle,1,0,30,true},world))
+                    enemy.rifle = false;
+                else
+                    enemy.rifleDropRetry = .25f;
+            }
             enemy.deadTime += dt;
             continue;
         }
@@ -342,10 +355,12 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
             if (enemy.attackTimer == 0 && seesTarget)
             {
                 const int hitPart = (static_cast<int>(enemyIndex) + static_cast<int>(elapsedSeconds)) % BodyPartCount;
-                if (targetingRescue)
-                    rescue.health=(std::max)(0.f,rescue.health-40.f);
-                else
+                if (targetingRescue) {
+                    rescue.health=(std::max)(0.f,rescue.health-40.f);rescue.hit=true;
+                } else {
                     player.vitals.Damage(static_cast<BodyPart>(hitPart), 40);
+                    hitReceived=true;
+                }
                 enemy.fired = true;
                 if (Input::IsFocused()) {
                     const auto offset = Eye(enemy.body) - camera.position;
@@ -431,8 +446,9 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         if (player.vitals.Alive()) separate(rescue.body,player,false);
         for (const auto& enemy : enemies)
             separate(rescue.body,enemy.body,enemy.health<=0);
-        rescue.visual->Update(dt,rescue.body,
-            {rescue.health<=0,false,false,false,0,0,false});
+        CharacterVisualState visualState{rescue.health<=0,false,false,false,0,0,false};
+        visualState.hit=rescue.hit;
+        rescue.visual->Update(dt,rescue.body,visualState);
     }
     for (auto& enemy : enemies)
     {
@@ -441,10 +457,33 @@ void CombatSystem::Update(float dt, Player& player, Camera& camera, const Collis
         // Only visual poses are throttled. AI, physics and weapon events stay per-frame.
         const float interval = distanceSquared > 60 * 60 ? 1.0f / 15.0f :
             distanceSquared > 25 * 25 ? 1.0f / 30.0f : 0.0f;
-        enemy.visual->Update(dt, enemy.body, {enemy.health <= 0, true, enemy.state == EnemyState::Attack,
-            enemy.fired, 0, enemy.aimPitch, enemy.rifle}, interval);
+        CharacterVisualState visualState{enemy.health<=0,true,enemy.state==EnemyState::Attack,
+            enemy.fired,0,enemy.aimPitch,enemy.rifle};
+        visualState.hit=enemy.hit;
+        enemy.visual->Update(dt,enemy.body,visualState,interval);
+        enemy.hit=false;
     }
     if (!player.vitals.Alive()) { reload = 0; aiming = false; camera.fieldOfView = 75; }
+}
+
+void CombatSystem::ResolveMelee(Player& player,const CharacterVisual& visual,const CollisionWorld& world)
+{
+    if(!meleeStrikePending) return;
+    meleeStrikePending=false;
+    if(!player.vitals.Alive()||equipped||melee<=0||player.IsLooting()||player.IsProne()) return;
+    glm::vec3 torso,fist;float radius=0;
+    if(!visual.MeleeStrikeSegment(player,torso,fist,radius)) return;
+    const float reach=glm::length(fist-torso);
+    const auto direction=(fist-torso)/reach;
+    float nearest=reach,hit=0;
+    for(const auto& box:world.GetBoxes())
+        if(RayBox(torso,direction,box.min-glm::vec3(radius),box.max+glm::vec3(radius),nearest,hit)) nearest=hit;
+    int victim=-1;
+    for(std::size_t i=0;i<enemies.size();++i)
+        if(enemies[i].health>0&&HitBody(enemies[i].body,torso,direction,nearest,hit,radius)&&hit<nearest) {
+            nearest=hit;victim=static_cast<int>(i);
+        }
+    if(victim>=0) DamageEnemy(victim,25.f,torso+direction*nearest,player.position);
 }
 
 void CombatSystem::Render(Shader& shader, Camera& camera, float width, float height)

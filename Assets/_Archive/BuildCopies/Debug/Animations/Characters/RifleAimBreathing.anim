@@ -1,0 +1,11 @@
+# Restrained 2.8-second aim breathing; both hands follow the same moving grip.
+Spine2 0 0 0 0 0 0 0
+Spine2 0.7 0 0 0 -0.15 0 0.08
+Spine2 1.4 0 0 0 0 0 0
+Spine2 2.1 0 0 0 0.15 0 -0.08
+Spine2 2.8 0 0 0 0 0 0
+Grip 0 0 0 0 0 0 0
+Grip 0.7 0 0.0015 0 0 0 0
+Grip 1.4 0 0 0 0 0 0
+Grip 2.1 0 -0.0015 0 0 0 0
+Grip 2.8 0 0 0 0 0 0

@@ -1,0 +1,2766 @@
+{
+  "retrieved": "2026-11-19",
+  "note": "GLB/glTF entries only. FBX equivalents are not counted twice. A_TPose is a reference pose.",
+  "records": [
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_1H_Slash",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_1H_Stab",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_2H_Attack",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_2H_Idle",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_2H_Slam",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Block",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Block_Attack",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Block_Hit",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Blocking",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Dualwield_Slash",
+      "channels": 57,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Dualwield_SlashCombo",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Unarmed_Idle",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Unarmed_Kick",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Unarmed_Punch",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "Melee_Unarmed_Smash",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_CombatMelee.glb",
+      "name": "T-Pose",
+      "channels": 46,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_General.glb",
+      "name": "Death_A",
+      "channels": 56,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_General.glb",
+      "name": "Death_A_Pose",
+      "channels": 47,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_General.glb",
+      "name": "Hit_A",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_General.glb",
+      "name": "Idle_A",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_General.glb",
+      "name": "Idle_B",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_General.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementAdvanced.glb",
+      "name": "Dodge_Backwards",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementAdvanced.glb",
+      "name": "Dodge_Forward",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementAdvanced.glb",
+      "name": "Dodge_Left",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementAdvanced.glb",
+      "name": "Dodge_Right",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementAdvanced.glb",
+      "name": "T-Pose",
+      "channels": 46,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementBasic.glb",
+      "name": "Running_A",
+      "channels": 47,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementBasic.glb",
+      "name": "T-Pose",
+      "channels": 46,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_MovementBasic.glb",
+      "name": "Walking_A",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_Simulation.glb",
+      "name": "Flexing",
+      "channels": 54,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_Simulation.glb",
+      "name": "T-Pose",
+      "channels": 46,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_Special.glb",
+      "name": "EXPERIMENTAL_Large_Transform",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Large/Rig_Large_Special.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_1H_Attack_Chop",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_1H_Attack_Jump_Chop",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_1H_Attack_Slice_Diagonal",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_1H_Attack_Slice_Horizontal",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_1H_Attack_Stab",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_2H_Attack_Chop",
+      "channels": 55,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_2H_Attack_Slice",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_2H_Attack_Spin",
+      "channels": 55,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_2H_Attack_Spinning",
+      "channels": 51,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_2H_Attack_Stab",
+      "channels": 53,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_2H_Idle",
+      "channels": 53,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Block",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Block_Attack",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Block_Hit",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Blocking",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Dualwield_Attack_Chop",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Dualwield_Attack_Slice",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Dualwield_Attack_Stab",
+      "channels": 54,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Unarmed_Attack_Kick",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Unarmed_Attack_Punch_A",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "Melee_Unarmed_Idle",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatMelee.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_1H_Aiming",
+      "channels": 67,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_1H_Reload",
+      "channels": 68,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_1H_Shoot",
+      "channels": 67,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_1H_Shooting",
+      "channels": 56,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_2H_Aiming",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_2H_Reload",
+      "channels": 60,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_2H_Shoot",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_2H_Shooting",
+      "channels": 61,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Bow_Aiming_Idle",
+      "channels": 53,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Bow_Draw",
+      "channels": 68,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Bow_Draw_Up",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Bow_Idle",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Bow_Release",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Bow_Release_Up",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Magic_Raise",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Magic_Shoot",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Magic_Spellcasting",
+      "channels": 53,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Magic_Spellcasting_Long",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "Ranged_Magic_Summon",
+      "channels": 53,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Death_A",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Death_A_Pose",
+      "channels": 47,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Death_B",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Death_B_Pose",
+      "channels": 47,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Hit_A",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Hit_B",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Idle_A",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Idle_B",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Interact",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "PickUp",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Spawn_Air",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Spawn_Ground",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Throw",
+      "channels": 56,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_General.glb",
+      "name": "Use_Item",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Crawling",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Crouching",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Dodge_Backward",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Dodge_Forward",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Dodge_Left",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Dodge_Right",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Running_HoldingBow",
+      "channels": 63,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Running_HoldingRifle",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Running_Strafe_Left",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Running_Strafe_Right",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Sneaking",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+      "name": "Walking_Backwards",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Jump_Full_Long",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Jump_Full_Short",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Jump_Idle",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Jump_Land",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Jump_Start",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Running_A",
+      "channels": 68,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Running_B",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Walking_A",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Walking_B",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+      "name": "Walking_C",
+      "channels": 65,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Cheering",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Lie_Down",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Lie_Idle",
+      "channels": 56,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Lie_StandUp",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Push_Ups",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Sit_Chair_Down",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Sit_Chair_Idle",
+      "channels": 50,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Sit_Chair_StandUp",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Sit_Floor_Down",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Sit_Floor_Idle",
+      "channels": 51,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Sit_Floor_StandUp",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Sit_Ups",
+      "channels": 67,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Simulation.glb",
+      "name": "Waving",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "EXPERIMENTAL_Medium_Transform",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Awaken_Floor",
+      "channels": 59,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Awaken_Floor_Long",
+      "channels": 60,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Awaken_Standing",
+      "channels": 57,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Death",
+      "channels": 55,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Death_Pose",
+      "channels": 47,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Death_Resurrect",
+      "channels": 56,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Idle",
+      "channels": 51,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Inactive_Floor_Pose",
+      "channels": 50,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Inactive_Standing_Pose",
+      "channels": 56,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Spawn_Ground",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Taunt",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Taunt_Longer",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "Skeletons_Walking",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Special.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Chop",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Chopping",
+      "channels": 51,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Dig",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Digging",
+      "channels": 50,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Fishing_Bite",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Fishing_Cast",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Fishing_Catch",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Fishing_Idle",
+      "channels": 67,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Fishing_Reeling",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Fishing_Struggling",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Fishing_Tug",
+      "channels": 68,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Hammer",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Hammering",
+      "channels": 51,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Holding_A",
+      "channels": 67,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Holding_B",
+      "channels": 67,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Holding_C",
+      "channels": 67,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Lockpick",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Lockpicking",
+      "channels": 51,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Pickaxe",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Pickaxing",
+      "channels": 51,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Saw",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Sawing",
+      "channels": 50,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "T-Pose",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Work_A",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Work_B",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Work_C",
+      "channels": 69,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Working_A",
+      "channels": 50,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Working_B",
+      "channels": 59,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "KayKit_CharacterAnimations",
+      "file": "KayKit_CharacterAnimations/Extracted/KayKit_Character_Animations_1.1/Animations/gltf/Rig_Medium/Rig_Medium_Tools.glb",
+      "name": "Working_C",
+      "channels": 52,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "A_TPose",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Crouch_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Crouch_Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Dance_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Death01",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Driving_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Fixing_Kneeling",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Hit_Chest",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Hit_Head",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Idle_Talking_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Idle_Torch_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Interact",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Jog_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Jump_Land",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Jump_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Jump_Start",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "PickUp_Table",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Pistol_Aim_Down",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Pistol_Aim_Neutral",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Pistol_Aim_Up",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Pistol_Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Pistol_Reload",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Pistol_Shoot",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Punch_Cross",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Punch_Jab",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Push_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Roll",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Sitting_Enter",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Sitting_Exit",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Sitting_Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Sitting_Talking_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Spell_Simple_Enter",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Spell_Simple_Exit",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Spell_Simple_Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Spell_Simple_Shoot",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Sprint_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Swim_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Swim_Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Sword_Attack",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Sword_Idle",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Walk_Formal_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "name": "Walk_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "A_TPose",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Crouch_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Crouch_Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Dance_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Death01",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Driving_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Fixing_Kneeling",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Hit_Chest",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Hit_Head",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Idle_Talking_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Idle_Torch_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Interact",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Jog_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Jump_Land",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Jump_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Jump_Start",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "PickUp_Table",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Pistol_Aim_Down",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Pistol_Aim_Neutral",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Pistol_Aim_Up",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Pistol_Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Pistol_Reload",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Pistol_Shoot",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Punch_Cross",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Punch_Jab",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Push_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Roll",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Sitting_Enter",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Sitting_Exit",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Sitting_Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Sitting_Talking_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Spell_Simple_Enter",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Spell_Simple_Exit",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Spell_Simple_Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Spell_Simple_Shoot",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Sprint_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Swim_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Swim_Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Sword_Attack",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Sword_Idle",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Walk_Formal_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary",
+      "file": "Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard_RM.glb",
+      "name": "Walk_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "A_TPose",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Chest_Open",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "ClimbUp_1m",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Consume",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Farm_Harvest",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Farm_PlantSeed",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Farm_Watering",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Hit_Knockback",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_FoldArms_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_Lantern_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_No_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_Rail_Call",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_Rail_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_Shield_Break",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_Shield_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Idle_TalkingPhone_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "LayToIdle",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Melee_Hook",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Melee_Hook_Rec",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "NinjaJump_Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "NinjaJump_Land",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "NinjaJump_Start",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "OverhandThrow",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Shield_Dash",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Shield_OneShot",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Slide_Exit",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Slide_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Slide_Start",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Block",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Dash",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Heavy_Combo",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Regular_A",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Regular_A_Rec",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Regular_B",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Regular_B_Rec",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Regular_C",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Sword_Regular_Combo",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "TreeChopping_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Walk_Carry_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Yes",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Zombie_Idle_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Zombie_Scratch",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb",
+      "name": "Zombie_Walk_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": false,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "A_TPose",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Chest_Open",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "ClimbUp_1m",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Consume",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Farm_Harvest",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Farm_PlantSeed",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Farm_Watering",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Hit_Knockback",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_FoldArms_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_Lantern_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_No_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_Rail_Call",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_Rail_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_Shield_Break",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_Shield_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Idle_TalkingPhone_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "LayToIdle",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Melee_Hook",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Melee_Hook_Rec",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "NinjaJump_Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "NinjaJump_Land",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "NinjaJump_Start",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "OverhandThrow",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Shield_Dash",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Shield_OneShot",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Slide_Exit",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Slide_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Slide_Start",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Block",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Dash",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Heavy_Combo",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Regular_A",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Regular_A_Rec",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Regular_B",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Regular_B_Rec",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Regular_C",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Sword_Regular_Combo",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "TreeChopping_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Walk_Carry_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Yes",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Zombie_Idle_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Zombie_Scratch",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "pack": "Quaternius_UniversalAnimationLibrary2",
+      "file": "Quaternius_UniversalAnimationLibrary2/Extracted/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard_RM.glb",
+      "name": "Zombie_Walk_Fwd_Loop",
+      "channels": 195,
+      "rootMotion": true,
+      "license": "CC0-1.0"
+    }
+  ]
+}

@@ -1,10 +1,20 @@
 # 라이선스 및 상업 배포 준비
 
-기준일: 2026-11-11
+기존 계획 기준일: 2026-11-11. 외부 모션 연결·경로 갱신: 2026-11-19.
 
 이 문서는 라이선스 확인 사항과 에셋 교체 계획을 개발 기능 문서와 별도로 관리한다. 실제 제3자 라이선스 원문과 설치 패키지 버전은 [Open_Source_Licenses.txt](../../Open_Source_Licenses.txt)를 참고한다. 아래 계획은 사용자와 합의한 작업 방향이며, 교체 완료 또는 상업 배포 승인 기록이 아니다.
 
 ## 현재 상태
+
+### 2026-11-19 — 상업 이용 가능한 전투 모션 확보
+
+사용자 요청으로 공식 Mixamo에서 전투용 무릎 대기·조준 전환, 소총 엎드림 대기·발사·장전, 꺼내기·수납, 무릎↔엎드림 전환 FBX 9개와 Pro Rifle Pack의 FBX 49개를 로컬에 취득했다. Without Skin/No Character로 내보냈으며 캐릭터 메시가 포함되지 않았는지 파일 구조를 검사했다. Mixamo는 CC0가 아닌 별도 이용 조건이며 상업용 게임 이용과 원본 에셋 독립 재배포를 구분한다. 원본 FBX와 ZIP은 Git에서 제외한다.
+
+[취득 파일과 이용 조건](../../Assets/_Archive/Animations/ThirdParty/Mixamo_Combat/README.md), [검사·해시 목록](../../Assets/_Archive/Animations/ThirdParty/combat-fbx-inventory.json)에 기록한다. 별도 보조 자료인 [ANIMMADE 소총 낮은 자세 사격](../../Assets/_Archive/Animations/ThirdParty/Animmade_RifleCrouchShooting/README.md)은 상품 페이지의 상업 이용 허용을 근거로 취득했으며 CC0로 분류하지 않고 런타임에 사용하지 않는다.
+
+후속 사용자 요청으로 실제 사용본인 Mixamo FBX 51개와 Quaternius CC0 GLB 1개를 [게임용 폴더](../../Assets/Animations/Characters/Imported/README.md)에 분리하고 모션 상태·리타기팅·손 소켓·근접공격/피격 이벤트를 코드에 연결했다. 게임에 동봉할 [고지 파일](../../Assets/Licenses/ANIMATION_NOTICES.txt)과 라이선스 원문을 `Assets/Licenses/`에 보존하며 화면 크레딧은 추가하지 않았다. 현재 사용한 Mixamo와 CC0 모션은 화면 출처 표기를 요구하지 않는다.
+
+현재는 코드 연결과 정적 파일 확인까지다. 시작한 빌드는 프로젝트 방침에 따라 중단했고 최종 빌드/게임 재생/배포 검증은 미완료다. 기존 캐릭터·의상·UI의 권리 확인은 별도이며, 이번 모션 연결로 완료 처리하지 않는다.
 
 C++·OpenGL·GLFW 기반 기술 구성과 에셋의 권리는 별도로 관리한다. 라이브러리 고지는 기존 원문 파일에 보존한다. 에셋은 아래 교체 및 확인 작업이 남아 있다.
 
@@ -14,11 +24,11 @@ C++·OpenGL·GLFW 기반 기술 구성과 에셋의 권리는 별도로 관리�
 
 교체 시 몸체·머리·의상·텍스처 각각의 제작 출처를 기록한다. 외부 부품을 사용한다면 해당 부품의 허가 범위도 확인한다. 새 모델로 바꾼 뒤 실제 배포 폴더에서 기존 모델·텍스처와 불필요한 원본을 제외한다.
 
-### 모션 FBX — 사용자 직접 제작본으로 교체 예정
+### 모션 FBX — 허가 확인한 외부 모션으로 코드 교체
 
-사용자는 현재 외부 모션 FBX를 추후 직접 제작한 모션으로 교체할 예정이다. 대상은 Assets/Animations/Characters/Locomotion/의 Idle.fbx, Walking.fbx, Fast Run.fbx, Crouched Walking.fbx다.
+기존에는 직접 제작본으로 교체할 계획이었다. 2026-11-19 사용자 요청으로 상업 이용을 허용한 Mixamo/Quaternius를 확보하고 실제 로딩 경로를 교체했다. 이전 `Assets/Animations/Characters/Locomotion/`의 Idle.fbx, Walking.fbx, Fast Run.fbx, Crouched Walking.fbx는 미사용 보관 폴더 `Assets/_Archive/LegacyAssets/Animations/Characters/Locomotion/`로 이동했다.
 
-교체 전에는 기존 파일의 출처 확인 항목을 유지한다. 교체 후 게임의 로딩 경로와 배포 에셋을 새 파일 기준으로 정리한다. 별도 모델인 Assets/Models/Player/Ch22_nonPBR.fbx는 모션 교체만으로 제거됐다고 간주하지 않고 실제 사용 여부와 교체 여부를 확인한다.
+이전 파일은 배포 대상에서 제외하고 보관만 한다. 새 모션 원본/사용본의 해시는 각각의 인벤토리에 남겼다. 별도 `Assets/Models/Player/Ch22_nonPBR.fbx`는 현재도 공통 리그 로딩에 사용하므로 보관 폴더로 옮기지 않았다. 캐릭터 외형의 권리 확인과 직접 제작 교체 계획은 유지한다.
 
 ### UI 이미지 — 일부 아이콘만 교체 예정
 
@@ -31,13 +41,13 @@ Assets/UI/items.png는 Codex의 이미지 생성 도구로 제작한 4×4 아이
 ## 진행 목록
 
 - [ ] 직접 제작한 캐릭터 적용 및 구성 요소별 출처 기록
-- [ ] 직접 제작한 이동 모션 FBX 4종 적용
+- [x] 기존 이동 모션 FBX 4종의 로딩 경로를 허가 확인한 외부 모션으로 교체하고 이전 파일을 보관 (코드 반영, 실행 확인 전)
 - [ ] Ch22_nonPBR.fbx의 실제 사용·교체·배포 여부 정리
 - [ ] UI 아틀라스 2행 3열을 독립적인 새 디자인으로 교체
 - [ ] UI 제작 기록 갱신 및 이전 참조 기반 결과물의 배포 제외 확인
 - [ ] 실제 출시 파일에 맞춰 라이선스 원문·버전·고지 갱신
 
-현재 위 에셋 교체는 수행하지 않았다. 이번 작업은 문서 분류와 계획 기록만 수행했으며 빌드·테스트·배포도 하지 않았다.
+캐릭터와 UI 교체는 아직 수행하지 않았다. 모션은 코드/에셋 경로를 바꿨으나 게임 실행 및 최종 배포 검증은 미완료다.
 
 ## 배포 문서 관리
 

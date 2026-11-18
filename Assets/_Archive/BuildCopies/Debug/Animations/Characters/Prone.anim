@@ -1,0 +1,17 @@
+# Prone support: low pelvis, spread legs, raised head, elbows supporting the chest.
+Hips 0 0 -78 0 88 0 0
+Spine 0 0 0 0 -6 0 0
+Spine1 0 0 0 0 -5 0 0
+Spine2 0 0 0 0 -6 0 0
+Neck 0 0 0 0 -32 0 0
+Head 0 0 0 0 -32 0 0
+RightUpLeg 0 0 0 0 0 0 -10
+LeftUpLeg 0 0 0 0 3 0 12
+RightLeg 0 0 0 0 -5 0 0
+LeftLeg 0 0 0 0 -9 0 0
+RightFoot 0 0 0 0 16 0 -8
+LeftFoot 0 0 0 0 16 0 8
+RightArm 0 0 0 0 65 10 -55
+LeftArm 0 0 0 0 65 -10 55
+RightForeArm 0 0 0 0 -65 0 0
+LeftForeArm 0 0 0 0 -65 0 0

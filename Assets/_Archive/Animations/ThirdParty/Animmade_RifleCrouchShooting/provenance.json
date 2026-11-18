@@ -1,0 +1,21 @@
+{
+  "retrieved": "2026-11-19",
+  "source": "https://animmade.com/animation/58",
+  "officialDownload": "https://drive.google.com/uc?export=download&id=1W37H_rGQ6Bta1fpCWExw1eo13tXbN3jF",
+  "license": "Product page grants royalty-free commercial and non-commercial use; not identified as CC0; linked EULA returned 404",
+  "records": [
+    {
+      "file": "Animmade_RifleCrouchShooting/RifleCrouchShooting_30fps.fbx",
+      "bytes": 1047804,
+      "sha256": "0fdcd26702cbd49eaafda3acad67c68d617c961f5f27112f0aa48b7a8b36bc88",
+      "fbxVersion": 7400,
+      "stacks": [
+        "Scene"
+      ],
+      "meshes": 0,
+      "curves": 486,
+      "keyArrays": 486,
+      "keyCount": 100602
+    }
+  ]
+}

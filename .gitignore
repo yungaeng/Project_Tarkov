@@ -21,3 +21,8 @@ __pycache__/
 *.suo
 *.VC.db
 *.VC.VC.opendb
+
+# Licensed animation files stay local; CC0 assets and provenance remain trackable.
+/Assets/Animations/Characters/Imported/Mixamo/*.fbx
+/Assets/_Archive/**/*.fbx
+/Assets/_Archive/**/*.zip

@@ -46,18 +46,22 @@ void WeaponVisual::Reset()
     sprintWeight = crouchWeight = 0;
     reloadTime = -1;
     visible = wasEquipped = dead = false;
+    equipmentInitialized=false;skeletalHandling=false;
 }
 
-void WeaponVisual::Update(float dt, bool equipped, bool aiming, float reloadRemaining, bool fired, bool moving, bool isDead, bool sprinting, bool crouching)
+void WeaponVisual::Update(float dt, bool equipped, bool aiming, float reloadRemaining, bool fired, bool moving, bool isDead,
+    bool sprinting, bool crouching, bool authoredHandling, float handlingDuration)
 {
     if (!assets) return;
     dead = isDead;
+    skeletalHandling = authoredHandling;
+    if(!equipmentInitialized) {equipmentInitialized=true;wasEquipped=equipped;equipTime=handlingDuration;}
     const float blend = 1 - std::exp(-dt * 12);
     sprintWeight += ((sprinting && equipped && !crouching && reloadRemaining <= 0 ? 1.f : 0.f) - sprintWeight) * blend;
     crouchWeight += ((crouching && equipped ? 1.f : 0.f) - crouchWeight) * blend;
     if (equipped != wasEquipped) { equipTime = 0; wasEquipped = equipped; }
     equipTime += dt;
-    visible = equipped || equipTime < assets->holster.Duration();
+    visible = equipped || equipTime < (skeletalHandling ? handlingDuration : assets->holster.Duration());
     clock += dt;
     recoilTime = fired ? 0 : recoilTime + dt;
     reloadTime = reloadRemaining > 0 ? 2.0f - reloadRemaining : -1;
@@ -66,7 +70,7 @@ void WeaponVisual::Update(float dt, bool equipped, bool aiming, float reloadRema
     if (dead) { recoilTime = 10; reloadTime = -1; }
 }
 
-glm::mat4 WeaponVisual::ModelMatrix(const glm::mat4& shoulder) const
+glm::mat4 WeaponVisual::ModelMatrix(const glm::mat4& shoulder,bool skipHandling) const
 {
     if (!assets) return shoulder;
     glm::mat4 model = shoulder;
@@ -84,7 +88,8 @@ glm::mat4 WeaponVisual::ModelMatrix(const glm::mat4& shoulder) const
         model *= idle.Matrix();
         auto aim = assets->aim.Sample("Weapon", aimWeight * assets->aim.Duration());
         model *= aim.Matrix();
-        model *= (wasEquipped ? assets->equip : assets->holster).Sample("Weapon", equipTime).Matrix();
+        if (!skeletalHandling && !skipHandling)
+            model *= (wasEquipped ? assets->equip : assets->holster).Sample("Weapon", equipTime).Matrix();
         model *= assets->fire.Sample("Weapon", recoilTime).Matrix();
         if (reloadTime >= 0) model *= assets->reload.Sample("Weapon", reloadTime).Matrix();
     }

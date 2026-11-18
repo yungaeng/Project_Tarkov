@@ -101,9 +101,11 @@ struct SkeletalAnimation::Data
     double idleTime = 0;
     float blendTime = 0.15f;
     bool playing = false;
+    bool verticesDirty = true;
 
     void RefreshGlobals()
     {
+        verticesDirty = true;
         const auto& nodes = asset->nodes;
         globals.resize(nodes.size());
         for (size_t i = 0; i < nodes.size(); ++i)
@@ -116,6 +118,7 @@ struct SkeletalAnimation::Data
 
     void RefreshPose()
     {
+        verticesDirty = true;
         RefreshGlobals();
         const auto& nodes = asset->nodes;
         const size_t count = asset->bones.size() + nodes.size();
@@ -155,7 +158,7 @@ struct SkeletalAnimation::Data
         }
     }
 
-    // CPU skinning is retained only for precise corpse support.
+    // CPU skinning is retained for explicit mesh queries, such as loot fitting.
     void Skin()
     {
         RefreshPose();
@@ -187,6 +190,7 @@ struct SkeletalAnimation::Data
             }
             if (vertex.normal.SquareLength() > 0) vertex.normal.Normalize();
         }
+        verticesDirty = false;
     }
 
 };
@@ -196,7 +200,11 @@ SkeletalAnimation::~SkeletalAnimation() = default;
 void SkeletalAnimation::Reset() { data = std::make_unique<Data>(); }
 const std::string& SkeletalAnimation::Error() const { return data->error; }
 size_t SkeletalAnimation::BoneCount() const { return data->asset->bones.size(); }
-const std::vector<AnimatedVertex>& SkeletalAnimation::Vertices() const { return data->output; }
+const std::vector<AnimatedVertex>& SkeletalAnimation::Vertices() const
+{
+    if (data->verticesDirty) data->Skin();
+    return data->output;
+}
 const std::vector<unsigned int>& SkeletalAnimation::Indices() const { return data->asset->indices; }
 
 void SkeletalAnimation::CapturePose() { data->captured = data->pose; }
@@ -205,6 +213,7 @@ void SkeletalAnimation::RefreshVertices() { data->Skin(); }
 
 void SkeletalAnimation::ApplyMotion(const MotionClip& clip, float time, float weight, bool fromBind, bool frozen, bool skin)
 {
+    data->verticesDirty = true;
     if (frozen && data->captured.size() == data->pose.size()) data->pose = data->captured;
     for (const auto& entry : clip.Tracks())
     {
@@ -597,11 +606,12 @@ bool SkeletalAnimation::LoadAppearance(const std::string& path)
     return true;
 }
 
-bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& path)
+bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& path, const std::string& take)
 {
     if (data->asset->nodes.empty()) { data->error = "Load the model before clips"; return false; }
     const auto cached = data->asset->clipPaths.find(name);
-    if (cached != data->asset->clipPaths.end() && cached->second == path) return true;
+    const auto sourceKey = path + "#" + take;
+    if (cached != data->asset->clipPaths.end() && cached->second == sourceKey) return true;
     if (cached != data->asset->clipPaths.end())
     { data->error = "Clip name already loaded from a different path"; return false; }
     Assimp::Importer importer;
@@ -618,6 +628,7 @@ bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& pat
     for (unsigned a = 0; a < scene->mNumAnimations; ++a)
     {
         const auto* candidate = scene->mAnimations[a];
+        if (!take.empty() && candidate->mName.C_Str() != take) continue;
         size_t keys = 0;
         for (unsigned c = 0; c < candidate->mNumChannels; ++c)
             keys += candidate->mChannels[c]->mNumRotationKeys + candidate->mChannels[c]->mNumPositionKeys;
@@ -652,11 +663,165 @@ bool SkeletalAnimation::LoadClip(const std::string& name, const std::string& pat
     for (const auto& bone : data->asset->bones) boneNodes.insert(bone.node);
     for (const auto node : boneNodes) if (clip.tracks.count(node)) ++matched;
     if (matched * 2 < boneNodes.size())
-    { data->error = "Animation skeleton does not match the model"; return false; }
+    {
+        // Quaternius uses UE humanoid names. Retarget in model space from rest-pose
+        // rotations, then recover target-local rotations; renaming bones alone
+        // would leave the shoulders and forearms on incompatible bind axes.
+        auto canonical = [](std::string n) {
+            static const std::unordered_map<std::string, std::string> central = {
+                {"pelvis","Hips"},{"spine_01","Spine"},{"spine_02","Spine1"},
+                {"spine_03","Spine2"},{"neck_01","Neck"},{"head","Head"}};
+            if (const auto it=central.find(n);it!=central.end()) return it->second;
+            for (const auto& side : {std::pair<const char*,const char*>{"_l","Left"},{"_r","Right"}}) {
+                if (n.size()<3 || n.substr(n.size()-2)!=side.first) continue;
+                const auto stem=n.substr(0,n.size()-2);
+                static const std::unordered_map<std::string,std::string> limbs = {
+                    {"clavicle","Shoulder"},{"upperarm","Arm"},{"lowerarm","ForeArm"},
+                    {"hand","Hand"},{"thigh","UpLeg"},{"calf","Leg"},{"foot","Foot"},{"ball","ToeBase"}};
+                if(const auto it=limbs.find(stem);it!=limbs.end()) return std::string(side.second)+it->second;
+                for(const auto& finger : {std::pair<const char*,const char*>{"thumb","Thumb"},{"index","Index"},
+                    {"middle","Middle"},{"ring","Ring"},{"pinky","Pinky"}})
+                    for(int j=1;j<=3;++j)
+                        if(stem==std::string(finger.first)+"_0"+std::to_string(j))
+                            return std::string(side.second)+"Hand"+finger.second+std::to_string(j);
+            }
+            return n;
+        };
+        struct SourceNode { const aiNode* node; int parent; Pose bind; Data::Track track; aiMatrix4x4 bindGlobal; };
+        std::vector<SourceNode> sources;
+        std::unordered_map<std::string,size_t> sourceIds;
+        std::function<void(const aiNode*,int)> visit=[&](const aiNode* node,int parent) {
+            SourceNode src{}; src.node=node;src.parent=parent;
+            node->mTransformation.Decompose(src.bind.scale,src.bind.rotation,src.bind.position);
+            src.bindGlobal=parent<0?node->mTransformation:sources[parent].bindGlobal*node->mTransformation;
+            const auto id=sources.size();sources.push_back(src);sourceIds[NodeName(node->mName)]=id;
+            for(unsigned j=0;j<node->mNumChildren;++j) visit(node->mChildren[j],static_cast<int>(id));
+        };
+        visit(scene->mRootNode,-1);
+        for(unsigned j=0;j<animation->mNumChannels;++j) {
+            const auto* c=animation->mChannels[j];const auto it=sourceIds.find(NodeName(c->mNodeName));
+            if(it==sourceIds.end()) continue;
+            auto& t=sources[it->second].track;
+            if(c->mNumPositionKeys) t.positions.assign(c->mPositionKeys,c->mPositionKeys+c->mNumPositionKeys);
+            if(c->mNumRotationKeys) t.rotations.assign(c->mRotationKeys,c->mRotationKeys+c->mNumRotationKeys);
+            if(c->mNumScalingKeys) t.scales.assign(c->mScalingKeys,c->mScalingKeys+c->mNumScalingKeys);
+        }
+        std::unordered_map<size_t,size_t> mapping;
+        for(size_t j=0;j<sources.size();++j)
+            if(const auto it=data->asset->nodeIds.find(canonical(NodeName(sources[j].node->mName)));it!=data->asset->nodeIds.end())
+                mapping[it->second]=j;
+        const auto hips=data->asset->nodeIds.find("Hips");
+        if(hips==data->asset->nodeIds.end() || !mapping.count(hips->second) || mapping.size()<20)
+        { data->error="Animation skeleton does not match the model: "+path;return false; }
+        std::vector<aiMatrix4x4> targetBind(data->asset->nodes.size());
+        for(size_t j=0;j<targetBind.size();++j) {
+            const auto& n=data->asset->nodes[j];const aiMatrix4x4 local(n.bind.scale,n.bind.rotation,n.bind.position);
+            targetBind[j]=n.parent<0?local:targetBind[n.parent]*local;
+        }
+        aiMatrix4x4 sourceInverse=scene->mRootNode->mTransformation;sourceInverse.Inverse();
+        auto rotation=[](const aiMatrix4x4& m){aiVector3D s,p;aiQuaternion q;m.Decompose(s,q,p);return q.Normalize();};
+        std::vector<aiQuaternion> sourceRest(sources.size()),targetRest(targetBind.size());
+        for(size_t j=0;j<sources.size();++j) sourceRest[j]=rotation(sourceInverse*sources[j].bindGlobal);
+        for(size_t j=0;j<targetBind.size();++j) targetRest[j]=rotation(data->asset->inverseRoot*targetBind[j]);
+        const std::unordered_map<std::string,std::string> children={
+            {"Hips","Spine"},{"Spine","Spine1"},{"Spine1","Spine2"},{"Spine2","Neck"},{"Neck","Head"},
+            {"LeftShoulder","LeftArm"},{"LeftArm","LeftForeArm"},{"LeftForeArm","LeftHand"},{"LeftHand","LeftHandMiddle1"},
+            {"RightShoulder","RightArm"},{"RightArm","RightForeArm"},{"RightForeArm","RightHand"},{"RightHand","RightHandMiddle1"},
+            {"LeftUpLeg","LeftLeg"},{"LeftLeg","LeftFoot"},{"LeftFoot","LeftToeBase"},
+            {"RightUpLeg","RightLeg"},{"RightLeg","RightFoot"},{"RightFoot","RightToeBase"}};
+        for(const auto& entry:mapping) {
+            const auto next=children.find(data->asset->nodes[entry.first].name);
+            if(next==children.end()) continue;
+            const auto child=data->asset->nodeIds.find(next->second);
+            if(child==data->asset->nodeIds.end()||!mapping.count(child->second)) continue;
+            auto from=(data->asset->inverseRoot*targetBind[child->second])*aiVector3D()-
+                (data->asset->inverseRoot*targetBind[entry.first])*aiVector3D();
+            auto to=(sourceInverse*sources[mapping.at(child->second)].bindGlobal)*aiVector3D()-
+                (sourceInverse*sources[entry.second].bindGlobal)*aiVector3D();
+            if(from.Length()<.00001f||to.Length()<.00001f) continue;
+            from.Normalize();to.Normalize();const float cosine=std::clamp(from*to,-1.f,1.f);
+            auto axis=from^to;
+            if(axis.Length()<.00001f) {
+                if(cosine>0) continue;
+                axis=from^aiVector3D(0,1,0);
+                if(axis.Length()<.00001f) axis=from^aiVector3D(1,0,0);
+            }
+            axis.Normalize();
+            // Adopt the source's rest limb direction (A-pose vs T-pose) as well
+            // as its rotational delta, so a forward punch does not point upward.
+            targetRest[entry.first]=(aiQuaternion(axis,std::acos(cosine))*targetRest[entry.first]).Normalize();
+        }
+        clip.tracks.clear();
+        const int frames=(std::min)(18000,(std::max)(2,static_cast<int>(std::ceil(clip.duration/clip.rate*30))+1));
+        std::vector<aiMatrix4x4> sourceGlobal(sources.size());
+        std::vector<aiQuaternion> targetGlobal(targetBind.size());
+        for(int frame=0;frame<frames;++frame) {
+            const double t=clip.duration*frame/(frames-1);
+            for(size_t j=0;j<sources.size();++j) {
+                const auto& n=sources[j];
+                const aiMatrix4x4 local(Sample(n.track.scales,t,n.bind.scale,Lerp),
+                    Sample(n.track.rotations,t,n.bind.rotation,Slerp),Sample(n.track.positions,t,n.bind.position,Lerp));
+                sourceGlobal[j]=n.parent<0?local:sourceGlobal[n.parent]*local;
+            }
+            for(size_t j=0;j<targetBind.size();++j) {
+                const auto& n=data->asset->nodes[j];
+                const aiQuaternion parent=n.parent<0?rotation(data->asset->inverseRoot):targetGlobal[n.parent];
+                aiQuaternion local=n.bind.rotation;
+                if(const auto it=mapping.find(j);it!=mapping.end()) {
+                    auto inverseRest=sourceRest[it->second];inverseRest.Conjugate();
+                    const auto desired=rotation(sourceInverse*sourceGlobal[it->second])*inverseRest*targetRest[j];
+                    auto inverseParent=parent;inverseParent.Conjugate();
+                    local=(inverseParent*desired).Normalize();
+                    clip.tracks[j].rotations.push_back(aiQuatKey(t,local));
+                    // Target proportions and planted hips belong to the game rig.
+                    clip.tracks[j].positions.push_back(aiVectorKey(t,n.bind.position));
+                }
+                targetGlobal[j]=(parent*local).Normalize();
+            }
+        }
+    }
     data->asset->clips[name] = std::move(clip);
-    data->asset->clipPaths[name] = path;
+    data->asset->clipPaths[name] = sourceKey;
     data->error.clear();
     return true;
+}
+
+float SkeletalAnimation::ClipDuration(const std::string& name) const
+{
+    const auto it=data->asset->clips.find(name);
+    return it==data->asset->clips.end()?0.f:static_cast<float>(it->second.duration/it->second.rate);
+}
+
+void SkeletalAnimation::ApplyClip(const std::string& name,float seconds,float weight,bool upperBodyOnly,bool loop,bool frozen)
+{
+    const auto it=data->asset->clips.find(name);
+    if(it==data->asset->clips.end()||!std::isfinite(seconds)||!std::isfinite(weight)||weight<=0) return;
+    const auto& clip=it->second;
+    const double time=loop?std::fmod((std::max)(0.f,seconds)*clip.rate,clip.duration):
+        std::clamp(static_cast<double>((std::max)(0.f,seconds))*clip.rate,0.0,clip.duration);
+    if(frozen&&data->captured.size()==data->pose.size()) data->pose=data->captured;
+    for(const auto& entry:clip.tracks) {
+        const auto& node=data->asset->nodes[entry.first];
+        if(upperBodyOnly && node.name!="Spine" && node.name!="Spine1" && node.name!="Spine2" &&
+            node.name!="Neck" && node.name!="Head" && node.name.find("Arm")==std::string::npos &&
+            node.name.find("Shoulder")==std::string::npos && node.name.find("Hand")==std::string::npos) continue;
+        const auto& track=entry.second;Pose target=node.bind;
+        target.position=Sample(track.positions,time,target.position,Lerp);
+        target.rotation=Sample(track.rotations,time,target.rotation,Slerp);
+        target.scale=Sample(track.scales,time,target.scale,Lerp);
+        if(node.parent<0||node.name=="Hips") {target.position.x=node.bind.position.x;target.position.z=node.bind.position.z;}
+        data->pose[entry.first]=Blend(data->pose[entry.first],target,std::clamp(weight,0.f,1.f));
+    }
+    data->verticesDirty=true;
+}
+
+glm::mat4 SkeletalAnimation::NodeTransform(const std::string& name) const
+{
+    const auto it=data->asset->nodeIds.find(name);
+    if(it==data->asset->nodeIds.end()||data->globals.empty()) return glm::mat4(1);
+    const auto matrix=data->asset->inverseRoot*data->globals[it->second];glm::mat4 result(1);
+    for(int r=0;r<4;++r)for(int c=0;c<4;++c)result[c][r]=matrix[r][c];
+    return result;
 }
 
 float SkeletalAnimation::CyclePhase() const
@@ -670,6 +835,7 @@ void SkeletalAnimation::Update(float dt, const std::string& name, bool playing, 
 {
     const auto found = data->asset->clips.find(name);
     if (found == data->asset->clips.end() || !std::isfinite(dt) || dt < 0) return;
+    data->verticesDirty = true;
     const auto& clip = found->second;
     if (data->selected != name || data->playing != playing)
     {
@@ -730,6 +896,25 @@ void SkeletalAnimation::RefreshPose() { data->RefreshPose(); }
 const std::vector<glm::mat4>& SkeletalAnimation::Palette() const { return data->gpuPalette; }
 glm::vec3 SkeletalAnimation::BoundsMin() const { return data->boundsMin; }
 glm::vec3 SkeletalAnimation::BoundsMax() const { return data->boundsMax; }
+float SkeletalAnimation::MinimumHeight(const glm::mat4& model) const
+{
+    float minimum = 0.f;
+    for (size_t i = 0; i < data->palette.size(); ++i)
+    {
+        if (data->asset->boundsMin.empty() ||
+            data->asset->boundsMin[i].x > data->asset->boundsMax[i].x) continue;
+        const auto transform = model * data->gpuPalette[i * 2];
+        // The minimum of an affine height over an AABB lies at a corner.
+        // Each weighted vertex is a convex combination of points inside these
+        // transformed envelopes, so this also bounds blended skin influences.
+        float height = transform[3].y;
+        for (int axis = 0; axis < 3; ++axis)
+            height += transform[axis].y * (transform[axis].y >= 0.f
+                ? data->asset->boundsMin[i][axis] : data->asset->boundsMax[i][axis]);
+        minimum = (std::min)(minimum, height);
+    }
+    return minimum;
+}
 void SkeletalAnimation::CreateMesh(Mesh& mesh) const
 {
     std::vector<SkinVertex> vertices;

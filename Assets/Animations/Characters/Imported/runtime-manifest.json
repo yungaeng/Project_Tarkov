@@ -1,0 +1,370 @@
+{
+  "date": "2026-11-19",
+  "verification": "Static paths, bytes and SHA-256 only; game loading/playback not verified",
+  "records": [
+    {
+      "file": "Animations/Characters/Imported/Mixamo/death crouching headshot front.fbx",
+      "bytes": 446273,
+      "sha256": "8c2cb1cf3587f52bbb5e17adec1b379df9aec0d6cb90d1bc2ff59079af4d4426",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/death crouching headshot front.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/death from the back.fbx",
+      "bytes": 554241,
+      "sha256": "36cde9824fbbf7054d7f9e885ac38268538c5ef4fb994722ae620fc20073d342",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/death from the back.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/death from the front.fbx",
+      "bytes": 589825,
+      "sha256": "b51cb9b9e028541e19418a9b1d783a3e218c4e3ff9edb50931d4c8732d04da8f",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/death from the front.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/idle aiming.fbx",
+      "bytes": 427665,
+      "sha256": "06724a62d77e0f558e27428532bb98dff3e9ad592b8918056541c67e81f885b4",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/idle aiming.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/idle crouching aiming.fbx",
+      "bytes": 427665,
+      "sha256": "f7873f7d4487152b5bdb4b35e3327c4715a3cc38b4a097088f63a00995939094",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/idle crouching aiming.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/idle crouching.fbx",
+      "bytes": 427665,
+      "sha256": "f5725b9fcd23d6ba4ba9d19e02a21a674bfc1eb8e5840f1dcb9c352598087e2e",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/idle crouching.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/idle.fbx",
+      "bytes": 427665,
+      "sha256": "a13208bd141084216453adadd6299bcbc02a23826182972b3f387c91b43a5981",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/idle.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/jump down.fbx",
+      "bytes": 316353,
+      "sha256": "0e268e21c7111222ef0e0f2d412659a41057798b0f238791baa5bdd225b5a91b",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/jump down.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/jump loop.fbx",
+      "bytes": 338769,
+      "sha256": "5f8f1919d7f3c5d01740eff67a70aa0f96d674b9f4a998de5d09bde33f819b02",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/jump loop.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/jump up.fbx",
+      "bytes": 305585,
+      "sha256": "5e560d25c2239d8904256410f061548daff88285917b2309a875ce9c1d643235",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/jump up.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Prone_Firing_Rifle.fbx",
+      "bytes": 345792,
+      "sha256": "a55855c3ca6f0e176d214907cbc1b288198756d55addca4d008935e61e37e81a",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Prone_Firing_Rifle.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Prone_Idle.fbx",
+      "bytes": 705152,
+      "sha256": "1d29fa1c6e54ddc855cdb0d2582f81c9d430ce45d509db9a72bfa15b0dd7fb7b",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Prone_Idle.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Prone_Reloading.fbx",
+      "bytes": 830896,
+      "sha256": "4b4cc654506d280efef6269a0a5a289c08c0eb60233673e7b869acee8ab1a705",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Prone_Reloading.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Rifle_Kneel_Idle.fbx",
+      "bytes": 397952,
+      "sha256": "79f4dc780d70995f2005778c2105d87caebfc1808f06051d6895afe24134da6f",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Rifle_Kneel_Idle.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Rifle_Kneel_To_Aim.fbx",
+      "bytes": 352816,
+      "sha256": "035e83abb186791ae4adf9e217161c2b353eeca1825c51db88d64ee00c71b1d5",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Rifle_Kneel_To_Aim.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Rifle_Kneel_To_Prone.fbx",
+      "bytes": 487488,
+      "sha256": "a084cbec1350d541777d87a4348c84720720176f04d54633f9c303d500aba224",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Rifle_Kneel_To_Prone.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Rifle_Prone_To_Kneel.fbx",
+      "bytes": 487376,
+      "sha256": "0ac17060eece47f1d523a7ceebb7c5ec4a1f5174513cf7656fd11f006f8ccccf",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Rifle_Prone_To_Kneel.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Rifle_Pull_Out.fbx",
+      "bytes": 490800,
+      "sha256": "7998164aefafe083ed3f732554809ad3794047efb16530d8d1d8179fa1fe02f8",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Rifle_Pull_Out.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/Rifle_Put_Away.fbx",
+      "bytes": 521360,
+      "sha256": "84b58a32d8e40577beb735df236ad65e1d41f93f46b5d450b0898d21a0efeb3c",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Rifle_Put_Away.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run backward left.fbx",
+      "bytes": 382657,
+      "sha256": "4e9860f2fd46f49fe41f0fc9cfa542d03b0656d919df8235ded8721e7cdcb0d0",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run backward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run backward right.fbx",
+      "bytes": 383601,
+      "sha256": "8c71ed1014f4251b4118f34ca74da9ae4fd77feed31da26e334e1bdeddfef2ca",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run backward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run backward.fbx",
+      "bytes": 381041,
+      "sha256": "e2f650ba1276a3fa32500ce707cfc40f14ef3603c48c3b371c09968a4d846b94",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run backward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run forward left.fbx",
+      "bytes": 383601,
+      "sha256": "dcc0acb15472c90e88ad2e5f7d4e27de83be68680ee2bf2b242546fd8589fa2c",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run forward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run forward right.fbx",
+      "bytes": 382801,
+      "sha256": "fe46f8a8614beb94fb8216d92ee149c0422f39379ab0d152d019f0fe1da7de16",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run forward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run forward.fbx",
+      "bytes": 382945,
+      "sha256": "bd606d27d004468b515cb8fef32d84a1bb3d5855376792499b40677f78de6834",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run forward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run left.fbx",
+      "bytes": 383601,
+      "sha256": "dff9f2c600e9e52a3c27111d78ee409492e3c2539465ee693a0b05d5c05539aa",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/run right.fbx",
+      "bytes": 382593,
+      "sha256": "979a53e829b919ab486406c5165da61de805403bd3fc8c3094afed4af3df8c74",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/run right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint backward left.fbx",
+      "bytes": 383601,
+      "sha256": "7332fd73cdea46b1d2809646702764fdb204713ce3dd7171b3549d0ed8ad663f",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint backward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint backward right.fbx",
+      "bytes": 383057,
+      "sha256": "4cd12406d905b2ad86b2b62eb7ffe3d6ac7f847f5ffb789b031f304c140c3cef",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint backward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint backward.fbx",
+      "bytes": 383601,
+      "sha256": "98ddb153c589c3951d6c573a4b324cb2766d450a54ec1b1c7664cbb3913ecdb2",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint backward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint forward left.fbx",
+      "bytes": 383601,
+      "sha256": "e41f870df1e652293877cce55ab911fb529fac0b1ad4b00d9266c0b2d5976988",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint forward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint forward right.fbx",
+      "bytes": 381329,
+      "sha256": "a415bf4330ce1a0b0f652e0e47a71fa0b2680221a6d244f2ced3ca8082e95d74",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint forward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint forward.fbx",
+      "bytes": 386113,
+      "sha256": "0f19d094e8ee1310b36d51dba76365956a0668b38f187dd4011feff065243654",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint forward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint left.fbx",
+      "bytes": 383313,
+      "sha256": "ad9719d0f43cfcbb7fc8826197b45bb91ba3ba7a3d4977a94a452678e34a4d08",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/sprint right.fbx",
+      "bytes": 383777,
+      "sha256": "c2b748539237099cbf0e484dc5ce1f97514ba0e88fd3475e81ef1e4a9db463be",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/sprint right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk backward left.fbx",
+      "bytes": 343089,
+      "sha256": "8fff78bd48b8b706160504c80c50b773fc117a42fe20c93e8000f3e321828ada",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk backward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk backward right.fbx",
+      "bytes": 343089,
+      "sha256": "59b2d9805feecedfcbda0018e20ddd882e1461215c7033e1e56b33b130d275d6",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk backward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk backward.fbx",
+      "bytes": 343089,
+      "sha256": "1342af6a454bff9fbae30ad263368244c8baf1c3d3507027f9697ce22989b1f4",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk backward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching backward left.fbx",
+      "bytes": 343089,
+      "sha256": "661fef4f088922f288d64997d1fbc02621315b0aa963d1644189c2a49525601c",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching backward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching backward right.fbx",
+      "bytes": 343377,
+      "sha256": "46f06ba1f904a9febde26ef88fd3b6e5b353b38817b894f103d420f441adb2a2",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching backward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching backward.fbx",
+      "bytes": 343281,
+      "sha256": "849692f4290b3adfef59f57cba2c5b7faa507fc1a5a42b65a401d9563def86a0",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching backward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching forward left.fbx",
+      "bytes": 343377,
+      "sha256": "277077feb96cbb0312ccd1ca0b8c732607286600334857aa470d4a256c8be906",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching forward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching forward right.fbx",
+      "bytes": 343089,
+      "sha256": "ad86b7384294cbfbb129cd98e0bd0ad2f4ac2c308363881985523065adb66aa8",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching forward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching forward.fbx",
+      "bytes": 343313,
+      "sha256": "6861d7b8e09b398170c45f2858d449c6b6f7e1480d8d986a377aaf22ddc65dec",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching forward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching left.fbx",
+      "bytes": 343233,
+      "sha256": "cf4d3f47b8b8ac4d54c3055eb583c47e02fb493fb05a9741328caf98a4d771ab",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk crouching right.fbx",
+      "bytes": 343313,
+      "sha256": "90e372b32b96c06229ebf0509f2632c0b37ae67eb147e364b0c98bfe7d64cf1e",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk crouching right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk forward left.fbx",
+      "bytes": 343089,
+      "sha256": "ce649f295d2173016bc2c9e8f4d5cb3869ac7f4bc113cca2b4ed997c231855c5",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk forward left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk forward right.fbx",
+      "bytes": 343089,
+      "sha256": "4fa2da10185eea8bbd696b609c18afe771143129531e8b17d31fe2feb2701e52",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk forward right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk forward.fbx",
+      "bytes": 343601,
+      "sha256": "20bdeedc70132d9707442ed6c0c991353865c58e5b4df60e896786a92ac98848",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk forward.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk left.fbx",
+      "bytes": 343233,
+      "sha256": "63defabf4234e40a213c468ea435b5b718afcc4f153683a8afffab274c32e162",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk left.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Mixamo/walk right.fbx",
+      "bytes": 343233,
+      "sha256": "08454237982d7580172931fb5134dfb33786e9aed70492909fbd771ffd81481f",
+      "source": "_Archive/Animations/ThirdParty/Mixamo_Combat/Pro_Rifle_Pack/walk right.fbx",
+      "license": "Adobe/Mixamo terms; commercial game use; standalone asset redistribution restricted"
+    },
+    {
+      "file": "Animations/Characters/Imported/Quaternius/UAL1_Standard.glb",
+      "bytes": 7618436,
+      "sha256": "69591853d817488edaa8fd9bf8fc1d821eaeaf789f8627b3cd23b41c4ed67997",
+      "source": "_Archive/Animations/ThirdParty/Quaternius_UniversalAnimationLibrary/Extracted/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb",
+      "license": "CC0-1.0"
+    }
+  ]
+}

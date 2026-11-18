@@ -3,7 +3,7 @@ from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 ASSETS = REPOSITORY / "Assets"
-ART_SOURCE = REPOSITORY / "ArtSource"
+ART_SOURCE = ASSETS / "_Archive"
 
 def repository_path(value):
     path = Path(value).expanduser()

@@ -81,10 +81,8 @@ struct CharacterVisual::Assets
     Mesh mesh, backpack, backpackDetail;
     Texture texture;
     MotionClip bedLootEnemyClip, bedLootPlayerClip, bedLootPlayerLoopClip, bedLootThirdClip, bedLootFourthClip;
-    MotionClip deathClip, lootClip, lootSearchClip, hideoutKneelClip, holdClip, reloadClip, aimClip, recoilClip;
-    MotionClip jumpClip, landClip;
-    MotionClip proneClip, crawlClip;
-    std::array<MotionClip, 5> stances;
+    MotionClip deathClip, lootClip, lootSearchClip, hideoutKneelClip, reloadClip, aimClip, recoilClip;
+    MotionClip crawlClip;
 };
 
 CharacterVisual::~CharacterVisual() { Reset(); }
@@ -100,6 +98,28 @@ void CharacterVisual::Init(PlayerAppearance appearance)
         !animation.LoadClip("run", AssetCatalog::Animations_Characters_Locomotion_Fast_Run_fbx) ||
         !animation.LoadClip("crouch", AssetCatalog::Animations_Characters_Locomotion_Crouched_Walking_fbx))
         throw std::runtime_error(animation.Error());
+    const auto load = [&](const std::string& id,const std::string& file) {
+        if (!animation.LoadClip(id,std::string(AssetCatalog::ImportedMixamo)+file+".fbx"))
+            throw std::runtime_error(animation.Error());
+    };
+    const char* directions[]={"forward","forward right","right","backward right","backward","backward left","left","forward left"};
+    for(int i=0;i<8;++i) {
+        for(const char* gait:{"walk","run","sprint"}) load(std::string(gait)+std::to_string(i),std::string(gait)+" "+directions[i]);
+        load("crouch"+std::to_string(i),std::string("walk crouching ")+directions[i]);
+    }
+    for(const auto& entry:{std::pair<const char*,const char*>{"aim_idle","idle aiming"},
+        {"crouch_idle","idle crouching"},{"crouch_aim","idle crouching aiming"},
+        {"jump_start","jump up"},{"jump_loop","jump loop"},{"jump_land","jump down"},
+        {"death_front","death from the front"},{"death_back","death from the back"},
+        {"death_crouch","death crouching headshot front"},{"kneel","Rifle_Kneel_Idle"},
+        {"kneel_aim","Rifle_Kneel_To_Aim"},{"prone","Prone_Idle"},{"prone_fire","Prone_Firing_Rifle"},
+        {"prone_reload","Prone_Reloading"},{"equip","Rifle_Pull_Out"},{"holster","Rifle_Put_Away"},
+        {"to_prone","Rifle_Kneel_To_Prone"},{"from_prone","Rifle_Prone_To_Kneel"}}) load(entry.first,entry.second);
+    for(const auto& entry:{std::pair<const char*,const char*>{"unarmed_idle","Idle_Loop"},
+        {"unarmed_walk","Walk_Loop"},{"unarmed_run","Sprint_Loop"},{"melee","Punch_Cross"},
+        {"hit","Hit_Chest"}})
+        if(!animation.LoadClip(entry.first,AssetCatalog::ImportedQuaternius,entry.second))
+            throw std::runtime_error(animation.Error());
     static std::unordered_map<PlayerAppearance, std::weak_ptr<Assets>> caches;
     auto& cache = caches[appearance];
     assets = cache.lock();
@@ -111,9 +131,6 @@ void CharacterVisual::Init(PlayerAppearance appearance)
         CreateBackpackShell(shared->backpack);
         shared->backpackDetail.CreateCube();
         shared->deathClip.Load(AssetCatalog::Animations_Characters_Death_anim);
-        shared->jumpClip.Load(AssetCatalog::Animations_Characters_Jump_anim);
-        shared->landClip.Load(AssetCatalog::Animations_Characters_Land_anim);
-        shared->proneClip.Load(AssetCatalog::Animations_Characters_Prone_anim);
         shared->crawlClip.Load(AssetCatalog::Animations_Characters_ProneCrawl_anim);
         shared->lootClip.Load(AssetCatalog::Animations_Characters_CorpseLoot_anim);
         shared->lootSearchClip.Load(AssetCatalog::Animations_Characters_CorpseSearch_anim);
@@ -123,11 +140,7 @@ void CharacterVisual::Init(PlayerAppearance appearance)
         shared->bedLootThirdClip.Load(AssetCatalog::Animations_Characters_BedLootThird_anim);
         shared->bedLootFourthClip.Load(AssetCatalog::Animations_Characters_BedLootFourth_anim);
         shared->hideoutKneelClip.Load(AssetCatalog::Animations_Characters_HideoutKneel_anim);
-        shared->holdClip.Load(AssetCatalog::Animations_Characters_RifleHold_anim);
         shared->reloadClip.Load(AssetCatalog::Animations_Characters_RifleReload_anim);
-        const char* names[] = {"RifleIdle", "RifleWalk", "RifleRun", "RifleCrouchIdle", "RifleCrouchWalk"};
-        for (int i = 0; i < 5; ++i)
-            shared->stances[i].Load(std::string(AssetCatalog::Animations_Characters) + names[i] + ".anim");
         shared->aimClip.Load(AssetCatalog::Animations_Characters_RifleAim_anim);
         shared->recoilClip.Load(AssetCatalog::Animations_Characters_RifleRecoil_anim);
         animation.CreateMesh(shared->mesh);
@@ -137,6 +150,20 @@ void CharacterVisual::Init(PlayerAppearance appearance)
     weapon.Init();
     animation.Update(0.15f, "idle", true, false);
     animation.RefreshPose();
+    // Calibrate a neutral rifle socket even when the actor starts unarmed.
+    // Deriving it from the first frame of a draw would bake a large hand offset.
+    const glm::vec3 referenceScale(CharacterSettings{}.modelScale);
+    const auto shoulder=animation.NodePosition("RightArm")*referenceScale+glm::vec3(.035f,-.035f,.08f);
+    weaponModel=weapon.ModelMatrix(glm::translate(glm::mat4(1),shoulder),true);
+    const auto rightGrip=glm::vec3(weaponModel*glm::vec4(WeaponVisual::FiringGrip(),1))/referenceScale;
+    const auto leftGrip=glm::vec3(weaponModel*glm::vec4(weapon.SupportGrip(),1))/referenceScale;
+    animation.SolveArm("Right",rightGrip,(shoulder+glm::vec3(-.18f,-.36f,.08f))/referenceScale,
+        glm::vec3(weaponModel*glm::vec4(1,0,.4f,0))/referenceScale,1);
+    animation.SolveArm("Left",leftGrip,(shoulder+glm::vec3(.30f,-.34f,.16f))/referenceScale,
+        glm::vec3(weaponModel*glm::vec4(-.3f,0,1,0))/referenceScale,1);
+    animation.RefreshPose();
+    weaponHandAttachment=glm::inverse(glm::scale(glm::mat4(1),referenceScale)*animation.NodeTransform("RightHand"))*weaponModel;
+    weaponAttachmentValid=true;
     GLint limit = 0;
     glGetIntegerv(GL_MAX_TEXTURE_BUFFER_SIZE, &limit);
     if (animation.Palette().size() * 4 > static_cast<size_t>(limit))
@@ -172,6 +199,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     weapon.SetMagazineInserted(state.magazineInserted);
     recoilTime = state.fired ? 0 : recoilTime + dt;
     firePending |= state.fired;
+    hitPending |= state.hit;
     if (roomTwoLootRole != 0) {
         state.hasWeapon = state.equipped = false;
         weapon.Update(dt,false,false,0,false,false,true);
@@ -266,22 +294,27 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (state.dead)
     {
         weapon.Update(dt, state.equipped, false, 0, false, false, true);
-        if (!dying) { animation.CapturePose(); dying = true; deathTime = 0; lootCorpseFlipped=false; }
-        else if (deathTime >= assets->deathClip.Duration()) return; // Preserve the corpse, no loop or idle breathing.
-        deathTime = (std::min)(assets->deathClip.Duration(), deathTime + dt);
+        if (!dying) {
+            animation.CapturePose(); dying=true; deathTime=0;lootCorpseFlipped=false;
+            deathAnimation=character.IsProne()?"":character.IsCrouching()?"death_crouch":
+                (static_cast<int>(std::abs(character.position.x+character.position.z))%2?"death_front":"death_back");
+        }
+        const float duration=deathAnimation.empty()?assets->deathClip.Duration():animation.ClipDuration(deathAnimation);
+        if(deathTime>=duration) return;
+        deathTime=(std::min)(duration,deathTime+dt);
         const auto previousHand = animation.NodePosition("RightHand");
-        animation.ApplyMotion(assets->deathClip, deathTime, std::clamp(deathTime / .65f, 0.f, 1.f), true, true);
+        const float blend = std::clamp(deathTime / .65f, 0.f, 1.f);
+        if(deathAnimation.empty())
+            animation.ApplyMotion(assets->deathClip, deathTime, blend * blend * (3.f - 2.f * blend), true, true, false);
+        else animation.ApplyClip(deathAnimation,deathTime,blend*blend*(3.f-2.f*blend),false,false,true);
+        animation.RefreshPose();
         weaponModel[3] += glm::vec4((animation.NodePosition("RightHand") - previousHand) *
             character.scale * character.GetSettings().modelScale, 0);
-        deathRoot = assets->deathClip.Sample("Root", deathTime);
+        deathRoot = deathAnimation.empty()?assets->deathClip.Sample("Root",deathTime,true):MotionPose{};
         // Keep the rotated mesh above the feet/support plane, including crouched deaths.
         const auto rotation = MotionPose{glm::vec3(0), deathRoot.rotation}.Matrix();
-        float minimum = 0;
-        for (const auto& vertex : animation.Vertices())
-        {
-            const glm::vec3 position(vertex.position.x, vertex.position.y, vertex.position.z);
-            minimum = (std::min)(minimum, (rotation * glm::vec4(position * character.scale * character.GetSettings().modelScale, 1)).y);
-        }
+        const float minimum = animation.MinimumHeight(glm::scale(rotation,
+            character.scale * character.GetSettings().modelScale));
         deathRoot.position.y = (std::max)(deathRoot.position.y, -minimum + 0.01f);
         UploadPalette();
         return;
@@ -322,51 +355,85 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (airborne) {
         jumpPhase = std::clamp(.5f - character.GetVerticalVelocity() /
             (2.f * character.GetSettings().jumpSpeed), 0.f, 1.f);
-        landingTime = assets->landClip.Duration();
+        landingTime = animation.ClipDuration("jump_land");
     }
     jumpWeight += ((airborne ? 1.f : 0.f) - jumpWeight) * (1.f - std::exp(-dt * 18.f));
     poseElapsed += dt;
     if (poseElapsed < poseInterval) return;
     dt = poseElapsed;
     poseElapsed = 0;
-    weapon.Update(dt, state.equipped, state.aiming, state.reloadRemaining, firePending, character.IsMoving(), false, character.IsSprinting() && character.IsMoving() && !state.aiming, character.IsCrouching());
-    firePending = false;
     const bool moving = character.IsMoving();
     const bool crouching = character.IsCrouching();
     const bool prone = character.IsProne();
-    const char* clip = airborne || prone ? "idle" : crouching ? "crouch" : moving ? (character.IsSprinting() ? "run" : "walk") : "idle";
+    if(!equipmentInitialized) {equipmentInitialized=true;previousEquipped=state.equipped;previousProne=prone;}
+    if(previousEquipped!=state.equipped) {handlingTime=0;previousEquipped=state.equipped;}
+    else handlingTime+=dt;
+    if(previousProne!=prone) {postureTime=0;postureClip=prone?"to_prone":"from_prone";previousProne=prone;}
+    else postureTime+=dt;
+    hitTime=hitPending?0:hitTime+dt;hitPending=false;
+    const bool handling=handlingTime<WeaponHandlingSeconds && state.hasWeapon;
+    weapon.Update(dt,state.equipped,state.aiming,state.reloadRemaining,firePending,moving,false,
+        character.IsSprinting()&&moving&&!state.aiming,crouching,true,WeaponHandlingSeconds);
+    firePending=false;
     const auto& movement = character.GetSettings();
     const float referenceSpeed = prone ? movement.proneSpeed : crouching ? movement.crouchSpeed :
         character.IsSprinting() ? movement.runSpeed : movement.walkSpeed;
     const float pace = moving ? std::clamp(character.GetMoveSpeed() / referenceSpeed, 0.f, 1.5f) : 1.f;
-    animation.Update(dt, clip, moving && !prone && !airborne, false, pace);
+    const auto direction=glm::vec3(glm::rotate(glm::mat4(1),glm::radians(-character.rotation.y),glm::vec3(0,1,0))*
+        glm::vec4(character.GetMoveDirection(),0));
+    const int sector=(static_cast<int>(std::floor(std::atan2(direction.x,direction.z)/.785398163f+.5f))+8)%8;
+    const bool sprint=moving&&character.IsSprinting()&&!crouching&&!prone&&!state.aiming;
+    std::string clip;
+    if(prone) clip="prone";
+    else if(crouching) clip=moving?"crouch"+std::to_string(sector):(state.equipped?"kneel":"crouch_idle");
+    else if(!state.equipped && !handling) clip=moving?(character.IsSprinting()?"unarmed_run":"unarmed_walk"):"unarmed_idle";
+    else if(moving) clip=std::string(sprint?"sprint":character.GetMoveSpeed()>movement.walkSpeed*1.1f?"run":"walk")+std::to_string(sector);
+    else clip=state.aiming?"aim_idle":"idle";
+    animation.Update(dt,clip,true,false,moving?pace:1.f);
     const float blend = 1 - std::exp(-dt * 12);
     proneWeight += ((prone ? 1.f : 0.f) - proneWeight) * (1.f - std::exp(-dt * 7.f));
     crawlWeight += ((prone && moving ? 1.f : 0.f) - crawlWeight) * blend;
     if (prone && moving) crawlClock = std::fmod(crawlClock + dt * pace, assets->crawlClip.Duration());
-    holdWeight += ((state.equipped ? 1.0f : 0.0f) - holdWeight) * blend;
-    const bool sprint = moving && character.IsSprinting() && !crouching && !state.aiming;
-    const int stance = prone ? 0 : crouching ? (moving ? 4 : 3) : moving ? (sprint ? 2 : 1) : 0;
+    holdWeight += (((state.equipped||handling) ? 1.0f : 0.0f) - holdWeight) * blend;
     motionClock = std::fmod(motionClock + dt, 924.0f);
     aimWeight += ((state.aiming && !sprint && state.reloadRemaining <= 0 ? 1.f : 0.f) - aimWeight) * blend;
-    for (int i = 0; i < 5; ++i) stanceWeights[i] += ((i == stance ? 1.f : 0.f) - stanceWeights[i]) * blend;
-    if (holdWeight > 0.001f) animation.ApplyMotion(assets->holdClip, 0, holdWeight, true, false, false);
-    for (int i = 0; i < 5; ++i) {
-        const auto& motion = assets->stances[i];
-        const float phase = i == 1 || i == 2 || i == 4 ? animation.CyclePhase() * motion.Duration() :
-            std::fmod(motionClock, motion.Duration());
-        animation.ApplyMotion(motion, phase,
-            stanceWeights[i] * holdWeight * (1.f - proneWeight) * (1.f - jumpWeight), true, false, false);
+    const float postureDuration=animation.ClipDuration(postureClip);
+    if(postureTime<postureDuration && !moving && !airborne) {
+        const float weight=std::clamp((std::min)(postureTime,postureDuration-postureTime)/.12f,0.f,1.f);
+        animation.ApplyClip(postureClip,postureTime,weight);
     }
-    animation.ApplyMotion(assets->proneClip, 0, proneWeight, true, false, false);
+    if(crouching&&!moving&&state.aiming)
+        animation.ApplyClip("kneel_aim",animation.ClipDuration("kneel_aim"),aimWeight,true);
+    if(crouching&&moving&&state.aiming)
+        animation.ApplyClip("crouch_aim",motionClock,aimWeight,true,true);
     animation.ApplyMotion(assets->crawlClip, crawlClock, crawlWeight * proneWeight, false, false, false);
     animation.ApplyMotion(assets->aimClip, 0, aimWeight * holdWeight, false, false, false);
-    animation.ApplyMotion(assets->recoilClip, recoilTime, holdWeight, false, false, false);
-    if (state.reloadRemaining > 0) animation.ApplyMotion(assets->reloadClip, 2 - state.reloadRemaining, holdWeight, false, false, false);
-    animation.ApplyMotion(assets->jumpClip, jumpPhase, jumpWeight * (1.f - proneWeight), true, false, false);
-    if (!airborne && !prone && landingTime < assets->landClip.Duration())
-        animation.ApplyMotion(assets->landClip, landingTime, 1.f, false, false, false);
+    const bool proneShot=prone&&recoilTime<animation.ClipDuration("prone_fire");
+    if(proneShot) animation.ApplyClip("prone_fire",recoilTime,holdWeight,true);
+    else animation.ApplyMotion(assets->recoilClip,recoilTime,holdWeight,false,false,false);
+    if(state.reloadRemaining>0) {
+        if(prone) animation.ApplyClip("prone_reload",(1.f-state.reloadRemaining/2.f)*animation.ClipDuration("prone_reload"),holdWeight,true);
+        else animation.ApplyMotion(assets->reloadClip,2-state.reloadRemaining,holdWeight,false,false,false);
+    }
+    if(airborne) {
+        const std::string jump=jumpPhase<.5f?"jump_start":"jump_loop";
+        animation.ApplyClip(jump,jumpPhase*animation.ClipDuration(jump),jumpWeight*(1.f-proneWeight));
+    }
+    if(!airborne&&!prone&&landingTime<animation.ClipDuration("jump_land"))
+        animation.ApplyClip("jump_land",landingTime,1.f);
+    if(handling) {
+        const std::string action=state.equipped?"equip":"holster";
+        const float phase=handlingTime/WeaponHandlingSeconds;
+        const float weight=std::clamp((state.equipped?(std::min)(phase,1.f-phase):phase)*10.f,0.f,1.f);
+        animation.ApplyClip(action,phase*animation.ClipDuration(action),weight,true);
+    }
+    if(state.meleeRemaining>0)
+        animation.ApplyClip("melee",(1.f-state.meleeRemaining/MeleeSeconds)*animation.ClipDuration("melee"),1.f,true);
+    const float hitDuration=animation.ClipDuration("hit");
+    if(hitTime<hitDuration) animation.ApplyClip("hit",hitTime,.65f*(1.f-hitTime/hitDuration),true);
     animation.RefreshPose();
+    const bool authoredArms=handling||proneShot||(prone&&state.reloadRemaining>0)||state.meleeRemaining>0;
+    const float armIK=authoredArms?0.f:hitTime<hitDuration?.4f:holdWeight;
     if (state.hasWeapon && holdWeight > 0.001f) {
         const glm::vec3 scale = character.scale * character.GetSettings().modelScale;
         // RightArm is the shoulder joint. Anchor the butt pad ahead of the torso,
@@ -388,17 +455,34 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         left = glm::mix(left, glm::vec3(.25f, .12f + .07f * lift, .48f + .15f * reach) / scale, support);
         leftPalm = glm::mix(leftPalm, glm::vec3(0, -1, .15f) / scale, support);
         // Tuck the elbows during standing locomotion without changing the grip targets.
-        const float compact = (stanceWeights[0] + stanceWeights[1] + stanceWeights[2]) *
-            (1.f - proneWeight) * (state.reloadRemaining > 0 ? 0.f : 1.f);
+        const float compact = (1.f - proneWeight) * (state.reloadRemaining > 0 ? 0.f : 1.f);
         auto rightElbow = glm::mix(glm::vec3(-.3f, -.4f, .1f), glm::vec3(-.18f, -.36f, .08f), compact);
         auto leftElbow = glm::mix(glm::vec3(.5f, -.4f, .1f), glm::vec3(.30f, -.34f, .16f), compact);
         rightElbow = glm::mix(shoulder + rightElbow, glm::vec3(-.24f, .12f, .32f), proneWeight);
         leftElbow = glm::mix(shoulder + leftElbow, glm::vec3(.30f, .12f, .32f), proneWeight);
-        animation.SolveArm("Right", right, rightElbow / scale, rightPalm, holdWeight);
-        animation.SolveArm("Left", left, leftElbow / scale, leftPalm, holdWeight);
+        animation.SolveArm("Right",right,rightElbow/scale,rightPalm,armIK);
+        animation.SolveArm("Left",left,leftElbow/scale,leftPalm,armIK);
         animation.RefreshPose();
+        const auto hand=glm::scale(glm::mat4(1),scale)*animation.NodeTransform("RightHand");
+        if(authoredArms && weaponAttachmentValid) weaponModel=hand*weaponHandAttachment;
+        else {weaponHandAttachment=glm::inverse(hand)*weaponModel;weaponAttachmentValid=true;}
     }
     UploadPalette();
+}
+
+bool CharacterVisual::MeleeStrikeSegment(const Character& character,glm::vec3& torso,glm::vec3& fist,float& radius) const
+{
+    if(!assets||state.dead||state.meleeRemaining<=0) return false;
+    const auto actor=glm::translate(glm::mat4(1),character.position)*
+        glm::rotate(glm::mat4(1),glm::radians(character.rotation.y),glm::vec3(0,1,0))*
+        glm::scale(glm::mat4(1),character.scale*character.GetSettings().modelScale);
+    auto world=[&](const char* node){return glm::vec3(actor*glm::vec4(animation.NodePosition(node),1));};
+    torso=world("Spine2");
+    const auto wrist=world("RightHand"),knuckle=world("RightHandMiddle1");
+    fist=knuckle;
+    radius=std::clamp(glm::length(knuckle-wrist)*.65f,.025f,.085f);
+    const float reach=glm::length(fist-torso);
+    return std::isfinite(reach)&&reach>.01f&&std::isfinite(radius);
 }
 
 glm::vec3 CharacterVisual::FirstPersonCameraPosition(const Character& character) const
@@ -844,13 +928,17 @@ void CharacterVisual::Reset()
     weaponModel = glm::mat4(1);
     dying = false;
     firePending = false;
+    hitPending=false;
+    equipmentInitialized=previousEquipped=previousProne=weaponAttachmentValid=false;
+    weaponHandAttachment=glm::mat4(1);
+    handlingTime=postureTime=hitTime=100;
+    postureClip.clear();deathAnimation.clear();
     deathTime = holdWeight = motionClock = aimWeight = 0;
     jumpWeight = jumpPhase = 0;
     landingTime = 1;
     wasAirborne = false;
     proneWeight = crawlClock = crawlWeight = 0;
     recoilTime = 1;
-    stanceWeights = {};
     deathRoot = {};
     state = {};
 }

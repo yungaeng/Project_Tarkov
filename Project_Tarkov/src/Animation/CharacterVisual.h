@@ -17,11 +17,15 @@ struct CharacterVisualState
     float reloadRemaining = 0, aimPitch = 0;
     bool hasWeapon = true;
     bool magazineInserted = true;
+    bool hit = false;
+    float meleeRemaining = 0;
 };
 
 class CharacterVisual
 {
 public:
+    static constexpr float WeaponHandlingSeconds = 1.2f;
+    static constexpr float MeleeSeconds = .65f;
     CharacterVisual() = default;
     ~CharacterVisual();
     CharacterVisual(const CharacterVisual&) = delete;
@@ -42,6 +46,7 @@ public:
     void FitRoomTwoLootHands(const Character& character, const Character& target,
         const CharacterVisual& targetVisual);
     glm::vec3 FirstPersonCameraPosition(const Character& character) const;
+    bool MeleeStrikeSegment(const Character& character,glm::vec3& torso,glm::vec3& fist,float& radius) const;
     glm::vec3 FitLootPose(const Character& character, const Character& corpse,
         const CharacterVisual& corpseVisual,
         const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear,
@@ -95,7 +100,12 @@ private:
     float jumpWeight = 0, jumpPhase = 0, landingTime = 1;
     bool wasAirborne = false;
     float proneWeight = 0, crawlClock = 0, crawlWeight = 0;
-    std::array<float, 5> stanceWeights{};
     bool dying = false;
     bool firePending = false;
+    bool hitPending = false;
+    bool equipmentInitialized = false, previousEquipped = false, previousProne = false;
+    bool weaponAttachmentValid = false;
+    glm::mat4 weaponHandAttachment{1};
+    float handlingTime = 100, postureTime = 100, hitTime = 100;
+    std::string postureClip, deathAnimation;
 };
