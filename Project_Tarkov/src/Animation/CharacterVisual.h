@@ -19,6 +19,7 @@ struct CharacterVisualState
     bool magazineInserted = true;
     bool hit = false;
     float meleeRemaining = 0;
+    bool scriptedCorpsePose = false; // Fixed farming scene; independent of combat death selection.
 };
 
 class CharacterVisual

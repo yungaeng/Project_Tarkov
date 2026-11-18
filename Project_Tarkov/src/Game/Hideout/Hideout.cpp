@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <limits>
 #include <random>
 #include <utility>
@@ -184,7 +185,7 @@ bool Hideout::Save(bool requireStashSpace)
     std::filesystem::create_directories(RuntimePaths::SaveRoot(), error);
     if (error) { message = "저장 폴더를 만들 수 없습니다. 변경 사항이 저장되지 않았습니다."; return false; }
     std::ofstream out(RuntimePaths::Save("hideout.tmp"), std::ios::trunc);
-    out << "HIDEOUT 22\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
+    out << "HIDEOUT 23\n" << static_cast<int>(appearance) << ' ' << clothingMask << ' '
         << rubles << ' ' << rescuedSurvivors << ' ' << rescuedRoomMask << ' '
         << scavDeployLocked << '\n';
     auto writeInventory = [&](const Inventory& inventory) {
@@ -207,8 +208,11 @@ bool Hideout::Save(bool requireStashSpace)
     }
     trading.Write(out);
     out << activeScav << '\n';
+    out << std::setprecision(std::numeric_limits<float>::max_digits10);
     for (const auto& profile : scavProfiles)
-        out << profile.unlocked << ' ' << profile.deployLocked << ' ' << profile.assignedRoom << '\n';
+        out << profile.unlocked << ' ' << profile.deployLocked << ' ' << profile.assignedRoom << ' '
+            << static_cast<int>(profile.appearance) << ' ' << profile.clothingMask << ' '
+            << profile.scale.x << ' ' << profile.scale.y << ' ' << profile.scale.z << '\n';
     out << "END\n";
     out.flush();
     const bool written = static_cast<bool>(out);
@@ -314,7 +318,7 @@ void Hideout::Load()
     std::string header;
     int savedVersion=0;
     in >> header >> savedVersion;
-    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=22)) {
+    if (header=="HIDEOUT" && (savedVersion>=10 && savedVersion<=23)) {
         Hideout next;
         int appearanceId = 0;
         bool valid = savedVersion < 12 || ((in >> appearanceId) && appearanceId >= 0 && appearanceId <= static_cast<int>(PlayerAppearance::Male));
@@ -449,6 +453,15 @@ void Hideout::Load()
                 valid=valid && static_cast<bool>(in >> unlocked >> locked >> profile.assignedRoom) &&
                     (unlocked==0||unlocked==1) && (locked==0||locked==1) && profile.assignedRoom>=-1 && profile.assignedRoom<HideoutRoomCount;
                 profile.unlocked=unlocked!=0;profile.deployLocked=locked!=0;
+                if(savedVersion>=23) {
+                    int model=0;
+                    valid=valid&&static_cast<bool>(in>>model>>profile.clothingMask>>profile.scale.x>>profile.scale.y>>profile.scale.z)&&
+                        (model==static_cast<int>(PlayerAppearance::Female)||model==static_cast<int>(PlayerAppearance::Male))&&
+                        !(profile.clothingMask&~AllClothingMask)&&
+                        std::isfinite(profile.scale.x)&&std::isfinite(profile.scale.y)&&std::isfinite(profile.scale.z)&&
+                        profile.scale.x>0&&profile.scale.x<=10&&profile.scale.y>0&&profile.scale.y<=10&&profile.scale.z>0&&profile.scale.z<=10;
+                    profile.appearance=model==static_cast<int>(PlayerAppearance::Male)?PlayerAppearance::Male:PlayerAppearance::Female;
+                }
             }
             next.scavDeployLocked=next.scavProfiles[next.activeScav].deployLocked;
         } else {
@@ -463,6 +476,17 @@ void Hideout::Load()
             }
         }
         const bool defaultScavUpdated=!next.scavProfiles[0].unlocked || next.scavProfiles[0].assignedRoom!=1;
+        if(savedVersion<23) {
+            // Older saves did not retain rescue looks. Their spawned rescue was
+            // the female character with no clothing; keep the initial resident
+            // (profile 0) separate from those rescued profiles.
+            for(std::size_t i=1;i<next.scavProfiles.size();++i) {
+                if(!next.scavProfiles[i].unlocked) continue;
+                next.scavProfiles[i].appearance=PlayerAppearance::Female;
+                next.scavProfiles[i].clothingMask=0;
+                next.scavProfiles[i].scale=glm::vec3(1.f);
+            }
+        }
         next.scavProfiles[0].unlocked=true;
         next.scavProfiles[0].assignedRoom=1;
         std::string end,extra;
@@ -491,7 +515,7 @@ void Hideout::Load()
             return;
         }
         in.close();
-        if ((savedVersion < 22 || defaultScavUpdated) && !next.Save()) {
+        if ((savedVersion < 23 || defaultScavUpdated) && !next.Save()) {
             message=next.message;
             return;
         }
@@ -713,9 +737,17 @@ bool Hideout::Depart()
     return true;
 }
 bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing,
-    bool rescuedSurvivor)
+    bool rescuedSurvivor, const Character* rescuedBody, PlayerAppearance rescuedAppearance)
 {
     (void)weapon; (void)rounds;
+    if(rescuedSurvivor && ((rescuedAppearance!=PlayerAppearance::Female&&rescuedAppearance!=PlayerAppearance::Male)||
+        (rescuedBody && ((rescuedBody->clothingMask&~AllClothingMask)||
+            !std::isfinite(rescuedBody->scale.x)||!std::isfinite(rescuedBody->scale.y)||!std::isfinite(rescuedBody->scale.z)||
+            rescuedBody->scale.x<=0||rescuedBody->scale.x>10||rescuedBody->scale.y<=0||rescuedBody->scale.y>10||
+            rescuedBody->scale.z<=0||rescuedBody->scale.z>10)))) {
+        message="구조 대상의 외형 정보를 저장할 수 없습니다.";
+        return false;
+    }
     auto updated=*this;
     updated.loadout=items;
     updated.clothingMask=clothing&AllClothingMask;
@@ -726,6 +758,9 @@ bool Hideout::Recover(const Inventory& items, bool weapon, int rounds, std::uint
             auto& profile=updated.scavProfiles[i];
             if (profile.unlocked) continue;
             profile.unlocked = true;
+            profile.appearance=rescuedAppearance;
+            profile.clothingMask=rescuedBody?rescuedBody->clothingMask:0;
+            profile.scale=rescuedBody?rescuedBody->scale:glm::vec3(1.f);
             newlyUnlocked=i;
             break;
         }

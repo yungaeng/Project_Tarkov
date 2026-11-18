@@ -31,6 +31,7 @@ struct Enemy
 struct RescueSurvivor
 {
     Character body;
+    PlayerAppearance appearance = PlayerAppearance::Female;
     std::unique_ptr<CharacterVisual> visual;
     glm::vec3 target{0};
     float health = 100;
@@ -52,6 +53,7 @@ public:
     bool RecruitRescue() { if (!rescue.available || rescue.recruited || rescue.health <= 0) return false; rescue.recruited = true; rescue.target = rescue.body.position; return true; }
     bool HasRecruitedRescue() const { return rescue.recruited && rescue.health > 0; }
     const Character* RescueBody() const { return rescue.available && rescue.health > 0 ? &rescue.body : nullptr; }
+    PlayerAppearance RescueAppearance() const { return rescue.appearance; }
     int Magazine() const { const auto* w = ActiveWeapon(); return w ? w->rounds : 0; }
     bool Equipped() const { return equipped; }
     bool HasWeapon() const { return carried && (carried->At(-1) || carried->At(-2) || carried->At(-3)); }

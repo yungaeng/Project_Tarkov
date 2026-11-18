@@ -101,7 +101,7 @@ bool CombatSystem::SpawnRescueSurvivor(const glm::vec3& playerSpawn, const Colli
         rescue.body.position = rescue.target = candidate;
         rescue.body.clothingMask = 0;
         rescue.visual = std::make_unique<CharacterVisual>();
-        rescue.visual->Init(PlayerAppearance::Female);
+        rescue.visual->Init(rescue.appearance);
         rescue.visual->Update(0,rescue.body,{false,false,false,false,0,0,false});
         rescue.moveTimer = 1.f;
         return true;

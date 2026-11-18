@@ -97,6 +97,8 @@ Project_Tarkov/                     저장소 루트
 
 ## 세이브 선택
 
+`HIDEOUT 23`은 기존 저장 항목에 주민 프로필별 구조 외형(모델 ID·착용 비트·체형 XYZ 스케일)을 추가한다. CombatSystem의 실제 구조 대상 → 탈출 시 Hideout::Recover → ScavProfile → 결과 화면/은신처 주민 생성으로 전달한다. v22 이하의 구조 출신 주민은 구조 대상 기본 외형으로 이관하며 기본 주민은 별도로 유지한다. 기존 파일은 게임 로딩·저장 경로에서 이관하고 개발 도구로 직접 수정하지 않는다.
+
 1. `TARKOV_SAVE_ROOT`가 지정되면 그 절대 경로를 사용한다.
 2. 미지정 시 EXE 옆 `Saves/hideout.txt`가 있으면 우선 사용한다. 과거 폴더에 다른 프로필이 있어도 이 우선순위는 유지된다.
 3. EXE 옆에 프로필이 없으면 저장소 루트 `Saves`, 예전 `Project_Tarkov/Project_Tarkov/Saves`, `Project_Tarkov/Saves`를 탐색한다. 하나면 그대로 사용하고, 둘 이상이면 경로 지정이 필요하다.

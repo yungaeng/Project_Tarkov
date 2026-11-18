@@ -38,6 +38,8 @@ public:
     size_t BoneCount() const;
     void Reset();
     void CapturePose();
+    // Authored bind-relative scenes must not inherit a locomotion take or its blend.
+    void ResetToBindPose(bool skin = false);
     void ApplyMotion(const MotionClip& clip, float time, float weight, bool fromBind = false, bool frozen = false, bool skin = true);
     void RefreshVertices();
     void RefreshPose();

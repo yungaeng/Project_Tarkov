@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace InventoryCommands { struct Command; }
+class Character;
 
 struct StashPlacement { int type, x, y, width, height; };
 enum class HideoutFurniture { Refrigerator, Armory, Wardrobe, MedicalTable, Count };
@@ -100,7 +101,8 @@ public:
     bool Depart();
     bool SelectScav(int index);
     bool Recover(const Inventory& items, bool weapon, int rounds, std::uint32_t clothing,
-        bool rescuedSurvivor = false);
+        bool rescuedSurvivor = false, const Character* rescuedBody = nullptr,
+        PlayerAppearance rescuedAppearance = PlayerAppearance::Female);
 private:
     static bool SeedStarterSupplies(Hideout& hideout);
     static bool SeedRoomSupplies(Hideout& hideout, int room);

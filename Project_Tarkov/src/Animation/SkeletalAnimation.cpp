@@ -209,6 +209,21 @@ const std::vector<unsigned int>& SkeletalAnimation::Indices() const { return dat
 
 void SkeletalAnimation::CapturePose() { data->captured = data->pose; }
 
+void SkeletalAnimation::ResetToBindPose(bool skin)
+{
+    data->pose.clear();
+    data->pose.reserve(data->asset->nodes.size());
+    for(const auto& node:data->asset->nodes) data->pose.push_back(node.bind);
+    data->selected.clear();
+    data->transition.clear();
+    data->captured.clear();
+    data->time=data->idleTime=0;
+    data->blendTime=.15f;
+    data->playing=false;
+    if(skin) data->Skin();
+    else data->RefreshPose();
+}
+
 void SkeletalAnimation::RefreshVertices() { data->Skin(); }
 
 void SkeletalAnimation::ApplyMotion(const MotionClip& clip, float time, float weight, bool fromBind, bool frozen, bool skin)

@@ -315,7 +315,7 @@ void RaidScene::FinishRaid(RaidPhase result)
         const int unlockedBefore=static_cast<int>(std::count_if(hideout.scavProfiles.begin(),hideout.scavProfiles.end(),[](const auto& p){return p.unlocked;}));
         if (player->appearance==PlayerAppearance::Male) hideout.trading.OnRaidExtracted();
         hideout.Recover(raid.recovered,combat.HasRifle(),combat.Magazine(),
-            player->clothingMask,rescueAttempted);
+            player->clothingMask,rescueAttempted,combat.RescueBody(),combat.RescueAppearance());
         const int unlockedAfter=static_cast<int>(std::count_if(hideout.scavProfiles.begin(),hideout.scavProfiles.end(),[](const auto& p){return p.unlocked;}));
         const bool rescuedFemale=rescueAttempted&&unlockedAfter>unlockedBefore;
         raid.saveMessage = "탈출 성공: 보급품을 은신처로 반입했습니다.";
@@ -327,6 +327,13 @@ void RaidScene::FinishRaid(RaidPhase result)
         summary.recoveredClothing = player->clothingMask;
         summary.recoveredRifle = combat.HasRifle();
         summary.rescuedFemale=rescuedFemale;
+        if(rescuedFemale) {
+            summary.rescuedAppearance=combat.RescueAppearance();
+            if(const auto* rescuedBody=combat.RescueBody()) {
+                summary.rescuedClothing=rescuedBody->clothingMask;
+                summary.rescuedScale=rescuedBody->scale;
+            }
+        }
         if (rescuedFemale) summary.acquiredEquipment.push_back("여캐 (합류함)");
         for (int type = 0; type < ItemTypeCount; ++type) {
             const auto itemType = static_cast<ItemType>(type);

@@ -25,8 +25,9 @@ void RaidResultScene::Init()
     if (summary.rescuedFemale) {
         rescuedCharacter.position={0,0,0};
         rescuedCharacter.rotation.y=0.f;
-        rescuedCharacter.clothingMask=DefaultClothingMask;
-        rescuedVisual.Init(PlayerAppearance::Female);
+        rescuedCharacter.clothingMask=summary.rescuedClothing;
+        rescuedCharacter.scale=summary.rescuedScale;
+        rescuedVisual.Init(summary.rescuedAppearance);
         rescuedVisual.Update(0,rescuedCharacter,{false,false,false,false,0,0,false});
     }
     hud.Init(glfwGetCurrentContext());

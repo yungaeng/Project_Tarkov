@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../Inventory/Inventory.h"
+#include "../Character/PlayerAppearance.h"
+#include <glm/vec3.hpp>
 #include <array>
 #include <string>
 #include <vector>
@@ -61,5 +63,8 @@ struct ScavProfile {
     bool unlocked = false;
     bool deployLocked = false;
     int assignedRoom = -1;
+    PlayerAppearance appearance = PlayerAppearance::Female;
+    std::uint32_t clothingMask = DefaultClothingMask;
+    glm::vec3 scale{1.f};
 };
 }

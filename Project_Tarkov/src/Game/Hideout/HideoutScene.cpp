@@ -98,10 +98,12 @@ void RaidScene::ConfigureHideoutSwitchNpc()
         if (!state.unlocked || (hideout.appearance==PlayerAppearance::Female && profile==hideout.activeScav)) continue;
         const int room=state.assignedRoom;
         auto resident=std::make_unique<Character>();
+        resident->clothingMask=state.clothingMask;
+        resident->scale=state.scale;
         resident->position=room>=0 ? glm::vec3(room*6.f+3.f,0.f,-4.5f)
             : glm::vec3(20.f+profile*.8f,0.f,-2.2f);
         auto visual=std::make_unique<CharacterVisual>();
-        visual->Init(PlayerAppearance::Female);
+        visual->Init(state.appearance);
         visual->Update(0,*resident,npcState);
         hideoutResidentNpcs.push_back(std::move(resident));
         hideoutResidentVisuals.push_back(std::move(visual));
@@ -174,6 +176,7 @@ void RaidScene::BeginHideoutBedPoseTest(int room, int scavProfile)
         target->rotation.y=0.f;
         CharacterVisualState targetState;
         targetState.dead=room!=1;
+        targetState.scriptedCorpsePose=room!=1;
         targetState.hasWeapon=false;
         visual->SetRoomTwoLootPose(room==1?1:0);
         if (room==1) {
@@ -187,6 +190,7 @@ void RaidScene::BeginHideoutBedPoseTest(int room, int scavProfile)
         hideoutSwitchNpc.rotation.y=0.f;
         CharacterVisualState npcState;
         npcState.dead=room != 1;
+        npcState.scriptedCorpsePose=room != 1;
         hideoutSwitchNpcVisual.SetRoomTwoLootPose(room == 1 ? 1 : 0);
         if (room == 1) {
             hideoutSwitchNpc.position.z -= .25f;
@@ -292,7 +296,7 @@ void RaidScene::EndHideoutBedPoseTest()
         }
         if (auto* visual=HideoutBedTargetVisual()) {
             visual->Reset();
-            visual->Init(PlayerAppearance::Female);
+            visual->Init(hideout.scavProfiles[hideoutBedScavProfile].appearance);
             CharacterVisualState scavState;
             scavState.hasWeapon=false;
             if (auto* target=HideoutBedTarget()) visual->Update(0,*target,scavState);
@@ -340,6 +344,7 @@ void RaidScene::UpdateHideout(float dt)
         hideoutBedPoseElapsed+=dt;
         CharacterVisualState npcState;
         npcState.dead=hideoutBedTestRoom != 1;
+        npcState.scriptedCorpsePose=hideoutBedTestRoom != 1;
         npcState.hasWeapon=false;
         auto* target=HideoutBedTarget();
         auto* targetVisual=HideoutBedTargetVisual();

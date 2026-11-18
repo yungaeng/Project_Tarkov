@@ -203,7 +203,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (roomTwoLootRole != 0) {
         state.hasWeapon = state.equipped = false;
         weapon.Update(dt,false,false,0,false,false,true);
-        animation.Update(0,"idle",false,false);
+        animation.ResetToBindPose();
         const MotionClip& bedLootClip = roomTwoLootRole == 1 ? assets->bedLootEnemyClip :
             (roomTwoLootRole == 3 ? assets->bedLootThirdClip :
                 (roomTwoLootRole == 4 ? assets->bedLootFourthClip : assets->bedLootPlayerClip));
@@ -258,7 +258,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     if (hideoutBedPose) {
         weapon.Update(dt,false,false,0,false,false,true);
         if (!hideoutBedPoseInitialized) {
-            animation.Update(0,"idle",false,false);
+            animation.ResetToBindPose();
             animation.ApplyMotion(assets->deathClip,assets->deathClip.Duration(),1,true,false);
             hideoutBedRoot=assets->deathClip.Sample("Root",assets->deathClip.Duration()).Matrix();
             hideoutBedRoot[3].x=0.f;
@@ -295,8 +295,9 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
     {
         weapon.Update(dt, state.equipped, false, 0, false, false, true);
         if (!dying) {
+            if(state.scriptedCorpsePose) animation.ResetToBindPose();
             animation.CapturePose(); dying=true; deathTime=0;lootCorpseFlipped=false;
-            deathAnimation=character.IsProne()?"":character.IsCrouching()?"death_crouch":
+            deathAnimation=(state.scriptedCorpsePose||character.IsProne())?"":character.IsCrouching()?"death_crouch":
                 (static_cast<int>(std::abs(character.position.x+character.position.z))%2?"death_front":"death_back");
         }
         const float duration=deathAnimation.empty()?assets->deathClip.Duration():animation.ClipDuration(deathAnimation);
@@ -323,7 +324,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         // Keep the knees planted while searching the waist pockets.
         if (hideoutKneelPose) {
             if (!hideoutKneelPoseInitialized) {
-                animation.Update(0,"idle",false,false);
+                animation.ResetToBindPose();
                 animation.ApplyMotion(assets->hideoutKneelClip,0,1,true,false);
                 animation.CapturePose();
                 hideoutKneelPoseInitialized=true;
@@ -332,7 +333,7 @@ void CharacterVisual::Update(float dt, const Character& character, const Charact
         } else if (lootPreview) {
             // UI previews use the authored kneel/search clips without a world corpse or collision fit.
             if (!lootPreviewInitialized) {
-                animation.Update(0,"idle",false,false);
+                animation.ResetToBindPose();
                 animation.ApplyMotion(assets->lootClip,0,1,true,false,true);
                 animation.CapturePose();
                 lootClock=0;
@@ -591,7 +592,7 @@ glm::vec3 CharacterVisual::FitLootPose(const Character& character, const Charact
     const std::function<bool(const glm::vec3&, float, const std::array<glm::vec3, 4>&)>& placementClear,
     float approachYaw,float supportHeight)
 {
-    animation.Update(0, "idle", false, false);
+    animation.ResetToBindPose();
     animation.ApplyMotion(assets->lootClip, 0, 1, true, false, true);
     lootPoseValid = false;
     lootPoseYaw = corpse.rotation.y +
