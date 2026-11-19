@@ -1,0 +1,19 @@
+{
+  "username": "spamrakuen",
+  "category": "General/Unsorted",
+  "changed": "2023-05-05",
+  "uid": 6454,
+  "license": "CC0",
+  "title": "Female generic with simplified genitals (fixed)",
+  "created": "2023-05-05",
+  "nid": 3396,
+  "skins": "Yes",
+  "faces": 13914,
+  "type": "proxy",
+  "files": {
+    "obj_file": "http://files.makehumancommunity.org/sites/default/files/proxies/6454/1683293144/female_generic_with_simplified_genitals_fixed.obj",
+    "thumb": "http://files.makehumancommunity.org/sites/default/files/clothes/6454/1683293157/female_generic_with_simplified_genitals_fixed.thumb",
+    "file": "http://files.makehumancommunity.org/sites/default/files/proxies/6454/1683292766/female_generic_with_simplified_genitals_fixed.proxy"
+  },
+  "description": "This is wolgade's topology with a little fix on the lips."
+}

@@ -1,0 +1,14 @@
+{
+  "source": "ArtSource\\Characters\\KoreanSurvivor\\Meshy\\korean-survivor-meshy6lite-untextured.glb",
+  "source_sha256": "5e692c6f5579bc3b48963f6651e2100b213cd21946dcdfa63d4e2aedb1170d92",
+  "base": "_Archive\\Characters\\Male\\BeforeMeshyReplacement",
+  "method": "downloaded head + existing detachable body and clothing",
+  "excluded": "all downloaded clothing/body below neck",
+  "neck_cut_cm": 158.5,
+  "vertices": 111672,
+  "triangles": 53992,
+  "joints": 52,
+  "texture": "8192x4096; original body/garments + basic skin/hair swatches",
+  "limitations": "No game/build/animation validation; head color is provisional; existing body/outfit provenance remains.",
+  "status": "REVERTED: failed face preservation and neck fitting; original runtime pair restored"
+}

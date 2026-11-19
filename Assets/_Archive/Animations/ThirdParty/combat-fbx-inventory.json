@@ -18,7 +18,7 @@
     {
       "file": "Mixamo_Combat/Prone_Firing_Rifle.fbx",
       "bytes": 345792,
-      "sha256": "a55855c3ca6f0e176d214907cbc1b288198756d55addca4d008935e61e37e81a",
+      "sha256": "900cb45365f33dca61344962f8f9bf715adceba3aa95c15c3802ecce02c9534e",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -31,7 +31,7 @@
     {
       "file": "Mixamo_Combat/Prone_Idle.fbx",
       "bytes": 705152,
-      "sha256": "1d29fa1c6e54ddc855cdb0d2582f81c9d430ce45d509db9a72bfa15b0dd7fb7b",
+      "sha256": "6535149cc28efa72aa903838c6756dca55127b72785694bae396efb921133b13",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -44,7 +44,7 @@
     {
       "file": "Mixamo_Combat/Prone_Reloading.fbx",
       "bytes": 830896,
-      "sha256": "4b4cc654506d280efef6269a0a5a289c08c0eb60233673e7b869acee8ab1a705",
+      "sha256": "dc0170e1d2693f9cbaf7af9c3886259e5f7e45388579b0e6e4f55d0e89a83ff8",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -57,7 +57,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/crouching turn 90 left.fbx",
       "bytes": 364881,
-      "sha256": "87db988ad9f02e094dd9701a18523269d4d80eb6b6e8d336775c004f55662a9f",
+      "sha256": "1196296cd6ac454890404178b1d521dad46ad34c31c1747acdbdfc04ce4ef513",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -70,7 +70,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/crouching turn 90 right.fbx",
       "bytes": 364689,
-      "sha256": "93727d8b9e34e5400b498e8928e541f7e416f6803c0611473804406f7edee6ed",
+      "sha256": "47d306d4a6e1645d689630ae3fee4d28bdaf05f508b15a8c18e0d2ca17c5d364",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -83,7 +83,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/death crouching headshot front.fbx",
       "bytes": 446273,
-      "sha256": "8c2cb1cf3587f52bbb5e17adec1b379df9aec0d6cb90d1bc2ff59079af4d4426",
+      "sha256": "1447c129bbd5086dca21dd718e4667f4076cde84770d568c4172e98e0240bbba",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -96,7 +96,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/death from back headshot.fbx",
       "bytes": 618369,
-      "sha256": "4b8058553f089e59a53bf5d146a2adef99729c4d63f9c0c70c33c9a6d02da373",
+      "sha256": "127ff7218fc73f39613d7effbc8ecca2372156f5839487e75e88ce189fae1226",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -109,7 +109,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/death from front headshot.fbx",
       "bytes": 537681,
-      "sha256": "b9e7909dc8dae16162ce6224c0477e97510b55dc4efa4bea83f87a1eb8c49255",
+      "sha256": "e4baaccd41541cc30b88fac17460145fefd43160c09d1750638d4b6bb6dcc0c8",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -122,7 +122,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/death from right.fbx",
       "bytes": 583313,
-      "sha256": "e7f5d3543304625da5ec0a75d1c5f8f2a664fda5c2916835171d23c6e7557adf",
+      "sha256": "193cd4d4ead34e01b6d6950f763ea40db13d103f82a85ac340602c99487033a9",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -135,7 +135,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/death from the back.fbx",
       "bytes": 554241,
-      "sha256": "36cde9824fbbf7054d7f9e885ac38268538c5ef4fb994722ae620fc20073d342",
+      "sha256": "96be32aaeabb86c01b5f2eb460e529da8c5afcb325624c11d662ddfc65023ffc",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -148,7 +148,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/death from the front.fbx",
       "bytes": 589825,
-      "sha256": "b51cb9b9e028541e19418a9b1d783a3e218c4e3ff9edb50931d4c8732d04da8f",
+      "sha256": "2edd89dd52084ff65ffc976eefe5c4c07d3650260f627b5f740e8e45ab486c85",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -161,7 +161,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/idle aiming.fbx",
       "bytes": 427665,
-      "sha256": "06724a62d77e0f558e27428532bb98dff3e9ad592b8918056541c67e81f885b4",
+      "sha256": "acda38c0fafa1db01d7961f1e7ec19aac17fef90b7d78494c58b73317b911bb9",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -174,7 +174,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/idle crouching aiming.fbx",
       "bytes": 427665,
-      "sha256": "f7873f7d4487152b5bdb4b35e3327c4715a3cc38b4a097088f63a00995939094",
+      "sha256": "8aac7a27bf34f799134ca4ec1e587069deb96ee52226dcf70d5bfb7aa3570aa6",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -187,7 +187,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/idle crouching.fbx",
       "bytes": 427665,
-      "sha256": "f5725b9fcd23d6ba4ba9d19e02a21a674bfc1eb8e5840f1dcb9c352598087e2e",
+      "sha256": "cbe4b77f5f9a17fbd6e9ec4b34562e4be7400b8c63b2a1211f556f797ee5fef5",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -200,7 +200,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/idle.fbx",
       "bytes": 427665,
-      "sha256": "a13208bd141084216453adadd6299bcbc02a23826182972b3f387c91b43a5981",
+      "sha256": "e4eb1930d77a989c2a78852f70a0d4da56db9abdb625845ac60389344034e7ed",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -213,7 +213,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/jump down.fbx",
       "bytes": 316353,
-      "sha256": "0e268e21c7111222ef0e0f2d412659a41057798b0f238791baa5bdd225b5a91b",
+      "sha256": "944a7d776979e2e5c3b3002ca5eb4b40574c39990f02da0c886c3533379586c0",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -226,7 +226,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/jump loop.fbx",
       "bytes": 338769,
-      "sha256": "5f8f1919d7f3c5d01740eff67a70aa0f96d674b9f4a998de5d09bde33f819b02",
+      "sha256": "dd5ce03e89866d6319b16bc803be7a874c04a8405c64f491de37abf3d8dd8692",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -239,7 +239,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/jump up.fbx",
       "bytes": 305585,
-      "sha256": "5e560d25c2239d8904256410f061548daff88285917b2309a875ce9c1d643235",
+      "sha256": "6fa221901527527a831231b8d57efaa2eef5d1612c429d24b5f0dde5259f0662",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -252,7 +252,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run backward left.fbx",
       "bytes": 382657,
-      "sha256": "4e9860f2fd46f49fe41f0fc9cfa542d03b0656d919df8235ded8721e7cdcb0d0",
+      "sha256": "3b8852ce5bdec348ea0e6e572b0dc910e7eee7ba052bf2bbb6cfc02930297026",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -265,7 +265,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run backward right.fbx",
       "bytes": 383601,
-      "sha256": "8c71ed1014f4251b4118f34ca74da9ae4fd77feed31da26e334e1bdeddfef2ca",
+      "sha256": "860ca761200dbf0eefc0a5e153648d09f865e78816e63657bf03ef746859682a",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -278,7 +278,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run backward.fbx",
       "bytes": 381041,
-      "sha256": "e2f650ba1276a3fa32500ce707cfc40f14ef3603c48c3b371c09968a4d846b94",
+      "sha256": "73ae571f923c55916b98e821e5640be89e0d1509e714d78eed384ec845a0fe0f",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -291,7 +291,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run forward left.fbx",
       "bytes": 383601,
-      "sha256": "dcc0acb15472c90e88ad2e5f7d4e27de83be68680ee2bf2b242546fd8589fa2c",
+      "sha256": "510a898dfaccc61aefef27af2af920b1488c6185e0b77a76b626279dc0bb3c71",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -304,7 +304,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run forward right.fbx",
       "bytes": 382801,
-      "sha256": "fe46f8a8614beb94fb8216d92ee149c0422f39379ab0d152d019f0fe1da7de16",
+      "sha256": "93e144cf9d41aacd2eb62bc3566b114d64c69a8e31ab0c6b3e820fa073559dbe",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -317,7 +317,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run forward.fbx",
       "bytes": 382945,
-      "sha256": "bd606d27d004468b515cb8fef32d84a1bb3d5855376792499b40677f78de6834",
+      "sha256": "7c642612fca50a443ff952512d883493bd8fce898e61a7efc714ee862d08af55",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -330,7 +330,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run left.fbx",
       "bytes": 383601,
-      "sha256": "dff9f2c600e9e52a3c27111d78ee409492e3c2539465ee693a0b05d5c05539aa",
+      "sha256": "b0d6d89d3cd45c419aac9efff8105b4b6d760e98db423242686588b777dcd8da",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -343,7 +343,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/run right.fbx",
       "bytes": 382593,
-      "sha256": "979a53e829b919ab486406c5165da61de805403bd3fc8c3094afed4af3df8c74",
+      "sha256": "6c64f733421288443c7478f2385a7e8e7f1824c69c288ab7b296e1526665cc70",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -356,7 +356,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint backward left.fbx",
       "bytes": 383601,
-      "sha256": "7332fd73cdea46b1d2809646702764fdb204713ce3dd7171b3549d0ed8ad663f",
+      "sha256": "6430bb7db6aa713cad9f611bdcdba02962b364c8cdc52620234ee8e46b74ee62",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -369,7 +369,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint backward right.fbx",
       "bytes": 383057,
-      "sha256": "4cd12406d905b2ad86b2b62eb7ffe3d6ac7f847f5ffb789b031f304c140c3cef",
+      "sha256": "566e5a4668d550890074cf98f9e50dd3499d722aec4bfb17c13339a022d36986",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -382,7 +382,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint backward.fbx",
       "bytes": 383601,
-      "sha256": "98ddb153c589c3951d6c573a4b324cb2766d450a54ec1b1c7664cbb3913ecdb2",
+      "sha256": "6dca6667610875bfa6744e037057843761ab2a8ce4ddc305602b500654ea0b58",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -395,7 +395,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint forward left.fbx",
       "bytes": 383601,
-      "sha256": "e41f870df1e652293877cce55ab911fb529fac0b1ad4b00d9266c0b2d5976988",
+      "sha256": "4d1db440aa8fcdc99ccefb8f582cef1fcbd22aedb41ea55b31b0226cdbd9119d",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -408,7 +408,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint forward right.fbx",
       "bytes": 381329,
-      "sha256": "a415bf4330ce1a0b0f652e0e47a71fa0b2680221a6d244f2ced3ca8082e95d74",
+      "sha256": "2c634754df4759d901dc97477082f4d5d9a221dc7f9a3dd631f0cce96a208149",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -421,7 +421,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint forward.fbx",
       "bytes": 386113,
-      "sha256": "0f19d094e8ee1310b36d51dba76365956a0668b38f187dd4011feff065243654",
+      "sha256": "2f7d2b6cbc5c81b74c7706b822051e6395c28ec19e94059c0f048c31f41c3b3a",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -434,7 +434,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint left.fbx",
       "bytes": 383313,
-      "sha256": "ad9719d0f43cfcbb7fc8826197b45bb91ba3ba7a3d4977a94a452678e34a4d08",
+      "sha256": "3b101af5958f9a8b15e6380f150914ec7038acb704e86e50852f5e5b13d420ca",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -447,7 +447,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/sprint right.fbx",
       "bytes": 383777,
-      "sha256": "c2b748539237099cbf0e484dc5ce1f97514ba0e88fd3475e81ef1e4a9db463be",
+      "sha256": "de4a1fc43caa102d6ba2a423c7f2ee903491057b9cd376f2bec2abda5d4ef21d",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -460,7 +460,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/turn 90 left.fbx",
       "bytes": 343089,
-      "sha256": "6fc3a8822d306403810fe758c3e86b9dbbf3e7e392174cb10bad999c1efe4c58",
+      "sha256": "57328e5057ea2dfa7fad1c8de376f224245c4c3306a50b9991c07fa0c1af833e",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -473,7 +473,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/turn 90 right.fbx",
       "bytes": 344065,
-      "sha256": "e6827a86a69cfa7d2f464fc9c72d51df915fbc4a4522a545d1c3527ae7d6cb65",
+      "sha256": "26ecd69dbbd19925bd05c8eb2e2b66109348db0db172d4facb032e9ee2dede09",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -486,7 +486,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk backward left.fbx",
       "bytes": 343089,
-      "sha256": "8fff78bd48b8b706160504c80c50b773fc117a42fe20c93e8000f3e321828ada",
+      "sha256": "bb24ef6cce99f8fc63ad143e4a4009b200b8202c7b8b8fe4bfd28f88c75d2d84",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -499,7 +499,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk backward right.fbx",
       "bytes": 343089,
-      "sha256": "59b2d9805feecedfcbda0018e20ddd882e1461215c7033e1e56b33b130d275d6",
+      "sha256": "5c3d4c0077b136a87201f0890e816a2a781da5634cbdd37797969ca18b53a408",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -512,7 +512,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk backward.fbx",
       "bytes": 343089,
-      "sha256": "1342af6a454bff9fbae30ad263368244c8baf1c3d3507027f9697ce22989b1f4",
+      "sha256": "78fb67c10dbb2d7c3756e0f58d4624f92c640eb0795ac0ba8c3de89173d918c8",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -525,7 +525,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching backward left.fbx",
       "bytes": 343089,
-      "sha256": "661fef4f088922f288d64997d1fbc02621315b0aa963d1644189c2a49525601c",
+      "sha256": "2ee230c5b3512a37dbb64da4449f7f96fc8ef0f800afa3af633b448bc35cbdd3",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -538,7 +538,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching backward right.fbx",
       "bytes": 343377,
-      "sha256": "46f06ba1f904a9febde26ef88fd3b6e5b353b38817b894f103d420f441adb2a2",
+      "sha256": "6327244925e018fd787e11ee0fffd7277c8d21e0d54458a81489cc37021b24e9",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -551,7 +551,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching backward.fbx",
       "bytes": 343281,
-      "sha256": "849692f4290b3adfef59f57cba2c5b7faa507fc1a5a42b65a401d9563def86a0",
+      "sha256": "42d7a587a23192fc11c371711d4067ecfd857641858c75bce84e4ff9e5ce993e",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -564,7 +564,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching forward left.fbx",
       "bytes": 343377,
-      "sha256": "277077feb96cbb0312ccd1ca0b8c732607286600334857aa470d4a256c8be906",
+      "sha256": "fe4b0e0123b1ad500bb497dc21d0d272c35bf8043c9d8b95ac76ea22b24b9a86",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -577,7 +577,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching forward right.fbx",
       "bytes": 343089,
-      "sha256": "ad86b7384294cbfbb129cd98e0bd0ad2f4ac2c308363881985523065adb66aa8",
+      "sha256": "7febe8ede7dca86044ea8657ed8bf9ad0b70a6faf38ae70cedb239310fc6dbc5",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -590,7 +590,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching forward.fbx",
       "bytes": 343313,
-      "sha256": "6861d7b8e09b398170c45f2858d449c6b6f7e1480d8d986a377aaf22ddc65dec",
+      "sha256": "ed6112572a9402a7806968105943772e21e8ea528f54f985532c69d3218a493e",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -603,7 +603,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching left.fbx",
       "bytes": 343233,
-      "sha256": "cf4d3f47b8b8ac4d54c3055eb583c47e02fb493fb05a9741328caf98a4d771ab",
+      "sha256": "f77c45176ece04052ef494fa4bcaa7cae5ce35b6524be0d3844f930dd361a0d3",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -616,7 +616,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk crouching right.fbx",
       "bytes": 343313,
-      "sha256": "90e372b32b96c06229ebf0509f2632c0b37ae67eb147e364b0c98bfe7d64cf1e",
+      "sha256": "58505164f198fe6d932d4bdecf9c7858cbe1708d7df2d684fbfe32c75901623c",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -629,7 +629,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk forward left.fbx",
       "bytes": 343089,
-      "sha256": "ce649f295d2173016bc2c9e8f4d5cb3869ac7f4bc113cca2b4ed997c231855c5",
+      "sha256": "d09c4f445214526af76207c11cf624c64538a22da96ca0c6bf5c27aa534e6a03",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -642,7 +642,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk forward right.fbx",
       "bytes": 343089,
-      "sha256": "4fa2da10185eea8bbd696b609c18afe771143129531e8b17d31fe2feb2701e52",
+      "sha256": "895ef596c10bc4dc614b0d52f6a1e1b90dce17d57502dda5492e14fb03392743",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -655,7 +655,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk forward.fbx",
       "bytes": 343601,
-      "sha256": "20bdeedc70132d9707442ed6c0c991353865c58e5b4df60e896786a92ac98848",
+      "sha256": "03619f707abd0c0321a668ef9c8d8f6cd5383c3b6a1ffa93ffd98ce8ebe5c529",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -668,7 +668,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk left.fbx",
       "bytes": 343233,
-      "sha256": "63defabf4234e40a213c468ea435b5b718afcc4f153683a8afffab274c32e162",
+      "sha256": "9e594208b0ef93e383ff6f1e416e14919d0353ff15b4940be4f069a168536c5a",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -681,7 +681,7 @@
     {
       "file": "Mixamo_Combat/Pro_Rifle_Pack/walk right.fbx",
       "bytes": 343233,
-      "sha256": "08454237982d7580172931fb5134dfb33786e9aed70492909fbd771ffd81481f",
+      "sha256": "ad37a91f07ec46f78d6a48120cdd2f19b7bab36c42b0ab32d463e5a0ea2fa50e",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -694,7 +694,7 @@
     {
       "file": "Mixamo_Combat/Rifle_Kneel_Idle.fbx",
       "bytes": 397952,
-      "sha256": "79f4dc780d70995f2005778c2105d87caebfc1808f06051d6895afe24134da6f",
+      "sha256": "4579ec22595a9f2897507ee1b302689015970017888b65339b9991917fc14bd5",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -707,7 +707,7 @@
     {
       "file": "Mixamo_Combat/Rifle_Kneel_To_Aim.fbx",
       "bytes": 352816,
-      "sha256": "035e83abb186791ae4adf9e217161c2b353eeca1825c51db88d64ee00c71b1d5",
+      "sha256": "0dd40fd7eabab67bb75d723836ead1ca02d789b0ca21dd37254c866787d48632",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -720,7 +720,7 @@
     {
       "file": "Mixamo_Combat/Rifle_Kneel_To_Prone.fbx",
       "bytes": 487488,
-      "sha256": "a084cbec1350d541777d87a4348c84720720176f04d54633f9c303d500aba224",
+      "sha256": "0efa3da44c7b061e640f4cd9db5824eeff0fcae67e5829779c512ce9ddb7e8a6",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -733,7 +733,7 @@
     {
       "file": "Mixamo_Combat/Rifle_Prone_To_Kneel.fbx",
       "bytes": 487376,
-      "sha256": "0ac17060eece47f1d523a7ceebb7c5ec4a1f5174513cf7656fd11f006f8ccccf",
+      "sha256": "a8ed21fb634cecd21ff173af2c8cd00acc46ca11541691adaae4cf54ba45fa68",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -746,7 +746,7 @@
     {
       "file": "Mixamo_Combat/Rifle_Pull_Out.fbx",
       "bytes": 490800,
-      "sha256": "7998164aefafe083ed3f732554809ad3794047efb16530d8d1d8179fa1fe02f8",
+      "sha256": "a0ce221908c893c7bdff09a2fc4824bb30fc4ee15fe3934e655cfdca7a1d3273",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -759,7 +759,7 @@
     {
       "file": "Mixamo_Combat/Rifle_Put_Away.fbx",
       "bytes": 521360,
-      "sha256": "84b58a32d8e40577beb735df236ad65e1d41f93f46b5d450b0898d21a0efeb3c",
+      "sha256": "c6657b3e083e40c6542fe4b7ab116e902727a46ffed66106a12d0ef749f0c765",
       "fbxVersion": 7700,
       "stacks": [
         "mixamo.com"
@@ -769,5 +769,6 @@
       "keyArrays": 315,
       "keyCount": 21921
     }
-  ]
+  ],
+  "reacquired": "2026-11-19"
 }

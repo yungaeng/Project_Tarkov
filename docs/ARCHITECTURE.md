@@ -1,6 +1,6 @@
 # 프로젝트 구조와 작업 경계
 
-폴더·경로 갱신일: 2026-11-19. 현재 소스와 프로젝트 설정을 설명한다. 빌드 출력은 기존 `Project_Tarkov/x64/Debug/`를 유지한다.
+폴더·경로 갱신일: 2026-11-20. 현재 소스와 프로젝트 설정을 설명한다. 빌드 출력은 기존 `Project_Tarkov/x64/Debug/`를 유지한다.
 
 ## 파일·폴더 관계도
 
@@ -33,6 +33,7 @@ Project_Tarkov/                     저장소 루트
 │  └─ Project_Tarkov/Saves/        과거 저장 경로, 보존 대상
 ├─ Assets/                         관리하는 런타임 자원
 │  ├─ Animations/  Maps/  Models/
+│  ├─ ArtSource/Characters/         다운로드 GLB·제작 참고 이미지, 배포 제외
 │  ├─ Shaders/     UI/
 │  ├─ Licenses/                    게임에 동봉하는 외부 모션 고지/원문
 │  └─ _Archive/                    취득 원본·미사용/이전 에셋, 배포 제외
@@ -53,7 +54,7 @@ Project_Tarkov/                     저장소 루트
 
 `Project_Tarkov.sln` → `Project_Tarkov/src/Project_Tarkov.vcxproj` → `Project_Tarkov/<Platform>/<Configuration>/`이 빌드 연결이다. x64 Debug의 실제 출력은 위 트리와 같이 `Project_Tarkov/x64/Debug/`다. 개발 실행은 루트 `Assets/`를 우선 사용하고, 배포 시 실행 파일 옆 `Assets/`를 사용한다. 세이브 선택 규칙은 아래 절을 따른다.
 
-`ArtSource/`는 삭제되어 현재 트리에 없다. `.build/`에는 원본·백업·세이브 등 보존 자료도 남아 있으므로 폴더 전체를 캐시로 간주해 삭제하지 않는다.
+루트의 기존 `ArtSource/`는 삭제됐으며, 이후 받은 캐릭터 GLB와 참고 이미지는 `Assets/ArtSource/Characters/`에 있다. 이 제작 입력은 런타임 복사 대상이 아니다. 한국생존자/의무병의 첫 교체 시도는 철회했고 기존 `Assets/Models/Player/Male/`, `여캐/`의 `character.mesh/png`를 복구했다. 복구용 쌍은 `Assets/_Archive/Characters/<성별>/BeforeMeshyReplacement/`에 보존한다. `.build/`에는 원본·백업·세이브 등 보존 자료도 남아 있으므로 폴더 전체를 캐시로 간주해 삭제하지 않는다.
 
 ## 폴더 역할
 
@@ -92,6 +93,8 @@ Project_Tarkov/                     저장소 루트
 에셋은 `TARKOV_ASSET_ROOT` 절대 경로가 최우선이다. 미지정 시 실행 파일의 상위에서 `vcpkg.json`과 `Project_Tarkov/src/`가 있는 저장소를 찾으면 그 루트의 Assets를 사용하고, 저장소 밖 패키지는 EXE 옆 Assets를 사용한다. 개발 중 출력 폴더의 에셋을 직접 확인하려면 `TARKOV_ASSET_ROOT`를 그 폴더로 지정한다.
 
 `CopyRuntimeAssets`는 셰이더 확장자(.vs/.fs), 애니메이션(.anim/.fbx/.glb), 맵(.layout/.parts), UI PNG, 무기 OBJ, 공통 리그 FBX, 캐릭터 character.mesh/png 및 `Assets/Licenses/`를 명시적으로 복사한다. 취득 ZIP·HTML·편집 원본·`Assets/_Archive/`는 포함하지 않는다. 기존 출력 폴더의 오래된 파일을 자동 삭제하는 타깃은 없다. 이번 정리에서 현재 원본에 없거나 배포 형식이 아닌 이전 출력 에셋은 `Assets/_Archive/BuildCopies/`로 이동했고, 앞으로도 배포본은 새 패키지 폴더에 필요한 결과만 구성한다. 사용자 세이브는 포함하지 않는다.
+
+2026-11-20: 현재 소스에 없는 과거 모션·개별 의상 메시·제작 메타데이터 등 출력 파일 36개를 `Assets/_Archive/BuildCopies/Debug/Cleanup-2026-11-20/`로 이동했다. [파일별 이동 기록과 보존 범위](../Assets/_Archive/BuildCopies/Debug/Cleanup-2026-11-20/README.md)를 참고한다. `Ch22_nonPBR.fbx`는 현재 공통 리그 입력이므로 유지한다. 빈 모션·모델 하위 폴더만 정리했고, 필요한 자산의 원본/출력 해시를 대조했다.
 
 실제 외부 모션은 `Assets/Animations/Characters/Imported/`의 Mixamo FBX 51개와 Quaternius GLB 1개다. 카탈로그와 상태 선택 코드가 이 경로를 사용한다. 기존 `Locomotion/` FBX 4종과 대체된 보조 `.anim` 9종은 `Assets/_Archive/LegacyAssets/`로 이동했다. 취득 팩·미사용 모션과 출처 기록은 `Assets/_Archive/Animations/ThirdParty/`에 보관한다. [사용/취득 구분](../Assets/Animations/Characters/Imported/README.md)을 참고한다.
 

@@ -16,3 +16,5 @@
 *.vrm binary
 *.vroid binary
 *.blend binary
+# Preserve downloaded vendor sources byte-for-byte, including original whitespace.
+Assets/_Archive/Characters/BaseBodies/MakeHuman/** -text -whitespace

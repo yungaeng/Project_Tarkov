@@ -1,0 +1,218 @@
+[
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Crouched Walking.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Crouched Walking.fbx",
+    "bytes": 59388512,
+    "sha256": "BC51C69127F9F67ED4CAE3E747CD1714C54F904A1DE262CD882B7E5E5FE371A3"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Fast Run.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Fast Run.fbx",
+    "bytes": 59348016,
+    "sha256": "C083C650A7744368AD7AC4FF8E779F4C9B37028D40B5E2D590E45A67AE5D30D9"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Idle.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Idle.fbx",
+    "bytes": 311234,
+    "sha256": "1A37B00C7E6FCB7BCF80B3584BC2982066AA9A75FDBDE2D265AB0963B1DCE974"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Walking.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Walking.fbx",
+    "bytes": 59414432,
+    "sha256": "29FB86AB869B830AA9DF0701E87CAC03DD85927CB2EDF7D3198566E95B415A44"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\Jump.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\Jump.anim",
+    "bytes": 618,
+    "sha256": "65ED18F5A5A2FCC7F25DF21075CA400E7B22DFD4AB61E345B79E7129442C7442"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\Land.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\Land.anim",
+    "bytes": 535,
+    "sha256": "A469160FD129D5F919593CF0936B1C1F807CB822576E338286DCF57A80E97933"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\Prone.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\Prone.anim",
+    "bytes": 489,
+    "sha256": "11BA9D87F661B8D002953AE724855285368573AC2B927CF800A3B774EFBDE973"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\RifleCrouchIdle.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\RifleCrouchIdle.anim",
+    "bytes": 702,
+    "sha256": "10047178A2A6AA1C8A4D090B99F7C4DC8ACF414BAF2678692B73C1022C0602AC"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\RifleCrouchWalk.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\RifleCrouchWalk.anim",
+    "bytes": 529,
+    "sha256": "CD7C2520BD2F0B4E6F4B10EB6B69112C273967D01F5D6AAF80599FB757A4C3BB"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\RifleHold.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\RifleHold.anim",
+    "bytes": 1009,
+    "sha256": "F605726A4E5C2030F7A6A427673F36531A59D0F2EEAD11CDB8991D09241EE11A"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\RifleIdle.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\RifleIdle.anim",
+    "bytes": 661,
+    "sha256": "6B2FB4D3216C3C8F6E858E63C86AF5A4855D91123E599DF36BD1ED600BAFDBB2"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\RifleRun.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\RifleRun.anim",
+    "bytes": 388,
+    "sha256": "16207E99F92F200FDA7EAACF2D5D3727EB4DD9DB3FCD0F0C12AFAB520479C346"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\RifleWalk.anim",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\RifleWalk.anim",
+    "bytes": 377,
+    "sha256": "D4E609A790B31162169B3DF54DFC6859D081146A19DFE4DF9AA8D0FCB8E1771F"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\Locomotion\\Crouched Walking.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\Locomotion\\Crouched Walking.fbx",
+    "bytes": 59388512,
+    "sha256": "BC51C69127F9F67ED4CAE3E747CD1714C54F904A1DE262CD882B7E5E5FE371A3"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\Locomotion\\Fast Run.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\Locomotion\\Fast Run.fbx",
+    "bytes": 59348016,
+    "sha256": "C083C650A7744368AD7AC4FF8E779F4C9B37028D40B5E2D590E45A67AE5D30D9"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\Locomotion\\Idle.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\Locomotion\\Idle.fbx",
+    "bytes": 311234,
+    "sha256": "1A37B00C7E6FCB7BCF80B3584BC2982066AA9A75FDBDE2D265AB0963B1DCE974"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Animations\\Characters\\Locomotion\\Walking.fbx",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Animations\\Characters\\Locomotion\\Walking.fbx",
+    "bytes": 59414432,
+    "sha256": "29FB86AB869B830AA9DF0701E87CAC03DD85927CB2EDF7D3198566E95B415A44"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\import.json",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\import.json",
+    "bytes": 12492,
+    "sha256": "923A20AD195BA03C410858975C9FE43FE313D0C053F670D824E5D6C48D72D9E9"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Tactical\\black_boots_material.png",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Tactical\\black_boots_material.png",
+    "bytes": 303,
+    "sha256": "9E8CFA339ADB7497ECBB52486C6B1AE43B91D2424B4CD64AF5E4C76E0C10D49A"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Tactical\\black_boots.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Tactical\\black_boots.mesh",
+    "bytes": 314238,
+    "sha256": "E0729003986C417C239726BF5578368E264714C403DA96F0F267980845B31561"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Tactical\\helmet.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Tactical\\helmet.mesh",
+    "bytes": 480990,
+    "sha256": "F0AC5936F0222DA37B12A0743EEF691F03E5F136EC7AB8F2FF031E7CE92A1314"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Tactical\\multicam.png",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Tactical\\multicam.png",
+    "bytes": 4070401,
+    "sha256": "EC38B06EBCCDD5156ED9D7C8A5AADC01F4E911E939159A591BA24D2919F4AD5D"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Tactical\\shirt.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Tactical\\shirt.mesh",
+    "bytes": 916014,
+    "sha256": "5BA7B0CC39A16D068C534A6A83B8A9C5AB201B10B10F7926BAFCFDCAA4EB0919"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Tactical\\trousers.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Tactical\\trousers.mesh",
+    "bytes": 744942,
+    "sha256": "7CC8145969C53AD1C72A4E13525C7FC77B450791AB6DBA5F8234D9D0C740B170"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Tactical\\vest.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Tactical\\vest.mesh",
+    "bytes": 79230,
+    "sha256": "C7B9C0317825F16374E10FFD7A2FC4702B1FF1C94747311D3BEB173927217599"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\Male\\Underwear\\black_trunks.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\Male\\Underwear\\black_trunks.mesh",
+    "bytes": 349230,
+    "sha256": "FD103A1019B4107D6AC5EEE8E745E9A2B1C801D54F626E288E1EF09EA51D4913"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\import.json",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\import.json",
+    "bytes": 14321,
+    "sha256": "D29062ADFA0940F842F58917EA0367AA2DB268B502AF0A2F3D117C34D88DDA78"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Tactical\\black_boots_material.png",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Tactical\\black_boots_material.png",
+    "bytes": 303,
+    "sha256": "9E8CFA339ADB7497ECBB52486C6B1AE43B91D2424B4CD64AF5E4C76E0C10D49A"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Tactical\\black_boots.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Tactical\\black_boots.mesh",
+    "bytes": 314238,
+    "sha256": "587D2296F167F094EED10E9AC80848BF2BA340AD394B61EB9BA76239EE015E12"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Tactical\\helmet.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Tactical\\helmet.mesh",
+    "bytes": 480990,
+    "sha256": "9CF10CE0DE93C88A6D717E3CF17F06F1689384BA05BEF87A0922944B61266CBC"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Tactical\\multicam.png",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Tactical\\multicam.png",
+    "bytes": 4070401,
+    "sha256": "EC38B06EBCCDD5156ED9D7C8A5AADC01F4E911E939159A591BA24D2919F4AD5D"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Tactical\\shirt.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Tactical\\shirt.mesh",
+    "bytes": 1480638,
+    "sha256": "C5D34060D8E07610341447695C3E29BAA74BA43BAC3A986B31CC7E9EDE358495"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Tactical\\trousers.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Tactical\\trousers.mesh",
+    "bytes": 1027038,
+    "sha256": "8AE8F3EDF43BDEBE359E663A0DE1D172CFF431CD557360A56C2E51E8FAB49486"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Tactical\\vest.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Tactical\\vest.mesh",
+    "bytes": 79230,
+    "sha256": "2DBDF6DEC51F7C967914DA16CDBBB6394E6B77260DE3337672C2E25F748D2965"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Underwear\\bra.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Underwear\\bra.mesh",
+    "bytes": 951438,
+    "sha256": "C0B4D5F1E08920A8EB059999D1E894CE32B4C3C6567379AD2BAAB0E302E96882"
+  },
+  {
+    "from": "Project_Tarkov\\x64\\Debug\\Assets\\Models\\Player\\여캐\\Underwear\\thong.mesh",
+    "to": "Assets\\_Archive\\BuildCopies\\Debug\\Cleanup-2026-11-20\\Models\\Player\\여캐\\Underwear\\thong.mesh",
+    "bytes": 471054,
+    "sha256": "70C7E5B5E44DD05B1D665C6567A36CD2D2E4043C88FDBE4B20F28A16E3EE36BA"
+  }
+]

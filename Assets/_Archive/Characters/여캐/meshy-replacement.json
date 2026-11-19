@@ -1,0 +1,14 @@
+{
+  "source": "ArtSource\\Characters\\CombatMedic\\Meshy\\combat-medic-meshy6lite-untextured.glb",
+  "source_sha256": "4392fd5e431c365134f1453cda2c8fe370e0755bbe2a21b6caef7bcecbb3dc5c",
+  "base": "_Archive\\Characters\\여캐\\BeforeMeshyReplacement",
+  "method": "downloaded head + existing detachable body and clothing",
+  "excluded": "all downloaded clothing/body below neck",
+  "neck_cut_cm": 155.5,
+  "vertices": 163492,
+  "triangles": 66773,
+  "joints": 52,
+  "texture": "8192x4096; original body/garments + basic skin/hair swatches",
+  "limitations": "No game/build/animation validation; head color is provisional; existing body/outfit provenance remains.",
+  "status": "REVERTED: failed face preservation and neck fitting; original runtime pair restored"
+}

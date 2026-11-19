@@ -1,0 +1,18 @@
+{
+  "username": "ukiyoe",
+  "category": "Genitalia",
+  "changed": "2022-11-05",
+  "uid": 7580,
+  "license": "CC0",
+  "title": "man genital",
+  "created": "2022-11-05",
+  "nid": 3223,
+  "type": "clothes",
+  "compatibility": "1.1.x",
+  "files": {
+    "mhclo": "http://files.makehumancommunity.org/sites/default/files/clothes/7580/1366233569/man_genital.mhclo",
+    "mhmat": "http://files.makehumancommunity.org/sites/default/files/clothes/7580/128345475/man_genital.mhmat",
+    "obj": "http://files.makehumancommunity.org/sites/default/files/clothes/7580/1518244446/man_genital.obj"
+  },
+  "description": "man's genital that I think more realistic"
+}

@@ -26,3 +26,17 @@ __pycache__/
 /Assets/Animations/Characters/Imported/Mixamo/*.fbx
 /Assets/_Archive/**/*.fbx
 /Assets/_Archive/**/*.zip
+
+# Generated copies and recovery backups stay local; keep their move/source records.
+/Assets/_Archive/BuildCopies/**/*.anim
+/Assets/_Archive/BuildCopies/**/*.mesh
+/Assets/_Archive/BuildCopies/**/*.png
+/Assets/_Archive/BuildCopies/**/import.json
+/Assets/_Archive/Characters/*/BeforeMeshyReplacement/
+/Assets/_Archive/Characters/MeshyReplacement/
+
+# Investigated files with conflicting license notices are not published.
+/Assets/_Archive/Characters/BaseBodies/MakeHuman/735/*.obj
+/Assets/_Archive/Characters/BaseBodies/MakeHuman/735/*.proxy
+/Assets/_Archive/Characters/BaseBodies/MakeHuman/880/*.obj
+/Assets/_Archive/Characters/BaseBodies/MakeHuman/880/*.proxy

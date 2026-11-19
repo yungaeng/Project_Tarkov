@@ -1,0 +1,20 @@
+{
+  "username": "beebo123",
+  "category": "Genitalia",
+  "changed": "2022-04-15",
+  "uid": 7324,
+  "license": "CC0",
+  "title": "RealisticLabiaMedium",
+  "created": "2022-04-15",
+  "nid": 3167,
+  "type": "clothes",
+  "compatibility": "1.2.x",
+  "files": {
+    "mhclo": "http://files.makehumancommunity.org/sites/default/files/clothes/7324/949122023/BetterSimplifiedVulvaMediumLabia.mhclo",
+    "mhmat": "http://files.makehumancommunity.org/sites/default/files/clothes/7324/1031676993/BetterSimplifiedVulvaMediumLabia.mhmat",
+    "obj": "http://files.makehumancommunity.org/sites/default/files/clothes/7324/920708639/BetterSimplifiedVulvaMediumLabia.obj",
+    "diffuse": "http://files.makehumancommunity.org/sites/default/files/clothes/7324/676238242/young_lightskinned_female_genitals_diffusePale.png",
+    "render": "http://files.makehumancommunity.org/sites/default/files/clothes/7324/631417581/MediumModel.png"
+  },
+  "description": "A realistic labia to be used with the \"Female Generic With Simplified Genitals\""
+}

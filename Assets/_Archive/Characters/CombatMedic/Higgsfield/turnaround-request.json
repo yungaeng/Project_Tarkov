@@ -1,0 +1,21 @@
+{
+  "status": "not_submitted_plan_required",
+  "reference_media_id": "c7e3ac7c-bdc5-48d2-be85-c492bb6b7fa1",
+  "reference_local_path": "docs/img/전투 의무병 게임 캐릭터 시트.png",
+  "estimated_image_credits": 4.25,
+  "params": {
+    "model": "gpt_image_2_6",
+    "count": 1,
+    "aspect_ratio": "16:9",
+    "resolution": "4k",
+    "quality": "high",
+    "output_format": "png",
+    "medias": [
+      {
+        "role": "image",
+        "value": "c7e3ac7c-bdc5-48d2-be85-c492bb6b7fa1"
+      }
+    ],
+    "prompt": "Produce a precise production character turnaround for 3D reconstruction of the SAME adult female combat medic in the reference. Preserve identity, adult proportions, pale peach blonde bob haircut, blue grey eyes, anime facial shape, white/pale pink cropped short-sleeve tactical uniform, shorts, hot pink webbing and buckles, black undersuit collars, headset mic, radio, scissors and vial pouches, thigh straps, black holstered pistol, fingerless tactical gloves, lace-up white pink combat boots, chest/back medical packs. IMPORTANT commercial design correction: replace EVERY cross emblem anywhere on her hair clip, shoulders, chest, back, belt pouches and boots with a simple solid magenta HEART symbol, never a cross or red crescent or diamond. No real manufacturer logos or text. All other details faithfully preserved. One single image 16:9, evenly divided into FOUR EXACT EQUAL WIDTH columns with no borders; one full body figure centered in each column; order left to right FRONT, character's LEFT SIDE (nose facing canvas left), BACK, character's RIGHT SIDE (nose facing canvas right). Pure white seamless background. All four figures are the SAME character at identical scale, feet baseline and head height, orthographic camera, no perspective or foreshortening. Exactly one character in each column. A-pose with straight legs, boots apart, arms straight diagonally down 30 degrees away from torso, palms facing thighs, clearly separated fingers; side views rotate that same pose. Adult 25 year old character. Keep face and costume fine detail sharp, faithful anime game art rendering, neutral even light, no cast shadows, no weapons in hands, no loose separate props, no text, labels, expression panels or equipment panels. Hair, boots and hands must be fully inside their own equal width column with generous white padding. Reference front/back are authoritative. Side views must logically match their exact outfit. The result is an asset modeling reference, not a poster."
+  }
+}

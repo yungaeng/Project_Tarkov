@@ -1,0 +1,19 @@
+{
+  "username": "MTKnife",
+  "category": "Partial body",
+  "changed": "2017-08-19",
+  "uid": 486,
+  "license": "CC0",
+  "title": "Adult female genitalia remapped",
+  "created": "2017-07-28",
+  "nid": 880,
+  "skins": "Yes",
+  "faces": 33148,
+  "type": "proxy",
+  "files": {
+    "obj_file": "http://files.makehumancommunity.org/sites/default/files/proxies/486/1501216705/adult_female_genitalia_remapped.obj",
+    "thumb": "http://files.makehumancommunity.org/sites/default/files/clothes/486/1501216705/adult_female_genitalia_remapped.thumb",
+    "file": "http://files.makehumancommunity.org/sites/default/files/proxies/486/1503125180/adult_female_genitalia_remapped.proxy"
+  },
+  "description": "I've taken the existing \"Adult female genitalia\" proxy, and changed its UV map, so that it uses the genitalia textures created for the \"Adult female genitalia old\" proxy:  you'll find these on the left sides of the texture files for all of the skins whose names end in \"female genitals\".  The result isn't perfect, because the \"female genitalia\" and \"female genitalia old\" proxies have somewhat different topologies (that's why the newer one was created--the older one doesn't look much like the real thing); in addition, both proxies are somewhat asymmetrical, in different ways (the old one more so than the new one).  These two factors result in a certain amount of stretching, but the end result looks pretty good, and it avoids the necessity of having to create textures for all 10 of the \"female genitals\" skins (and 7 more user-created skins based on them), which is obviously a job nobody has been prepared to do.\nEDIT:  Discovered I'd accidentally copied over the UUID from the old proxy, which kept the new proxy from saving correctly.\n\nUPDATE:  Added a tag to the PROXY file.\n\nThe one major problem to note  (which also exists when the same skins are used with the \"Adult female genitalia old\" proxy for which they were created) is that the borders between the remapped section and the rest of the body have sudden color changes in the area behind the vagina.  I've done what I could to minimize the problem, by adjusting the boundaries of both the remapped faces and the adjoining faces on the main texture so that their borders run through colors that match as closely as possible, but you'd have to redo the skins to eliminate the issue entirely, which would to some extent defeat the purpose of the present effort. The same problem exists, to a much smaller extent, along the borders of the front of the remapped area as well (that is, the top of the pubic mound), but it's barely noticeable from most angles.\n\nThe THUMB file, BTW, is simply a copy of that used for the other two female genitalia proxies."
+}

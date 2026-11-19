@@ -5,6 +5,7 @@
 - `Animations/ThirdParty/`: Quaternius·KayKit·Mixamo·ANIMMADE 취득 원본, 원본 ZIP, 라이선스·해시·목록. 현재 사용본은 `Assets/Animations/Characters/Imported/`에 있다.
 - `LegacyAssets/`: 새 모션 연결로 더 이상 읽지 않는 기존 에셋. 원래 상대 경로를 보존한다.
 - `BuildCopies/`: 실행 출력 폴더에서 발견한 이전 런타임 에셋 복사본.
+  - [2026-11-20 모션·모델 정리](BuildCopies/Debug/Cleanup-2026-11-20/README.md): 실행 폴더의 과거 파일 36개와 이동/해시 기록. 현재 사용하는 모션·통합 캐릭터·공통 리그는 유지했다.
 - `Downloads/`: 이번 대화에서 취득한 파일을 다운로드 폴더에서 회수해 보관한다. 이름과 해시가 일치하는 이번 파일만 이동한다.
 
 원본의 라이선스는 각 팩에 그대로 유지한다. 특히 Mixamo 원본과 게임용 FBX를 독립 에셋으로 공개 재배포하지 않는다. 캐릭터 제작 도구의 중간 결과물도 `Characters/` 아래에 보관하도록 경로를 맞춘다.

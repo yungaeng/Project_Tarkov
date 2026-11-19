@@ -1,0 +1,119 @@
+[
+  {
+    "asset_id": "3167",
+    "file": "BetterSimplifiedVulvaMediumLabia.obj",
+    "vertices": 1260,
+    "faces": 1156,
+    "bounds_min": [
+      -0.1174,
+      -0.8381,
+      0.1813
+    ],
+    "bounds_max": [
+      0.0716,
+      -0.3115,
+      1.0552
+    ],
+    "sha256": "7ce3461b851f33da97c0bfcb2197e8d0714583b4ab7204d7f47a01859f335c97",
+    "header": [
+      "# This is a clothes file for MakeHuman Community, exported by MakeClothes 2",
+      "#",
+      "# author: unknown",
+      "# license: CC0",
+      "#"
+    ]
+  },
+  {
+    "asset_id": "3223",
+    "file": "man_genital.obj",
+    "vertices": 607,
+    "faces": 588,
+    "bounds_min": [
+      -0.6352,
+      -0.271,
+      0.11
+    ],
+    "bounds_max": [
+      0.6352,
+      0.9478,
+      1.4742
+    ],
+    "sha256": "8e9441b050350d588cb1e5415861f3939138354cc83ef13d5932eee59b9b8f13",
+    "header": [
+      "# This is a clothes file for MakeHuman Community, exported by MakeClothes 2",
+      "#",
+      "# author: unknown",
+      "# license: CC0",
+      "#"
+    ]
+  },
+  {
+    "asset_id": "3396",
+    "file": "female_generic_with_simplified_genitals_fixed.obj",
+    "vertices": 13916,
+    "faces": 13914,
+    "bounds_min": [
+      -4.9007,
+      -8.1899,
+      -0.9232
+    ],
+    "bounds_max": [
+      4.9007,
+      7.8643,
+      2.9527
+    ],
+    "sha256": "faa9be936002d2f3cfe7c19c6755e8ce50f9d69b9fc1fd968e6190ac6b1745f3",
+    "header": [
+      "# Exported from MakeClothes (TM)",
+      "# author wolgade",
+      "# license CC0",
+      "# homepage http://www.makehumancommunity.org"
+    ]
+  },
+  {
+    "asset_id": "735",
+    "file": "adult_male_genitalia.obj",
+    "vertices": 13774,
+    "faces": 13772,
+    "bounds_min": [
+      -5.6857,
+      -8.181,
+      -0.9764
+    ],
+    "bounds_max": [
+      5.6857,
+      9.3003,
+      3.7787
+    ],
+    "sha256": "2acc3d73a0bccfd92d517b524196fe8a1d562e5f0d83c43cc491627c0060ead5",
+    "header": [
+      "# Exported from MakeClothes (TM)",
+      "# author MHteam",
+      "# license AGPL3 (see also http://www.makehuman.org/doc/node/external_tools_license.html)",
+      "# homepage http://www.makehuman.org/"
+    ]
+  },
+  {
+    "asset_id": "880",
+    "file": "adult_female_genitalia_remapped.obj",
+    "vertices": 13644,
+    "faces": 13642,
+    "bounds_min": [
+      -4.9007,
+      -8.1899,
+      -0.9232
+    ],
+    "bounds_max": [
+      4.9007,
+      7.8643,
+      2.9527
+    ],
+    "sha256": "bda54b8e2bb2ab4b52ccff3643c418587e706e58663ea360983afcd74b7a14e6",
+    "header": [
+      "# Exported from MakeClothes (TM)",
+      "# author MTKnife",
+      "# license CC0 - Creative Commons Zero",
+      "# homepage http://www.makehumancommunity.org/"
+    ]
+  }
+]
